@@ -8,7 +8,7 @@ import React, { Component } from 'react';
 import './App.css';
 
 
-const DEFAULT_QUERY = 'Steve Jobs';
+const DEFAULT_QUERY = 'Bill Gates';
 
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
 const PATH_SEARCH = '/search';
