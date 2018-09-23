@@ -129,7 +129,6 @@ class App extends Component {
               // [pages.MERCHANDISE]:  <Merchancise merchandise={merchandise} />,
             }[currentPage]
           }
-
           <PrevNextButtons pageNum={currentPage} />
         </div>
       </div>
@@ -219,15 +218,17 @@ class App extends Component {
 
 
 const SoftHeader = ({eventInfo}) =>
-  <div>
-    <img 
-      src="https://trisomy.wpengine.com/wp-content/uploads/2017/07/softlogo.png"
-      height="75px"
-      alt="Soft Logo"
-    />
-    {eventInfo && 
-      eventInfo.eventTitle
-    }
+  <div className="logo-header">
+    <div>
+      <img 
+        src="https://trisomy.wpengine.com/wp-content/uploads/2017/07/softlogo.png"
+        height="75px"
+        alt="Soft Logo"
+      />
+    </div>
+    <div>
+      <h1>{eventInfo && eventInfo.eventTitle}</h1>
+    </div>
   </div>
 
 
@@ -247,7 +248,6 @@ const ContactInfo = ({contact}) =>
       <EditPhone>Home Phone</EditPhone>
     </div>
     <EditEmail>Best Email Address</EditEmail>
-    <div className="clear"></div>
   </div>
 
 
@@ -274,9 +274,9 @@ const EditAddress = ({value="", className="edit-address", children}) =>
     <div>
       <City value="City" />
       <StateProv value="State/Prov/Region" />
-      <Country value="Country"/>
+      <PostalCode value="Zip / Postal Code" />
     </div>
-    <PostalCode value="Zip / Postal Code" />
+    <Country value="Country"/>
   </div>
 
 
@@ -334,11 +334,10 @@ const EditEmail = ({value="", className="edit-email", children}) =>
     />
   </div>
 
-const PrevNextButtons = () =>
+const PrevNextButtons = ({pageNum}) =>
   <div className="button-bar">
     <Button className="button button-prev" onClick={this.onPrevPage}>BACK</Button>
     <Button className="button button-next" onClick={this.onNextPage}>NEXT</Button>
-    <div className="clear"></div>
   </div>
 
 

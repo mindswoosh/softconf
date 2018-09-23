@@ -1,7 +1,45 @@
 body {
   background-color: #eee;
+  /*background-image: url(https://media.istockphoto.com/photos/confetti-balloons-a10-picture-id493119586?s=2048x2048);*/
+  background-image: url(balloons.jpg);
 }
 
+.logo-header {
+  overflow: auto;
+}
+
+.logo-header div {
+  float: left;
+  margin-right: 30px;
+}
+
+.logo-header h1 {
+  margin-top: 20px;
+  font-family: "Comic Sans MS", Arial, Helvetica, sans-serif;
+  font-size: 28px;
+  text-shadow: 1px 1px 3px #2e3a97, 0 0 10px #b21f24;
+  color: #efd31c;
+  color: 2e3a97;
+}
+
+h1 { margin: 0px; }
+
+h2 {
+  font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+  color: #efd31c;
+/*  text-shadow: 0px 0px 2px #2e3a97;*/
+  margin: 10px 0 0 0;
+}
+
+input {
+  height: 2em;
+  color: #2e3a97;
+}
+
+p {
+  color: #2e3a97;
+  font-size: 16px;
+}
 
 .body-boundary {
   max-width: 650px;
@@ -12,14 +50,11 @@ body {
   max-width: 100%;
   padding: 20px;
   border: 1px solid grey;
+  border-radius: 15px;
+  background-color: white;
+  overflow: auto;
 }
 
-h2 {
-  font-family: "Arial", Helvetica, sans-serif;
-  color: #cfb50b;
-  text-shadow: 1px 1px 1px black;
-
-}
 
 
 .edit-name {
@@ -33,7 +68,6 @@ h2 {
 
 .edit-name>input {
   width: 250px;
-  height: 2em;
 }
 
 
@@ -53,35 +87,30 @@ h2 {
   display: block;
   margin-top: 5px;
   width: 330px;
-  height: 2em;
 }
 
 .edit-city {
   margin-top: 5px;
   margin-right: 24px;
   width: 150px;
-  height: 2em;
 }
 
 .edit-state-prov {
   margin-top: 5px;
   margin-right: 24px;
   width: 150px;
-  height: 2em;
 }
 
 .edit-country {
   margin-top: 5px;
   width: 150px;
-  height: 2em;
 }
 
 
 .edit-postal-code {
   margin-top: 5px;
   margin-right: 24px;
-  width: 50px;
-  height: 1em;
+  width: 150px;
 }
 
 
@@ -101,7 +130,6 @@ h2 {
 
 .edit-phone>input {
   width: 150px;
-  height: 2em;
 }
 
 
@@ -119,7 +147,6 @@ h2 {
 
 .edit-email>input {
   width: 330px;
-  height: 2em;
 }
 
 
@@ -145,7 +172,7 @@ h2 {
   float: right;
   margin-top: 20px;
   border-width: 0;
-  background: #cfb50b;
+  background: #efd31c;
   color: inherit;
   text-align: inherit;
   -webkit-font-smoothing: inherit;
@@ -166,6 +193,10 @@ h2 {
 .interactions {
   text-align: center;
 }
+
+
+
+
 
 .table {
   margin: 20px 0;
