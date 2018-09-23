@@ -8,7 +8,7 @@ import React, { Component } from 'react';
 import './App.css';
 
 
-const DEFAULT_QUERY = 'Bill Gates';
+const DEFAULT_QUERY = 'Steve Jobs';
 
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
 const PATH_SEARCH = '/search';
@@ -19,7 +19,8 @@ const PARAM_PAGE   = 'page=';
 const pages = {
   CONTACT:     1,
   ATTENDEES:   2,
-  MERCHANDISE: 3,
+  SCHEDULES:   3,
+  MERCHANDISE: 4,
 };
 
 // const isSearched = searchTerm => item =>
@@ -33,21 +34,111 @@ class App extends Component {
 
     this.state = {
       currentPage: pages.CONTACT,
+
+      eventInfo: null,
+
+      contactInfo: {
+        firstName:  '',
+        lastName:   '',
+        address1:   '',
+        address2:   '',
+        city:       '',
+        region:     '',
+        country:    '',
+        postalCode: '' 
+      },
+
+      //balloonReleases: [],
+      //attendees: [],
+
+      // OLD
       result: null,
       searchTerm: DEFAULT_QUERY,
       page: 0,
     };
 
-    this.setSearchTopStories  = this.setSearchTopStories.bind(this);
+    this.setEventInfo         = this.setEventInfo.bind(this);
     this.onSearchChange       = this.onSearchChange.bind(this);
     this.onDismiss            = this.onDismiss.bind(this);
     this.onPrevPage           = this.onPrevPage.bind(this);
     this.onNextPage           = this.onNextPage.bind(this);
-    this.fetchSearchResults   = this.fetchSearchTopStories.bind(this);
+    this.fetchSearchResults   = this.fetchEventInfo.bind(this);
     this.onSearchSubmit       = this.onSearchSubmit.bind(this);
     this.componentDidMount    = this.componentDidMount.bind(this);
   }
 
+
+
+
+  setEventInfo(result) {
+    console.log(result);
+
+    // Override result for testing purpose
+
+    const eventInfo = {
+      eventTitle: '2019 Conference Registration',
+      dinnerMenu: [
+          'Wild Mushroom Ravioli',
+          'Lemon Herb Chicken Breast',
+          'Red Wine Marinated Grilled Top Sirloin'
+        ],
+      kidsMenu: [
+          'Chicken Tenders',
+          'Mac \'n Cheese',
+          'Carrots',
+          'Celery',
+        ]
+    };
+
+    this.setState({
+      eventInfo
+    });
+    console.log('In set Info:');
+    console.log(eventInfo);
+  }
+
+
+  fetchEventInfo(searchTerm, page = 0) {
+      fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}`)
+      .then(response => response.json())
+      .then(result => this.setEventInfo(result))
+      .catch(error => error);
+  }
+
+
+  componentDidMount() {
+    const { searchTerm, page } = this.state;      // deconstructing
+    this.fetchEventInfo(searchTerm, page);
+    console.log("Got here...");
+  }
+
+
+  render() {
+    const { eventInfo, currentPage, contactInfo } = this.state;
+
+    return (
+      <div className="body-boundary">
+        <SoftHeader eventInfo={eventInfo} />
+        <div className="page-boundary">
+          <PageBar pageNum={currentPage} />
+
+          {
+            {
+              [pages.CONTACT]:      <ContactInfo contact={contactInfo} />,
+              // [pages.ATTENDEES]:    <Attendess   balloonReleases={balloonReleases} />,
+              // [pages.MERCHANDISE]:  <Merchancise merchandise={merchandise} />,
+            }[currentPage]
+          }
+
+          <PrevNextButtons pageNum={currentPage} />
+        </div>
+      </div>
+    );
+  }
+
+
+
+  // OLD
 
   onSearchChange(event) {
     this.setState({
@@ -55,32 +146,12 @@ class App extends Component {
     });
     console.log(event.target.value);
   }
-
-
-  setSearchTopStories(result) {
-    console.log(result);
-
-    this.setState({
-      result
-    });
-  }
-
-
-  fetchSearchTopStories(searchTerm, page = 0) {
-      fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}`)
-      .then(response => response.json())
-      .then(result => this.setSearchTopStories(result))
-      .catch(error => error);
-  }
-
-
+  
   onSearchSubmit(event) {
     const { searchTerm, page } = this.state;
-    this.fetchSearchTopStories(searchTerm, page);
+    this.fetchEventInfo(searchTerm, page);
     event.preventDefault();
     console.log("In onSubmit");
-
-    console.log('es8'.padStart(6, 'woof'));
   }
 
 
@@ -99,7 +170,7 @@ class App extends Component {
   onPrevPage() {
     const { searchTerm, page } = this.state;
     let prevPage = page && page-1;
-    this.fetchSearchTopStories(searchTerm, prevPage);
+    this.fetchEventInfo(searchTerm, prevPage);
     this.setState({ page: prevPage });
   }
 
@@ -107,41 +178,16 @@ class App extends Component {
   onNextPage() {
     const { searchTerm, page } = this.state;
     let nextPage = page+1;
-    this.fetchSearchTopStories(searchTerm, nextPage);
+    this.fetchEventInfo(searchTerm, nextPage);
     this.setState({ page: nextPage });
   }
 
-
-  componentDidMount() {
-    const { searchTerm, page } = this.state;      // deconstructing
-    this.fetchSearchTopStories(searchTerm, page);
-    console.log("Got here...");
-  }
-
-
-  render() {
+  renderOLD() {
     const { searchTerm, result, page } = this.state;
 
     if (!result) { 
       return null; 
     }
-
-    // return (
-    //   <Header />
-
-    //   {switch (this.state.currentPage) {
-    //     case pages.CONTACT:
-    //     break;
-    //     case pages.ATTENDEES:
-    //     break;
-    //     case pages.MERCHANDISE:
-    //     break;
-    //     default:
-    //       console.log("In default case");
-    //     }
-    //   }
-    // );
-
 
     return (
       <div className="page">
@@ -168,8 +214,136 @@ class App extends Component {
       </div>
     );
   }
+
 }
 
+
+const SoftHeader = ({eventInfo}) =>
+  <div>
+    <img 
+      src="https://trisomy.wpengine.com/wp-content/uploads/2017/07/softlogo.png"
+      height="75px"
+      alt="Soft Logo"
+    />
+    {eventInfo && 
+      eventInfo.eventTitle
+    }
+  </div>
+
+
+const PageBar = ({pageNum}) =>
+  <div><h1>{pageNum}</h1></div>
+
+
+const ContactInfo = ({contact}) =>
+  <div>
+    <h2>Contact Information:</h2>
+    <EditName>FIRST Name</EditName>
+    <EditName>LAST Name</EditName>
+    <EditAddress>Address</EditAddress>
+    <div className="phones">
+      <EditPhone>Mobile Phone</EditPhone>
+      <EditPhone>Work Phone</EditPhone>
+      <EditPhone>Home Phone</EditPhone>
+    </div>
+    <EditEmail>Best Email Address</EditEmail>
+    <div className="clear"></div>
+  </div>
+
+
+const EditName = ({ value="", className="edit-name", children }) =>
+  <div className={className}>
+    <p>{children}</p>
+    <input
+      type="text"
+      value={value}
+    />
+  </div>
+
+// const EditFullName = ({value="", className="edit-fullname"}) =>
+//   <div class={className}>
+//     <EditName>FIRST Name</EditName>
+//     <EditName>LAST Name</EditName>
+//   </div>
+
+const EditAddress = ({value="", className="edit-address", children}) =>
+  <div className={className}>
+    <p>{children}</p>
+    <Address value="Address 1" />
+    <Address value="Address 2" />
+    <div>
+      <City value="City" />
+      <StateProv value="State/Prov/Region" />
+      <Country value="Country"/>
+    </div>
+    <PostalCode value="Zip / Postal Code" />
+  </div>
+
+
+const Address = ({value=""}) =>
+    <input
+      type="text"
+      value={value}
+    />
+
+const City = ({value="", className="edit-city"}) =>
+    <input
+      type="text"
+      value={value}
+      className={className}
+    />
+
+const StateProv = ({value="", className="edit-state-prov"}) =>
+    <input
+      type="text"
+      value={value}
+      className={className}
+    />
+
+const Country = ({value="", className="edit-country"}) =>
+    <input
+      type="text"
+      value={value}
+      className={className}
+    />
+
+const PostalCode = ({value="", className="edit-postal-code"}) =>
+    <input
+      type="text"
+      value={value}
+      className={className}
+    />
+
+
+
+const EditPhone = ({value="", className="edit-phone", children}) =>
+  <div className={className}>
+    <p>{children}</p>
+    <input
+      type="text"
+      value={value}
+    />
+  </div>
+
+const EditEmail = ({value="", className="edit-email", children}) =>
+  <div className={className}>
+    <p>{children}</p>
+    <input
+      type="text"
+      value={value}
+    />
+  </div>
+
+const PrevNextButtons = () =>
+  <div className="button-bar">
+    <Button className="button button-prev" onClick={this.onPrevPage}>BACK</Button>
+    <Button className="button button-next" onClick={this.onNextPage}>NEXT</Button>
+    <div className="clear"></div>
+  </div>
+
+
+
+// OLD ----------------------------------------------------------------------------
 
 const Search = ({ value, onChange, onSubmit, children }) =>
   <form onSubmit={onSubmit}>
@@ -193,7 +367,7 @@ const Table = ({ list, onDismiss }) =>
     {list.map(item =>
       <div key={item.objectID} className="table-row">
         <span style={widthWide}>
-          <a href={item.url}>{item.title}</a>
+          <a target="_blank" href={item.url}>{item.title}</a>
         </span>
         <span style={widthMedium}>
           {item.author}

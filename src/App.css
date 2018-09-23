@@ -1,5 +1,162 @@
-.button {
-  margin: 20px;
+body {
+  background-color: #eee;
+}
+
+
+.body-boundary {
+  max-width: 650px;
+  margin: auto;
+}
+
+.page-boundary {
+  max-width: 100%;
+  padding: 20px;
+  border: 1px solid grey;
+}
+
+h2 {
+  font-family: "Arial", Helvetica, sans-serif;
+  color: #cfb50b;
+  text-shadow: 1px 1px 1px black;
+
+}
+
+
+.edit-name {
+  float: left;
+  margin: 0px 25px 0px 0px;
+}
+
+.edit-name>p {
+  margin: 20px 0px 0px 0px;
+}
+
+.edit-name>input {
+  width: 250px;
+  height: 2em;
+}
+
+
+
+.edit-address {
+  float: left;
+  clear: both;
+  margin: 0px 25px 0px 0px;
+}
+
+.edit-address>p {
+  margin: 20px 0px 0px 0px;
+}
+
+
+.edit-address>input {
+  display: block;
+  margin-top: 5px;
+  width: 330px;
+  height: 2em;
+}
+
+.edit-city {
+  margin-top: 5px;
+  margin-right: 24px;
+  width: 150px;
+  height: 2em;
+}
+
+.edit-state-prov {
+  margin-top: 5px;
+  margin-right: 24px;
+  width: 150px;
+  height: 2em;
+}
+
+.edit-country {
+  margin-top: 5px;
+  width: 150px;
+  height: 2em;
+}
+
+
+.edit-postal-code {
+  margin-top: 5px;
+  margin-right: 24px;
+  width: 50px;
+  height: 1em;
+}
+
+
+.phones {
+  float: left;
+  clear: both;
+}
+
+.edit-phone {
+  float: left;
+  margin: 0px 25px 0px 0px;
+}
+
+.edit-phone>p {
+  margin: 20px 0px 0px 0px;
+}
+
+.edit-phone>input {
+  width: 150px;
+  height: 2em;
+}
+
+
+
+
+.edit-email {
+  float: left;
+  clear: both;
+  margin: 0px 25px 0px 0px;
+}
+
+.edit-email>p {
+  margin: 20px 0px 0px 0px;
+}
+
+.edit-email>input {
+  width: 330px;
+  height: 2em;
+}
+
+
+.button-bar {
+  clear: left;
+}
+
+.button-prev {
+  float: left;
+  margin-top: 20px;
+  border-width: 0;
+  background: lightgrey;
+  color: inherit;
+  text-align: inherit;
+  -webkit-font-smoothing: inherit;
+  padding: 5px 5px 5px 20px;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+
+.button-next {
+  float: right;
+  margin-top: 20px;
+  border-width: 0;
+  background: #cfb50b;
+  color: inherit;
+  text-align: inherit;
+  -webkit-font-smoothing: inherit;
+  padding: 5px 20px 5px 5px;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.clear {
+  float: left;
+  clear: both;
 }
 
 .page {
@@ -52,11 +209,11 @@
 
 .button-inline {
   border-width: 0;
-  background: transparent;
+  background: lightgrey;
   color: inherit;
   text-align: inherit;
   -webkit-font-smoothing: inherit;
-  padding: 0;
+  padding: 5px 5px 5px 15px;
   font-size: inherit;
   cursor: pointer;
 }
