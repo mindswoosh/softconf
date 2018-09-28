@@ -5,21 +5,20 @@ body {
 }
 
 .logo-header {
-  overflow: auto;
 }
 
 .logo-header div {
-  float: left;
+  display: inline-block;
+  vertical-align: middle;
   margin-right: 30px;
 }
 
 .logo-header h1 {
-  margin-top: 20px;
+  display: inline-block;
   font-family: "Comic Sans MS", Arial, Helvetica, sans-serif;
   font-size: 28px;
   text-shadow: 1px 1px 3px #2e3a97, 0 0 10px #b21f24;
   color: #efd31c;
-  color: 2e3a97;
 }
 
 h1 { margin: 0px; }
@@ -58,7 +57,7 @@ p {
 
 
 .edit-name {
-  float: left;
+  display: inline-block;
   margin: 0px 25px 0px 0px;
 }
 
@@ -73,8 +72,6 @@ p {
 
 
 .edit-address {
-  float: left;
-  clear: both;
   margin: 0px 25px 0px 0px;
 }
 
@@ -115,12 +112,13 @@ p {
 
 
 .phones {
-  float: left;
-  clear: both;
+/*  float: left;
+  clear: both;*/
 }
 
 .edit-phone {
-  float: left;
+  /*float: left;*/
+  display: inline-block;
   margin: 0px 25px 0px 0px;
 }
 
@@ -136,8 +134,6 @@ p {
 
 
 .edit-email {
-  float: left;
-  clear: both;
   margin: 0px 25px 0px 0px;
 }
 
@@ -151,12 +147,12 @@ p {
 
 
 .button-bar {
-  clear: left;
+
 }
 
 .button-prev {
   float: left;
-  margin-top: 20px;
+  margin-top: 45px;
   border-width: 0;
   background: lightgrey;
   color: inherit;
@@ -170,7 +166,7 @@ p {
 
 .button-next {
   float: right;
-  margin-top: 20px;
+  margin-top: 45px;
   border-width: 0;
   background: #efd31c;
   color: inherit;

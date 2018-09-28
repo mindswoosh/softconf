@@ -5,6 +5,7 @@
 
 
 import React, { Component } from 'react';
+import Select from 'react-select';
 import './App.css';
 
 
@@ -23,8 +24,49 @@ const pages = {
   MERCHANDISE: 4,
 };
 
-// const isSearched = searchTerm => item =>
-//   item.title.toLowerCase().includes(searchTerm.toLowerCase());
+const countries = ['United States', 'Canada', 'Mexico', 'United Kingdom', '-----', 'Afghanistan', 'Åland Islands', 'Albania', 'Algeria', 'American Samoa', 'Andorra', 'Angola', 'Anguilla', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Aruba', 'Australia', 'Austria', 'Azerbaijan', 'Bangladesh', 'Barbados', 'Bahamas', 'Bahrain', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bermuda', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'British Indian Ocean Territory', 'British Virgin Islands', 'Brunei Darussalam', 'Bulgaria', 'Burkina Faso', 'Burma', 'Burundi', 'Cambodia', 'Cameroon', 'Cape Verde', 'Cayman Islands', 'Central African Republic', 'Chad', 'Chile', 'China', 'Christmas Island', 'Cocos (Keeling) Islands', 'Colombia', 'Comoros', 'Congo-Brazzaville', 'Congo-Kinshasa', 'Cook Islands', 'Costa Rica', 'Croatia', 'Curaçao', 'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'East Timor', 'Ecuador', 'El Salvador', 'Egypt', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Ethiopia', 'Falkland Islands', 'Faroe Islands', 'Federated States of Micronesia', 'Fiji', 'Finland', 'France', 'French Guiana', 'French Polynesia', 'French Southern Lands', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Gibraltar', 'Greece', 'Greenland', 'Grenada', 'Guadeloupe', 'Guam', 'Guatemala', 'Guernsey', 'Guinea', 'Guinea-Bissau', 'Guyana', 'Haiti', 'Heard and McDonald Islands', 'Honduras', 'Hong Kong', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iraq', 'Ireland', 'Isle of Man', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jersey', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Macau', 'Macedonia', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Martinique', 'Mauritania', 'Mauritius', 'Mayotte', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Montserrat', 'Morocco', 'Mozambique', 'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Caledonia', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'Niue', 'Norfolk Island', 'Northern Mariana Islands', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Pitcairn Islands', 'Poland', 'Portugal', 'Puerto Rico', 'Qatar', 'Réunion', 'Romania', 'Russia', 'Rwanda', 'Saint Barthélemy', 'Saint Helena', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Martin', 'Saint Pierre and Miquelon', 'Saint Vincent', 'Samoa', 'San Marino', 'São Tomé and Príncipe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Sint Maarten', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Georgia', 'South Korea', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Svalbard and Jan Mayen', 'Sweden', 'Swaziland', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Togo', 'Tokelau', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Turks and Caicos Islands', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'Uruguay', 'Uzbekistan', 'Vanuatu', 'Vatican City', 'Vietnam', 'Venezuela', 'Wallis and Futuna', 'Western Sahara', 'Yemen', 'Zambia', 'Zimbabwe'];
+
+const optionsCountries = countries.map(opt => ({ label: opt, value: opt }));
+
+const customStyles = {
+  option: (base, state) => ({
+    ...base,
+    // borderBottom: '1px dotted pink',
+    // color: state.isFullscreen ? 'red' : 'green',
+    padding: 5,
+  }),
+  control: (base, state) => ({
+    ...base,
+    width: 336,
+    padding: 0,
+    marginTop: 5,
+    borderRadius: 0,
+    minHeight: 0,
+    height: "2em",
+    backgroundColor: "white",
+  }),
+  singleValue: (base, state) => {
+    const opacity = state.isDisabled ? 0.5 : 1;
+    const transition = 'opacity 300ms';
+
+    return {
+       ...base, 
+       opacity, 
+       transition,
+    };
+  },
+  menuList: (base, state) => ({
+    ...base,
+    height: 200,
+    color: "#2e3a97",
+  }),
+  placeholder: (base, state) => ({
+    ...base,
+    color: "#999",
+    fontSize: 12,
+  }),
+}
+
 
 
 class App extends Component {
@@ -38,14 +80,18 @@ class App extends Component {
       eventInfo: null,
 
       contactInfo: {
-        firstName:  '',
-        lastName:   '',
-        address1:   '',
-        address2:   '',
-        city:       '',
-        region:     '',
-        country:    '',
-        postalCode: '' 
+        firstName:   '',
+        lastName:    '',
+        address1:    '',
+        address2:    '',
+        city:        '',
+        stateProv:   '',
+        country:     '',
+        postalCode:  '',
+        phoneMobile: '',
+        phoneWork:   '',
+        phoneHome:   '',
+        email:       '',
       },
 
       //balloonReleases: [],
@@ -58,8 +104,10 @@ class App extends Component {
     };
 
     this.setEventInfo         = this.setEventInfo.bind(this);
+    this.onChangeContactInfo  = this.onChangeContactInfo.bind(this);
+    this.onChangeCountry      = this.onChangeCountry.bind(this);
+
     this.onSearchChange       = this.onSearchChange.bind(this);
-    this.onDismiss            = this.onDismiss.bind(this);
     this.onPrevPage           = this.onPrevPage.bind(this);
     this.onNextPage           = this.onNextPage.bind(this);
     this.fetchSearchResults   = this.fetchEventInfo.bind(this);
@@ -68,10 +116,23 @@ class App extends Component {
   }
 
 
+  onChangeCountry(opt) {
+    if (opt.value === "-----")
+        opt.value = "";
 
+    this.setState ({
+      contactInfo: { ...this.state.contactInfo, country: opt.value }
+    });
+  }
+
+  onChangeContactInfo(event, field) {
+    this.setState ({
+      contactInfo: { ...this.state.contactInfo, [field]: event.target.value }
+    });
+    console.log("New event:", event.target.value, field);
+  }
 
   setEventInfo(result) {
-    console.log(result);
 
     // Override result for testing purpose
 
@@ -93,8 +154,6 @@ class App extends Component {
     this.setState({
       eventInfo
     });
-    console.log('In set Info:');
-    console.log(eventInfo);
   }
 
 
@@ -109,7 +168,6 @@ class App extends Component {
   componentDidMount() {
     const { searchTerm, page } = this.state;      // deconstructing
     this.fetchEventInfo(searchTerm, page);
-    console.log("Got here...");
   }
 
 
@@ -124,7 +182,12 @@ class App extends Component {
 
           {
             {
-              [pages.CONTACT]:      <ContactInfo contact={contactInfo} />,
+              [pages.CONTACT]:
+                  <ContactInfo 
+                      contact={contactInfo}
+                      onChangeContactInfo={this.onChangeContactInfo}
+                      onChangeCountry={this.onChangeCountry} 
+                  />,
               // [pages.ATTENDEES]:    <Attendess   balloonReleases={balloonReleases} />,
               // [pages.MERCHANDISE]:  <Merchancise merchandise={merchandise} />,
             }[currentPage]
@@ -154,18 +217,6 @@ class App extends Component {
   }
 
 
-  onDismiss(id) {
-    const { result } = this.state;
-
-    const isNotId = item => item.objectID !== id;
-    const updatedHits = result.hits.filter(isNotId);
-
-    this.setState({ result: { hits: updatedHits } });
-
-    console.log(`Got to onDismiss() ${id}`);
-  }
-
-
   onPrevPage() {
     const { searchTerm, page } = this.state;
     let prevPage = page && page-1;
@@ -179,39 +230,6 @@ class App extends Component {
     let nextPage = page+1;
     this.fetchEventInfo(searchTerm, nextPage);
     this.setState({ page: nextPage });
-  }
-
-  renderOLD() {
-    const { searchTerm, result, page } = this.state;
-
-    if (!result) { 
-      return null; 
-    }
-
-    return (
-      <div className="page">
-        <div className="interactions">
-          <Search
-            value={searchTerm}
-            onChange={this.onSearchChange}
-            onSubmit={this.onSearchSubmit}
-          >
-            Search
-          </Search>
-        </div>
-        {result &&
-          <Table
-            list={result.hits}
-            onDismiss={this.onDismiss}
-          />
-        }
-        <div className="interactions">
-          Page {page}:
-          <Button className="button" onClick={this.onPrevPage}>Previous Page</Button>
-          <Button className="button" onClick={this.onNextPage}>Next Page</Button>
-        </div>
-      </div>
-    );
   }
 
 }
@@ -236,101 +254,132 @@ const PageBar = ({pageNum}) =>
   <div><h1>{pageNum}</h1></div>
 
 
-const ContactInfo = ({contact}) =>
+const ContactInfo = ({contact, onChangeContactInfo, onChangeCountry}) =>
   <div>
     <h2>Contact Information:</h2>
-    <EditName>FIRST Name</EditName>
-    <EditName>LAST Name</EditName>
-    <EditAddress>Address</EditAddress>
+    <EditName field="firstName" onChange={onChangeContactInfo}>FIRST Name</EditName>
+    <EditName field="lastName"  onChange={onChangeContactInfo}>LAST Name</EditName>
+    <EditAddress contact={contact} onChange={onChangeContactInfo} onChangeCountry={onChangeCountry}>Address</EditAddress>
     <div className="phones">
-      <EditPhone>Mobile Phone</EditPhone>
-      <EditPhone>Work Phone</EditPhone>
-      <EditPhone>Home Phone</EditPhone>
+      <EditPhone field="phoneMobile" onChange={onChangeContactInfo}>Mobile Phone</EditPhone>
+      <EditPhone field="phoneWork"   onChange={onChangeContactInfo}>Work Phone</EditPhone>
+      <EditPhone field="phoneHome"   onChange={onChangeContactInfo}>Home Phone</EditPhone>
     </div>
-    <EditEmail>Best Email Address</EditEmail>
+    <EditEmail onChange={onChangeContactInfo}>Best Email Address</EditEmail>
+    <ContactSummary contact={contact} />
   </div>
 
 
-const EditName = ({ value="", className="edit-name", children }) =>
+const ContactSummary = ({contact}) =>
+  <div>
+    <br />
+    First name: {contact.firstName}<br />
+    Last name: {contact.lastName}<br />
+    Address 1: {contact.address1}<br />
+    Address 2: {contact.address2}<br />
+    City: {contact.city}<br />
+    State: {contact.stateProv}<br />
+    Zip: {contact.postalCode}<br />
+    Country: {contact.country}<br />
+    Mobile Phone: {contact.phoneMobile}<br />
+    Work Phone: {contact.phoneWork}<br />
+    Home Phone: {contact.phoneHome}<br />
+    Email: {contact.email}<br />
+  </div>
+
+
+const EditName = ({ field, value="", onChange, className="edit-name", children }) =>
   <div className={className}>
     <p>{children}</p>
     <input
       type="text"
-      value={value}
+      onChange={(evt) => onChange(evt, field)}
     />
   </div>
 
-// const EditFullName = ({value="", className="edit-fullname"}) =>
-//   <div class={className}>
-//     <EditName>FIRST Name</EditName>
-//     <EditName>LAST Name</EditName>
-//   </div>
 
-const EditAddress = ({value="", className="edit-address", children}) =>
+const EditAddress = ({contact,  onChange, onChangeCountry, className="edit-address", children}) =>
   <div className={className}>
     <p>{children}</p>
-    <Address value="Address 1" />
-    <Address value="Address 2" />
+    <Address field="address1" placeHolder="Address 1" onChange={onChange}/>
+    <Address field="address2" placeHolder="Address 2" onChange={onChange}/>
     <div>
-      <City value="City" />
-      <StateProv value="State/Prov/Region" />
-      <PostalCode value="Zip / Postal Code" />
+      <City onChange={onChange} />
+      <StateProv onChange={onChange} />
+      <PostalCode onChange={onChange}  />
     </div>
-    <Country value="Country"/>
+    <Country selectValue={contact.country} onChange={onChangeCountry}/>
   </div>
 
 
-const Address = ({value=""}) =>
+const Address = ({field, placeHolder="", onChange}) =>
     <input
       type="text"
-      value={value}
+      placeholder={placeHolder}
+      onChange={(evt) => onChange(evt, field)}
     />
 
-const City = ({value="", className="edit-city"}) =>
+const City = ({value="", onChange, className="edit-city"}) =>
     <input
       type="text"
-      value={value}
+      className={className}
+      placeholder="City"
+      onChange={(evt) => onChange(evt, "city")}
+    />
+
+const StateProv = ({value,  onChange, className="edit-state-prov"}) =>
+    <input
+      type="text"
+      className={className}
+      placeholder="State/Prov/Region"
+      onChange={(evt) => onChange(evt, "stateProv")}
+    />
+
+const Country = ({selectValue, onChange, className="edit-country"}) => {
+      const defaultOpt = optionsCountries.find(opt => (opt.value === selectValue));
+      // if (selectValue !== null) {
+        return (
+          <div>
+            <Select
+              options={optionsCountries}
+              defaultValue={defaultOpt}
+              placeholder={"Select Country..."}
+              onChange={onChange}
+              styles={customStyles}
+            />
+          </div>
+        );
+      // }
+      // console.log("In Country Render");
+      // return "<p>selectValue</p>";
+    }
+    
+
+
+const PostalCode = ({value="", onChange, className="edit-postal-code"}) =>
+    <input
+      type="text"
+      placeholder="   Zip/Postal Code..."
+      onChange={(evt) => onChange(evt, "postalCode")}
       className={className}
     />
 
-const StateProv = ({value="", className="edit-state-prov"}) =>
-    <input
-      type="text"
-      value={value}
-      className={className}
-    />
 
-const Country = ({value="", className="edit-country"}) =>
-    <input
-      type="text"
-      value={value}
-      className={className}
-    />
-
-const PostalCode = ({value="", className="edit-postal-code"}) =>
-    <input
-      type="text"
-      value={value}
-      className={className}
-    />
-
-
-
-const EditPhone = ({value="", className="edit-phone", children}) =>
+const EditPhone = ({field, onChange, className="edit-phone", children}) =>
   <div className={className}>
     <p>{children}</p>
     <input
       type="text"
-      value={value}
+      onChange={(evt) => onChange(evt, field)}
     />
   </div>
 
-const EditEmail = ({value="", className="edit-email", children}) =>
+const EditEmail = ({value="", onChange, className="edit-email", children}) =>
   <div className={className}>
     <p>{children}</p>
     <input
       type="text"
-      value={value}
+      onChange={(evt) => onChange(evt, "email")}
     />
   </div>
 
@@ -343,51 +392,6 @@ const PrevNextButtons = ({pageNum}) =>
 
 
 // OLD ----------------------------------------------------------------------------
-
-const Search = ({ value, onChange, onSubmit, children }) =>
-  <form onSubmit={onSubmit}>
-    {children} <input
-      type="text"
-      value={value}
-      onChange={onChange}
-    />
-    <Button className="button" type="submit">
-     Fetch!
-    </Button>
-  </form>
-
-
-const widthWide   = { width: '40%' };
-const widthMedium = { width: '20%' };
-const widthSmall  = { width: '10%' };
-
-const Table = ({ list, onDismiss }) =>
-  <div className="table">
-    {list.map(item =>
-      <div key={item.objectID} className="table-row">
-        <span style={widthWide}>
-          <a target="_blank" href={item.url}>{item.title}</a>
-        </span>
-        <span style={widthMedium}>
-          {item.author}
-        </span>
-        <span style={widthSmall}>
-          {item.num_comments}
-        </span>
-        <span style={widthSmall}>
-          {item.points}
-        </span>
-        <span style={widthSmall}>
-          <Button
-            onClick={() => onDismiss(item.objectID)}
-            className="button-inline"
-          >
-            Dismiss
-          </Button>
-        </span>
-      </div>
-    )}
-  </div>
 
 
 const Button = ({ onClick = null, onSubmit = null, className = '', children, type = 'button' }) =>
