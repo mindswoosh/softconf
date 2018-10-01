@@ -8,6 +8,13 @@ import React, { Component } from 'react';
 import Select from 'react-select';
 import './App.css';
 
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faAngleDoubleRight } from '@fortawesome/free-solid-svg-icons'
+
+library.add(faAngleDoubleRight)
+
+
 
 const DEFAULT_QUERY = 'Steve Jobs';
 
@@ -106,12 +113,11 @@ class App extends Component {
     this.setEventInfo         = this.setEventInfo.bind(this);
     this.onChangeContactInfo  = this.onChangeContactInfo.bind(this);
     this.onChangeCountry      = this.onChangeCountry.bind(this);
+    this.smartFixContactInfo  = this.smartFixContactInfo.bind(this);
 
-    this.onSearchChange       = this.onSearchChange.bind(this);
     this.onPrevPage           = this.onPrevPage.bind(this);
     this.onNextPage           = this.onNextPage.bind(this);
-    this.fetchSearchResults   = this.fetchEventInfo.bind(this);
-    this.onSearchSubmit       = this.onSearchSubmit.bind(this);
+    this.fetchEventInfo       = this.fetchEventInfo.bind(this);
     this.componentDidMount    = this.componentDidMount.bind(this);
   }
 
@@ -129,8 +135,31 @@ class App extends Component {
     this.setState ({
       contactInfo: { ...this.state.contactInfo, [field]: event.target.value }
     });
-    console.log("New event:", event.target.value, field);
   }
+
+  smartFixContactInfo() {
+    const contactInfo = this.state.contactInfo;
+    const contact = {
+        ...contactInfo,
+        firstName:   smartFixName(contactInfo.firstName),
+        lastName:    smartFixName(contactInfo.lastName),
+        address1:    smartFixAddress(contactInfo.address1),
+        address2:    smartFixAddress(contactInfo.address2),
+        city:        smartFixName(contactInfo.city),
+        stateProv:   smartFixStateProv(contactInfo.stateProv),
+        // country:     '',
+        postalCode:  smartFixPostalCode(contactInfo.postalCode),
+        // phoneMobile: '',
+        // phoneWork:   '',
+        // phoneHome:   '',
+        email:       smartFixEmail(contactInfo.email),
+      }
+
+    this.setState({
+      contactInfo: contact,
+    });
+  }
+
 
   setEventInfo(result) {
 
@@ -188,11 +217,12 @@ class App extends Component {
                       onChangeContactInfo={this.onChangeContactInfo}
                       onChangeCountry={this.onChangeCountry} 
                   />,
-              // [pages.ATTENDEES]:    <Attendess   balloonReleases={balloonReleases} />,
+              [pages.ATTENDEES]:
+                  <ContactSummary contact={contactInfo} />,
               // [pages.MERCHANDISE]:  <Merchancise merchandise={merchandise} />,
             }[currentPage]
           }
-          <PrevNextButtons pageNum={currentPage} />
+          <PrevNextButtons pageNum={currentPage} contact={contactInfo} onClickPrev={this.onPrevPage} onClickNext={this.onNextPage}/>
         </div>
       </div>
     );
@@ -200,36 +230,22 @@ class App extends Component {
 
 
 
-  // OLD
-
-  onSearchChange(event) {
-    this.setState({
-      searchTerm: event.target.value
-    });
-    console.log(event.target.value);
-  }
-  
-  onSearchSubmit(event) {
-    const { searchTerm, page } = this.state;
-    this.fetchEventInfo(searchTerm, page);
-    event.preventDefault();
-    console.log("In onSubmit");
-  }
-
-
   onPrevPage() {
-    const { searchTerm, page } = this.state;
-    let prevPage = page && page-1;
-    this.fetchEventInfo(searchTerm, prevPage);
-    this.setState({ page: prevPage });
+    let { currentPage } = this.state;
+    let prevPage = currentPage-1;
+    this.setState({
+      currentPage: prevPage,
+    });
   }
 
 
   onNextPage() {
-    const { searchTerm, page } = this.state;
-    let nextPage = page+1;
-    this.fetchEventInfo(searchTerm, nextPage);
-    this.setState({ page: nextPage });
+    let { currentPage } = this.state;
+    this.smartFixContactInfo();
+    let nextPage = currentPage+1;
+    this.setState({
+      currentPage: nextPage,
+    });
   }
 
 }
@@ -250,25 +266,54 @@ const SoftHeader = ({eventInfo}) =>
   </div>
 
 
+const pageTitles = ['Welcome', "Contact", "Attendees", "Schedules", "Merchandise", "Checkout"];
+
 const PageBar = ({pageNum}) =>
-  <div><h1>{pageNum}</h1></div>
+  <div className="pagebar">
+    {pageTitles.map( (title, i) => {
+        const keyName = title.replace(/ /g, "-");
+        if (pageNum === (i+1)) {
+          return <div key={keyName} className={"pagebar-selected"}><FontAwesomeIcon icon="angle-double-right" /> {title}</div>;
+        }
+        else
+          return <div key={keyName} className={"pagebar-unselected"}>{title}</div>;
+      }
+    )}
+  </div>
 
 
 const ContactInfo = ({contact, onChangeContactInfo, onChangeCountry}) =>
   <div>
     <h2>Contact Information:</h2>
-    <EditName field="firstName" onChange={onChangeContactInfo}>FIRST Name</EditName>
-    <EditName field="lastName"  onChange={onChangeContactInfo}>LAST Name</EditName>
+    <EditName value={contact.firstName} field="firstName" onChange={onChangeContactInfo}>FIRST Name</EditName>
+    <EditName value={contact.lastName} field="lastName"  onChange={onChangeContactInfo}>LAST Name</EditName>
     <EditAddress contact={contact} onChange={onChangeContactInfo} onChangeCountry={onChangeCountry}>Address</EditAddress>
     <div className="phones">
-      <EditPhone field="phoneMobile" onChange={onChangeContactInfo}>Mobile Phone</EditPhone>
-      <EditPhone field="phoneWork"   onChange={onChangeContactInfo}>Work Phone</EditPhone>
-      <EditPhone field="phoneHome"   onChange={onChangeContactInfo}>Home Phone</EditPhone>
+      <EditPhone value={contact.phoneMobile} field="phoneMobile" onChange={onChangeContactInfo}>Mobile Phone</EditPhone>
+      <EditPhone value={contact.phoneWork}   field="phoneWork"   onChange={onChangeContactInfo}>Work Phone</EditPhone>
+      <EditPhone value={contact.phoneHome}   field="phoneHome"   onChange={onChangeContactInfo}>Home Phone</EditPhone>
     </div>
-    <EditEmail onChange={onChangeContactInfo}>Best Email Address</EditEmail>
-    <ContactSummary contact={contact} />
+    <EditEmail value={contact.email} onChange={onChangeContactInfo}>Best Email Address</EditEmail>
   </div>
+   
 
+//     <ContactSummary contact={contact} />
+// const ContactSummary = ({contact}) =>
+//   <div>
+//     <br />
+//     First name: {smartFixName(contact.firstName)}<br />
+//     Last name: {smartFixName(contact.lastName)}<br />
+//     Address 1: {smartFixAddress(contact.address1)}<br />
+//     Address 2: {smartFixAddress(contact.address2)}<br />
+//     City: {smartFixName(contact.city)}<br />
+//     State: {smartFixStateProv(contact.stateProv)}<br />
+//     Zip: {smartFixPostalCode(contact.postalCode)}<br />
+//     Country: {contact.country}<br />
+//     Mobile Phone: {contact.phoneMobile}<br />
+//     Work Phone: {contact.phoneWork}<br />
+//     Home Phone: {contact.phoneHome}<br />
+//     Email: {smartFixEmail(contact.email)}<br />
+//   </div>
 
 const ContactSummary = ({contact}) =>
   <div>
@@ -288,10 +333,12 @@ const ContactSummary = ({contact}) =>
   </div>
 
 
-const EditName = ({ field, value="", onChange, className="edit-name", children }) =>
+
+const EditName = ({ field, value, onChange, className="edit-name", children }) =>
   <div className={className}>
     <p>{children}</p>
     <input
+      value={value}
       type="text"
       onChange={(evt) => onChange(evt, field)}
     />
@@ -301,20 +348,21 @@ const EditName = ({ field, value="", onChange, className="edit-name", children }
 const EditAddress = ({contact,  onChange, onChangeCountry, className="edit-address", children}) =>
   <div className={className}>
     <p>{children}</p>
-    <Address field="address1" placeHolder="Address 1" onChange={onChange}/>
-    <Address field="address2" placeHolder="Address 2" onChange={onChange}/>
+    <Address value={contact.address1} field="address1" placeHolder="Address 1" onChange={onChange}/>
+    <Address value={contact.address2} field="address2" placeHolder="Address 2" onChange={onChange}/>
     <div>
-      <City onChange={onChange} />
-      <StateProv onChange={onChange} />
-      <PostalCode onChange={onChange}  />
+      <City       value={contact.city}       onChange={onChange} />
+      <StateProv  value={contact.stateProv}  onChange={onChange} />
+      <PostalCode value={contact.postalCode} onChange={onChange}  />
     </div>
     <Country selectValue={contact.country} onChange={onChangeCountry}/>
   </div>
 
 
-const Address = ({field, placeHolder="", onChange}) =>
+const Address = ({value="", field, placeHolder="", onChange}) =>
     <input
       type="text"
+      value={value}
       placeholder={placeHolder}
       onChange={(evt) => onChange(evt, field)}
     />
@@ -322,14 +370,16 @@ const Address = ({field, placeHolder="", onChange}) =>
 const City = ({value="", onChange, className="edit-city"}) =>
     <input
       type="text"
+      value={value}
       className={className}
       placeholder="City"
       onChange={(evt) => onChange(evt, "city")}
     />
 
-const StateProv = ({value,  onChange, className="edit-state-prov"}) =>
+const StateProv = ({value="",  onChange, className="edit-state-prov"}) =>
     <input
       type="text"
+      value={value}
       className={className}
       placeholder="State/Prov/Region"
       onChange={(evt) => onChange(evt, "stateProv")}
@@ -350,8 +400,6 @@ const Country = ({selectValue, onChange, className="edit-country"}) => {
           </div>
         );
       // }
-      // console.log("In Country Render");
-      // return "<p>selectValue</p>";
     }
     
 
@@ -359,17 +407,19 @@ const Country = ({selectValue, onChange, className="edit-country"}) => {
 const PostalCode = ({value="", onChange, className="edit-postal-code"}) =>
     <input
       type="text"
+      value={value}
       placeholder="   Zip/Postal Code..."
       onChange={(evt) => onChange(evt, "postalCode")}
       className={className}
     />
 
 
-const EditPhone = ({field, onChange, className="edit-phone", children}) =>
+const EditPhone = ({value="", field, onChange, className="edit-phone", children}) =>
   <div className={className}>
     <p>{children}</p>
     <input
       type="text"
+      value={value}
       onChange={(evt) => onChange(evt, field)}
     />
   </div>
@@ -378,15 +428,16 @@ const EditEmail = ({value="", onChange, className="edit-email", children}) =>
   <div className={className}>
     <p>{children}</p>
     <input
+      value={value}
       type="text"
       onChange={(evt) => onChange(evt, "email")}
     />
   </div>
 
-const PrevNextButtons = ({pageNum}) =>
+const PrevNextButtons = ({pageNum, contact, onClickPrev, onClickNext}) =>
   <div className="button-bar">
-    <Button className="button button-prev" onClick={this.onPrevPage}>BACK</Button>
-    <Button className="button button-next" onClick={this.onNextPage}>NEXT</Button>
+    <Button className="button button-prev" onClick={onClickPrev}>BACK</Button>
+    <Button className="button button-next" onClick={onClickNext}>NEXT</Button>
   </div>
 
 
@@ -403,6 +454,131 @@ const Button = ({ onClick = null, onSubmit = null, className = '', children, typ
   >
     {children}
   </button>
+
+
+function ucFirst(string) 
+{
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+function smartFixName(text) {
+
+    //  Don't do anything if the text has BOTH upper and lowercase letters
+    if (text.match(/[A-Z]/)  &&  text.match(/[a-z]/)) {
+        return text;
+    }
+
+    //  This name is either entirely uppercase or entirely lowercase. Either
+    //  way, lets start with entirely lowercase and construct a properly
+    //  capitalized name from there. As we do this this, we must remember
+    //  to always account for hyphenated names, treating "-" as a name
+    //  separator equivalent to a space...
+
+    text = text.toLowerCase();
+
+    function replaceUpcase2nd(str, match1, match2, offset) {
+      return (match1+ucFirst(match2));
+    }
+
+    //  Upcase the first letter of each name in the full name
+    text = ucFirst(text);
+    text = text.replace(/([\s-]+)(.)/g, replaceUpcase2nd);
+
+    text = text.replace(/(Mc)(.)/g,   replaceUpcase2nd);      // McNames
+    text = text.replace(/(Mac)(.)/g,  replaceUpcase2nd);      // MacNames
+    text = text.replace(/(O')(.)/g,   replaceUpcase2nd);      // O'Names
+    text = text.replace(/(Le)(.eu)/g, replaceUpcase2nd);      // LeFeuvre, LeBeuf, etc.
+
+    text = text.replace(/\bi\b/ig,   "I");
+    text = text.replace(/\bii\b/ig,  "II");
+    text = text.replace(/\biii\b/ig, "III");
+    text = text.replace(/\biv\b/ig,  "IV");
+
+    //  What about names like:
+    //  DeWitt, DeWalt, DeVries, DeVoss, DeGeneris, AuCoin, DaVinci, etc.?
+    //  Consider Davis - not DaVis, etc...
+
+    return(text);
+}
+
+function smartFixAddress(address) {
+
+    address = smartFixName(address);
+
+    //  No need for double spaces in addresses
+    address = address.replace(/\s+/ig, ' ');
+
+    //  The substitions, below, are made even if the
+    //  address is entered in mixed case.
+
+    address = address.replace(/\bp[.]?o[.]? /ig, "P.O. ");          // po, PO ==> P.O.
+    address = address.replace(/\bbox\b/ig, "Box");                  // Box
+
+    //  Handle some place abbreviations
+    address = address.replace(/\bst\b/ig, "St");                    // St.
+    address = address.replace(/\bstreet\b/ig, "St.");               // St.
+    address = address.replace(/\bave\b/ig, "Ave");                  // Ave
+    address = address.replace(/\bavenue\b/ig, "Ave.");              // Ave
+    address = address.replace(/\brd\b/ig, "Rd");                    // Rd
+    address = address.replace(/\broad\b/ig, "Rd.");                 // Rd.
+    address = address.replace(/\bblvd\b/ig, "Blvd");                // Blvd
+    address = address.replace(/\bpl\b/ig, "Pl");                    // Pl
+    address = address.replace(/\bct\b/ig, "Ct");                    // Ct
+    address = address.replace(/\bln\b/ig, "Ln");                    // Ln
+    address = address.replace(/\bcir\b/ig, "Cir");                  // Cir
+    address = address.replace(/\bway\b/ig, "Way");                  // Way
+
+    address = address.replace(/\bapt\b/ig, "Apt");                  // Apt
+    address = address.replace(/\bunit\b/ig, "Unit");                // Unit
+    address = address.replace(/\bbldg\b/ig, "Bldg");                // Bldg
+
+    //  Handle digits followed by "st", "nd", "rd", or "th"
+    address = address.replace(/\b(\d+)st\b/ig, "$1st");             // 1st, 21st, 31st
+    address = address.replace(/\b(\d+)nd\b/ig, "$1nd");             // 2nd, 22nd, etc.
+    address = address.replace(/\b(\d+)rd\b/ig, "$1rd");             // 3rd
+    address = address.replace(/\b(\d+)th\b/ig, "$1th");             // 4th
+
+    //  Handle some directional abbreviations
+    address = address.replace(/\bn\b/ig,  "N");
+    address = address.replace(/\be\b/ig,  "E");
+    address = address.replace(/\bs\b/ig,  "S");
+    address = address.replace(/\bso\b/ig, "S");
+    address = address.replace(/\bw\b/ig,  "W");
+    address = address.replace(/\bn\s*e\b/ig, "NE");
+    address = address.replace(/\bn\s*w\b/ig, "NW");
+    address = address.replace(/\bs\s*e\b/ig, "SE");
+    address = address.replace(/\bs\s*w\b/ig, "SW");
+    address = address.replace(/\bnorth\b/ig, "North");
+    address = address.replace(/\beast\b/ig,  "East");
+    address = address.replace(/\bsouth\b/ig, "South");
+    address = address.replace(/\bwest\b/ig,  "West");
+
+    return(address);
+}
+
+
+
+function smartFixStateProv(stateProv) {
+
+    if (stateProv.length <= 2) {
+      stateProv = stateProv.toUpperCase();
+    }
+    else {
+      stateProv = smartFixName(stateProv);
+    }
+    return stateProv;
+}
+
+
+function smartFixPostalCode(postalCode) {
+    return postalCode.toUpperCase();
+}
+
+
+function smartFixEmail(email) {
+    email = email.replace(/\s+/g, "");
+    return email.toLowerCase();
+}
 
 
 export default App;

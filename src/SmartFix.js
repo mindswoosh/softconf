@@ -28,6 +28,12 @@ use strict;
 //----------------------------------------------------------------------
 
 
+function ucFirst(string) 
+{
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+
 function SmartFixName(text) {
 
     //  Don't do anything if the text has BOTH upper and lowercase letters
@@ -51,13 +57,13 @@ function SmartFixName(text) {
 
 
     //  Upcase the first letter of each name in the full name
-    $name = ucfirst($name);
-    text = text.replace(/([\s\-]+)(.)/g, "$1\U$2";
+    $name = ucFirst($name);
+    text = text.replace(/([\s\-]+)(.)/g, "$1\U$2");
 
-    text = text.replace(/([\s\-]Mc)(.)/g, "$1\U$2";          // McNames
-    text = text.replace(/([\s\-]Mac)(.)/g, "$1\U$2";         // MacNames
-    text = text.replace(/([\s\-]O')(.)/g, "$1\U$2";          // O'Names
-    text = name.replace(/([\s\-]Le)(.)eu/g, "$1\U$2\Leu";    // LeFeuvre, LeBeuf, etc.
+    text = text.replace(/([\s\-]Mc)(.)/g, "$1\U$2");          // McNames
+    text = text.replace(/([\s\-]Mac)(.)/g, "$1\U$2");         // MacNames
+    text = text.replace(/([\s\-]O')(.)/g, "$1\U$2");          // O'Names
+    text = name.replace(/([\s\-]Le)(.)eu/g, "$1\U$2\Leu");    // LeFeuvre, LeBeuf, etc.
 
     //  What about names like:
     //  DeWitt, DeWalt, DeVries, DeVoss, DeGeneris, AuCoin, DaVinci, etc.?

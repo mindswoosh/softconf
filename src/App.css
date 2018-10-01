@@ -1,7 +1,7 @@
 body {
   background-color: #eee;
   /*background-image: url(https://media.istockphoto.com/photos/confetti-balloons-a10-picture-id493119586?s=2048x2048);*/
-  background-image: url(balloons.jpg);
+  background-image: url(ryb_balloons.png);
 }
 
 .logo-header {
@@ -54,6 +54,25 @@ p {
   overflow: auto;
 }
 
+
+.pagebar {
+  margin-bottom: 35px;
+}
+
+.pagebar-unselected {
+  display: inline-block;
+  padding: 10px;
+  background-color: #6a76cf;
+  color: #afb7f6;
+  border: 1px solid white;
+}
+
+.pagebar-selected {
+  display: inline-block;
+  padding: 10px;
+  background-color: #efd31c;
+  border: 1px solid white;
+}
 
 
 .edit-name {
