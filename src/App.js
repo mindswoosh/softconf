@@ -10,11 +10,13 @@ import './App.css';
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAngleDoubleRight } from '@fortawesome/free-solid-svg-icons'
+import { faAngleDoubleRight, faHandPointRight } from '@fortawesome/free-solid-svg-icons'
 
 library.add(faAngleDoubleRight)
+library.add(faHandPointRight)
 
 
+var nextID = 10000;
 
 const DEFAULT_QUERY = 'Steve Jobs';
 
@@ -25,10 +27,16 @@ const PARAM_PAGE   = 'page=';
 
 
 const pages = {
-  CONTACT:     1,
-  ATTENDEES:   2,
-  SCHEDULES:   3,
-  MERCHANDISE: 4,
+  START:        0,
+  WELCOME:      1,
+  CONTACT:      2,
+  ATTENDEES:    3,
+  REMEMBRANCE:  4,
+  CHAPTERCHAIR: 5,
+  SCHEDULES:    6,
+  SUMMARY:      7,
+  CHECKOUT:     8,
+  END:          9,
 };
 
 const countries = ['United States', 'Canada', 'Mexico', 'United Kingdom', '-----', 'Afghanistan', 'Åland Islands', 'Albania', 'Algeria', 'American Samoa', 'Andorra', 'Angola', 'Anguilla', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Aruba', 'Australia', 'Austria', 'Azerbaijan', 'Bangladesh', 'Barbados', 'Bahamas', 'Bahrain', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bermuda', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'British Indian Ocean Territory', 'British Virgin Islands', 'Brunei Darussalam', 'Bulgaria', 'Burkina Faso', 'Burma', 'Burundi', 'Cambodia', 'Cameroon', 'Cape Verde', 'Cayman Islands', 'Central African Republic', 'Chad', 'Chile', 'China', 'Christmas Island', 'Cocos (Keeling) Islands', 'Colombia', 'Comoros', 'Congo-Brazzaville', 'Congo-Kinshasa', 'Cook Islands', 'Costa Rica', 'Croatia', 'Curaçao', 'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'East Timor', 'Ecuador', 'El Salvador', 'Egypt', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Ethiopia', 'Falkland Islands', 'Faroe Islands', 'Federated States of Micronesia', 'Fiji', 'Finland', 'France', 'French Guiana', 'French Polynesia', 'French Southern Lands', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Gibraltar', 'Greece', 'Greenland', 'Grenada', 'Guadeloupe', 'Guam', 'Guatemala', 'Guernsey', 'Guinea', 'Guinea-Bissau', 'Guyana', 'Haiti', 'Heard and McDonald Islands', 'Honduras', 'Hong Kong', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iraq', 'Ireland', 'Isle of Man', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jersey', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Macau', 'Macedonia', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Martinique', 'Mauritania', 'Mauritius', 'Mayotte', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Montserrat', 'Morocco', 'Mozambique', 'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Caledonia', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'Niue', 'Norfolk Island', 'Northern Mariana Islands', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Pitcairn Islands', 'Poland', 'Portugal', 'Puerto Rico', 'Qatar', 'Réunion', 'Romania', 'Russia', 'Rwanda', 'Saint Barthélemy', 'Saint Helena', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Martin', 'Saint Pierre and Miquelon', 'Saint Vincent', 'Samoa', 'San Marino', 'São Tomé and Príncipe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Sint Maarten', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Georgia', 'South Korea', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Svalbard and Jan Mayen', 'Sweden', 'Swaziland', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Togo', 'Tokelau', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Turks and Caicos Islands', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'Uruguay', 'Uzbekistan', 'Vanuatu', 'Vatican City', 'Vietnam', 'Venezuela', 'Wallis and Futuna', 'Western Sahara', 'Yemen', 'Zambia', 'Zimbabwe'];
@@ -42,14 +50,15 @@ const customStyles = {
     // color: state.isFullscreen ? 'red' : 'green',
     padding: 5,
   }),
-  control: (base, state) => ({
+  control: (base, state) => ({        /* Select line with drop-down arrow */
     ...base,
     width: 336,
     padding: 0,
     marginTop: 5,
     borderRadius: 0,
     minHeight: 0,
-    height: "2em",
+    height: 30,
+    fontSize: 14,
     backgroundColor: "white",
   }),
   singleValue: (base, state) => {
@@ -64,13 +73,80 @@ const customStyles = {
   },
   menuList: (base, state) => ({
     ...base,
-    height: 200,
+    height: 212,
+    fontSize: 14,
     color: "#2e3a97",
   }),
   placeholder: (base, state) => ({
     ...base,
     color: "#999",
     fontSize: 12,
+  }),
+  container: (base, state) => ({
+    ...base,
+    width: 336,
+  }),
+}
+
+
+const peopleTypes = {
+  SOFTCHILD:    "S",
+  CHILD:        "C",
+  ADULT:        "A",
+  PROFESSIONAL: "P",
+};
+
+const optionsPeopleTypes = [
+  { label: "SOFT child",   value: peopleTypes.SOFTCHILD },
+  { label: "Child",        value: peopleTypes.CHILD },  
+  { label: "Adult",        value: peopleTypes.ADULT },
+  { label: "Professional", value: peopleTypes.PROFESSIONAL },
+];
+
+
+//  I should deep clone this from the previous style and change what's appropriate
+const customStylesPeopleTypes = {
+  option: (base, state) => ({
+    ...base,
+    // borderBottom: '1px dotted pink',
+    // color: state.isFullscreen ? 'red' : 'green',
+    padding: 5,
+  }),
+  control: (base, state) => ({
+    ...base,
+    width: 156,
+    padding: 0,
+    marginTop: 5,
+    borderRadius: 0,
+    minHeight: 0,
+    height: 30,
+    fontSize: 14,
+    backgroundColor: "white",
+  }),
+  singleValue: (base, state) => {
+    const opacity = state.isDisabled ? 0.5 : 1;
+    const transition = 'opacity 300ms';
+
+    return {
+       ...base, 
+       opacity, 
+       transition,
+    };
+  },
+  menuList: (base, state) => ({
+    ...base,
+    height: 110,
+    fontSize: 14,
+    color: "#2e3a97",
+  }),
+  placeholder: (base, state) => ({
+    ...base,
+    color: "#999",
+    fontSize: 12,
+  }),
+  container: (base, state) => ({
+    ...base,
+    width: 156,
   }),
 }
 
@@ -101,8 +177,13 @@ class App extends Component {
         email:       '',
       },
 
+      attendees: [
+        { id: 5, firstName: "Steve", lastName: "Maguire", peopleType: peopleTypes.ADULT },
+        { id: 21, firstName: "Beth", lastName: "Mountjoy", peopleType: peopleTypes.CHILD },
+        { id: 37, firstName: "Terre", lastName: "Krotzer", peopleType: peopleTypes.PROFESSIONAL },
+      ],
+
       //balloonReleases: [],
-      //attendees: [],
 
       // OLD
       result: null,
@@ -113,6 +194,12 @@ class App extends Component {
     this.setEventInfo         = this.setEventInfo.bind(this);
     this.onChangeContactInfo  = this.onChangeContactInfo.bind(this);
     this.onChangeCountry      = this.onChangeCountry.bind(this);
+    
+    this.onAddAttendee        = this.onAddAttendee.bind(this);
+    this.onRemoveAttendee     = this.onRemoveAttendee.bind(this);
+    this.onChangeAttendeeList = this.onChangeAttendeeList.bind(this);
+    this.onChangePeopleType   = this.onChangePeopleType.bind(this);
+
     this.smartFixContactInfo  = this.smartFixContactInfo.bind(this);
 
     this.onPrevPage           = this.onPrevPage.bind(this);
@@ -201,7 +288,7 @@ class App extends Component {
 
 
   render() {
-    const { eventInfo, currentPage, contactInfo } = this.state;
+    const { eventInfo, currentPage, contactInfo, attendees } = this.state;
 
     return (
       <div className="body-boundary">
@@ -218,6 +305,20 @@ class App extends Component {
                       onChangeCountry={this.onChangeCountry} 
                   />,
               [pages.ATTENDEES]:
+                  <Attendees
+                    attendees={attendees} 
+                    onAdd={this.onAddAttendee}
+                    onRemove={this.onRemoveAttendee}
+                    onChange={this.onChangeAttendeeList}
+                    onChangePeopleType={this.onChangePeopleType}
+                  />,
+              [pages.REMEMBRANCE]:
+                  <Remembrance contact={contactInfo} />,
+              [pages.CHAPTERCHAIR]:
+                  <ChapterChair contact={contactInfo} />,
+              [pages.SCHEDULES]:
+                  <Schedules contact={contactInfo} />,
+              [pages.SUMMARY]:
                   <ContactSummary contact={contactInfo} />,
               // [pages.MERCHANDISE]:  <Merchancise merchandise={merchandise} />,
             }[currentPage]
@@ -230,21 +331,85 @@ class App extends Component {
 
 
 
-  onPrevPage() {
+  onPrevPage(event) {
+    //  The visitor can always to go a previous page.
     let { currentPage } = this.state;
-    let prevPage = currentPage-1;
-    this.setState({
-      currentPage: prevPage,
-    });
+    if (currentPage > pages.START+1) {
+      // let prevPage = currentPage-1;
+      this.setState({
+        currentPage: currentPage-1,
+      });
+    }
   }
 
 
-  onNextPage() {
+  onNextPage(event) {
     let { currentPage } = this.state;
+
+    //  Don't let visitor go to next page unless there are no errors on
+    //  the current page.
     this.smartFixContactInfo();
     let nextPage = currentPage+1;
     this.setState({
       currentPage: nextPage,
+    });
+  }
+
+
+  //  Process Attendees page
+  
+  onAddAttendee(event) {
+    let { attendees, contactInfo } = this.state;
+    if (attendees.length === 0)
+      attendees.push(
+        {
+          id: nextID++,
+          firstName: contactInfo.firstName,
+          lastName:  contactInfo.lastName,
+          peopleType: peopleTypes.ADULT,
+        }
+      );
+
+    else
+      attendees.push(
+        {
+          id: nextID++,
+          firstName: "",
+          lastName:  "",
+          peopleType: "",
+        }
+      );
+    this.setState({
+      attendees
+    });
+  }
+
+  onRemoveAttendee(id) {
+    let { attendees } = this.state;
+    attendees = attendees.filter(attendee => attendee.id !== id);
+    this.setState({
+      attendees
+    });
+  }
+
+  onChangeAttendeeList(event, id, field) {
+    let { attendees } = this.state;
+    let i = attendees.findIndex(a => a.id === id);
+    console.assert(i !== -1, "Warning -- didn't find attendee in attendee list: id = " + id);
+    attendees[i][field] = event.target.value;
+    this.setState ({
+      attendees
+    });
+  }
+
+  onChangePeopleType(opt, id) {
+    let { attendees } = this.state;
+    let i = attendees.findIndex(a => a.id === id);
+    console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
+    attendees[i].peopleType = opt.value;
+
+    this.setState ({
+      attendees
     });
   }
 
@@ -266,7 +431,7 @@ const SoftHeader = ({eventInfo}) =>
   </div>
 
 
-const pageTitles = ['Welcome', "Contact", "Attendees", "Schedules", "Merchandise", "Checkout"];
+const pageTitles = ['Welcome', "Contact", "Balloons", "Attendees", "Schedules", "Summary", "Checkout" ];
 
 const PageBar = ({pageNum}) =>
   <div className="pagebar">
@@ -282,9 +447,14 @@ const PageBar = ({pageNum}) =>
   </div>
 
 
+
+//----------------------------------------------------------------------------------------------------
+
+
+
 const ContactInfo = ({contact, onChangeContactInfo, onChangeCountry}) =>
   <div>
-    <h2>Contact Information:</h2>
+    <h2>Contact Information</h2>
     <EditName value={contact.firstName} field="firstName" onChange={onChangeContactInfo}>FIRST Name</EditName>
     <EditName value={contact.lastName} field="lastName"  onChange={onChangeContactInfo}>LAST Name</EditName>
     <EditAddress contact={contact} onChange={onChangeContactInfo} onChangeCountry={onChangeCountry}>Address</EditAddress>
@@ -295,28 +465,99 @@ const ContactInfo = ({contact, onChangeContactInfo, onChangeCountry}) =>
     </div>
     <EditEmail value={contact.email} onChange={onChangeContactInfo}>Best Email Address</EditEmail>
   </div>
-   
 
-//     <ContactSummary contact={contact} />
-// const ContactSummary = ({contact}) =>
-//   <div>
-//     <br />
-//     First name: {smartFixName(contact.firstName)}<br />
-//     Last name: {smartFixName(contact.lastName)}<br />
-//     Address 1: {smartFixAddress(contact.address1)}<br />
-//     Address 2: {smartFixAddress(contact.address2)}<br />
-//     City: {smartFixName(contact.city)}<br />
-//     State: {smartFixStateProv(contact.stateProv)}<br />
-//     Zip: {smartFixPostalCode(contact.postalCode)}<br />
-//     Country: {contact.country}<br />
-//     Mobile Phone: {contact.phoneMobile}<br />
-//     Work Phone: {contact.phoneWork}<br />
-//     Home Phone: {contact.phoneHome}<br />
-//     Email: {smartFixEmail(contact.email)}<br />
-//   </div>
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+
+const Attendees = ({attendees, onRemove, onAdd, onChange, onChangePeopleType}) =>
+  <div>
+    <h2>Conference Attendees</h2>
+    <p>Please list everybody in your party who will be attending any part of the Conference. If no one
+       will be attending, simply click on the Next button.
+    </p>
+    <p><FontAwesomeIcon icon="hand-point-right" /> Remember to include the contact person if that person will be attending.</p>
+    {attendees.length  ?
+      <div>
+        <p className="row-num">1.</p>
+        <Input value={attendees[0].firstName} placeHolder="First Name" onChange={event => onChange(event, attendees[0].id, "firstName")}>FIRST Name</Input>
+        <Input value={attendees[0].lastName} placeHolder="Last Name" onChange={event => onChange(event, attendees[0].id, "lastName")}>LAST Name</Input>
+        <PeopleType value={attendees[0].peopleType} onChange={(opt) => onChangePeopleType(opt, attendees[0].id)}/>
+        <Button onClick={() => onRemove(attendees[0].id)}>Remove</Button>
+        {attendees.length > 1 ?
+          attendees.slice(1).map( (a, i) =>
+            <div key={a.id}>
+              <p className="row-num">{i+2}.</p>
+              <Input value={a.firstName} placeHolder="First Name" onChange={event => onChange(event, a.id, "firstName")} />
+              <Input value={a.lastName} placeHolder="Last Name"  onChange={event => onChange(event, a.id, "lastName")} />
+              <PeopleType value={a.peopleType} onChange={(opt) => onChangePeopleType(opt, a.id)}/>
+              <Button onClick={() => onRemove(a.id)}>Remove</Button>
+            </div>
+          )
+          : null
+        }
+      </div>
+      : null
+    }
+    <br />
+    {attendees.length === 0 ?
+        <Button onClick={onAdd}>Add a Person</Button>
+      :
+        <Button onClick={onAdd}>Add Another Person</Button>
+    }
+  </div>
+
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+
+const Remembrance = ({contact}) =>
+  <div>
+    <h2>Remembrance Outing</h2>
+    <p>There will be a Remembrance Outing for families who have lost a child. If you have lost
+       a child and plan to attend, please put a checkmark next to each person who will be
+       attending, and select the type of box lunch for each. Otherwise, simply click the Next button.
+    </p>
+  </div>
+
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+
+const ChapterChair = ({contact}) =>
+  <div>
+    <h2>Chapter Chair Luncheon</h2>
+    <p>Is anyone in your party a registered or prospective Chapter Chair? If so, please check everyone
+       who will be attending the Chapter Chair Lunch; otherwise, simply click the Next buttton.
+    </p>
+  </div>
+
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+
+const Schedules = ({contact}) =>
+  <div>
+    <h2>Schedules</h2>
+  </div>
+
+
+
+//----------------------------------------------------------------------------------------------------
+
+
 
 const ContactSummary = ({contact}) =>
   <div>
+    <h2>Summary</h2>
     <br />
     First name: {contact.firstName}<br />
     Last name: {contact.lastName}<br />
@@ -334,6 +575,29 @@ const ContactSummary = ({contact}) =>
 
 
 
+
+
+
+//----------------------------------------------------------------------------------------------------
+//
+//  Support components
+//
+//
+
+const Input = ({ field, value, placeHolder="", onChange, className="edit-input", children="" }) =>
+  <div className={className}>
+    {children &&
+      <p>{children}</p>
+    }
+    <input
+      value={value}
+      type="text"
+      placeholder={placeHolder}
+      onChange={(evt) => onChange(evt, field)}
+    />
+  </div>
+
+
 const EditName = ({ field, value, onChange, className="edit-name", children }) =>
   <div className={className}>
     <p>{children}</p>
@@ -343,6 +607,17 @@ const EditName = ({ field, value, onChange, className="edit-name", children }) =
       onChange={(evt) => onChange(evt, field)}
     />
   </div>
+
+
+// const EditAge = ({ field, value, onChange, className="edit-age", children }) =>
+//   <div className={className}>
+//     <p>{children}</p>
+//     <input
+//       value={value}
+//       type="text"
+//       onChange={(evt) => onChange(evt, field)}
+//     />
+//   </div>
 
 
 const EditAddress = ({contact,  onChange, onChangeCountry, className="edit-address", children}) =>
@@ -355,7 +630,7 @@ const EditAddress = ({contact,  onChange, onChangeCountry, className="edit-addre
       <StateProv  value={contact.stateProv}  onChange={onChange} />
       <PostalCode value={contact.postalCode} onChange={onChange}  />
     </div>
-    <Country selectValue={contact.country} onChange={onChangeCountry}/>
+    <Country value={contact.country} onChange={onChangeCountry}/>
   </div>
 
 
@@ -385,21 +660,34 @@ const StateProv = ({value="",  onChange, className="edit-state-prov"}) =>
       onChange={(evt) => onChange(evt, "stateProv")}
     />
 
-const Country = ({selectValue, onChange, className="edit-country"}) => {
-      const defaultOpt = optionsCountries.find(opt => (opt.value === selectValue));
-      // if (selectValue !== null) {
+const PeopleType = ({value, onChange, className="edit-people"}) => {
+      const defaultOpt = optionsPeopleTypes.find(opt => (opt.value === value));
         return (
-          <div>
+          <div className={className}>
             <Select
-              options={optionsCountries}
+              options={optionsPeopleTypes}
               defaultValue={defaultOpt}
-              placeholder={"Select Country..."}
+              placeholder={"Select..."}
               onChange={onChange}
-              styles={customStyles}
+              styles={customStylesPeopleTypes}
             />
           </div>
         );
-      // }
+    }
+
+const Country = ({value, onChange, className="edit-country"}) => {
+    const defaultOpt = optionsCountries.find(opt => (opt.value === value));
+      return (
+        <div>
+          <Select
+            options={optionsCountries}
+            defaultValue={defaultOpt}
+            placeholder={"Select Country..."}
+            onChange={onChange}
+            styles={customStyles}
+          />
+        </div>
+      );
     }
     
 
@@ -436,7 +724,9 @@ const EditEmail = ({value="", onChange, className="edit-email", children}) =>
 
 const PrevNextButtons = ({pageNum, contact, onClickPrev, onClickNext}) =>
   <div className="button-bar">
-    <Button className="button button-prev" onClick={onClickPrev}>BACK</Button>
+    {pageNum > pages.START+1  &&
+      <Button className="button button-prev" onClick={onClickPrev}>BACK</Button>
+    }
     <Button className="button button-next" onClick={onClickNext}>NEXT</Button>
   </div>
 
@@ -463,7 +753,7 @@ function ucFirst(string)
 
 function smartFixName(text) {
 
-    //  Don't do anything if the text has BOTH upper and lowercase letters
+    // Don't do anything if the text has BOTH upper and lowercase letters
     if (text.match(/[A-Z]/)  &&  text.match(/[a-z]/)) {
         return text;
     }

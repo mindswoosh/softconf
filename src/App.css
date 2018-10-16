@@ -1,8 +1,25 @@
+::-moz-placeholder { /* Code for Firefox */
+    color: #cccccc;
+}
+
+::-webkit-input-placeholder { /* Chrome, Safari and Opera */
+    color: #cccccc;
+}
+
+:-ms-input-placeholder { /* Internet Explorer */
+    color: #cccccc;
+}
+
+::placeholder {
+    color: #cccccc;
+}
+
+
 body {
   background-color: #eee;
-  /*background-image: url(https://media.istockphoto.com/photos/confetti-balloons-a10-picture-id493119586?s=2048x2048);*/
-  background-image: url(ryb_balloons.png);
+  background-image: url(skyballoons.png);   
 }
+
 
 .logo-header {
 }
@@ -26,13 +43,14 @@ h1 { margin: 0px; }
 h2 {
   font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
   color: #efd31c;
-/*  text-shadow: 0px 0px 2px #2e3a97;*/
+  text-shadow: 1px 1px 1px #aaaaaa;
   margin: 10px 0 0 0;
 }
 
 input {
-  height: 2em;
-  color: #2e3a97;
+  height: 24px;
+  font-size: 14px;
+  color: black;
 }
 
 p {
@@ -41,12 +59,13 @@ p {
 }
 
 .body-boundary {
-  max-width: 650px;
+  max-width: 725px;
   margin: auto;
 }
 
 .page-boundary {
   max-width: 100%;
+  min-height: 400px;
   padding: 20px;
   border: 1px solid grey;
   border-radius: 15px;
@@ -75,6 +94,33 @@ p {
 }
 
 
+.edit-input {
+  display: inline-block;
+  margin: 0px 25px 0px 0px;
+}
+.edit-input>p {
+  margin: 20px 0px 0px 0px;
+}
+.edit-input input{
+    width: 150px;
+}
+
+.row-num {
+  display: inline-block;
+  margin: 0;
+  width: 30px;
+  padding-right: 15px;
+  text-align: right;
+}
+
+@media screen and (max-width: 500px) {
+  .row-num {
+    display: block;
+    margin-top: 25px;
+    text-align: left;
+  }
+}
+
 .edit-name {
   display: inline-block;
   margin: 0px 25px 0px 0px;
@@ -85,10 +131,26 @@ p {
 }
 
 .edit-name>input {
-  width: 250px;
+  width: 150px;
 }
 
+.edit-age {
+  display: inline-block;
+  margin: 0px 25px 0px 0px;
+}
 
+.edit-age>p {
+  margin: 20px 0px 0px 0px;
+}
+
+.edit-age>input {
+  width: 30px;
+}
+
+.edit-people {
+    display: inline-block;
+    margin: 0 25px 0 0;
+}
 
 .edit-address {
   margin: 0px 25px 0px 0px;
