@@ -191,9 +191,9 @@ class App extends Component {
       },
 
       attendees: [
-        attendee("Steve", "Maguire", peopleTypes.ADULT),
-        attendee("Beth", "Mountjoy", peopleTypes.CHILD),
-        attendee("Terre", "Krotzer", peopleTypes.PROFESSIONAL),
+        // attendee("Steve", "Maguire", peopleTypes.ADULT),
+        // attendee("Beth", "Mountjoy", peopleTypes.CHILD),
+        // attendee("Terre", "Krotzer", peopleTypes.PROFESSIONAL),
         // { id: 5, firstName: "Steve", lastName: "Maguire", peopleType: peopleTypes.ADULT, rembOuting: 0, rembLunch: '', chapterChair: '' },
         // { id: 21, firstName: "Beth", lastName: "Mountjoy", peopleType: peopleTypes.CHILD, rembOuting: 0, rembLunch: '', chapterChair: '' },
         // { id: 37, firstName: "Terre", lastName: "Krotzer", peopleType: peopleTypes.PROFESSIONAL, rembOuting: 0, rembLunch: '', chapterChair: '' },
