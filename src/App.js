@@ -10,21 +10,13 @@ import './App.css';
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAngleDoubleRight, faHandPointRight } from '@fortawesome/free-solid-svg-icons'
+import { faAngleDoubleRight, faHandPointRight, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
-library.add(faAngleDoubleRight)
-library.add(faHandPointRight)
-
+library.add(faAngleDoubleRight);
+library.add(faHandPointRight);
+library.add(faQuestionCircle);
 
 var nextID = 10000;
-
-const DEFAULT_QUERY = 'Steve Jobs';
-
-const PATH_BASE = 'https://hn.algolia.com/api/v1';
-const PATH_SEARCH = '/search';
-const PARAM_SEARCH = 'query=';
-const PARAM_PAGE   = 'page=';
-
 
 const pages = {
   START:        0,
@@ -32,12 +24,17 @@ const pages = {
   CONTACT:      2,
   ATTENDEES:    3,
   REMEMBRANCE:  4,
-  CHAPTERCHAIR: 5,
-  SCHEDULES:    6,
-  SUMMARY:      7,
-  CHECKOUT:     8,
-  END:          9,
+  SCHEDULES:    5,
+  BALLOONS:     6, 
+  CHAPTERCHAIR: 7,
+  DIRECTORY:    8,
+  SOFTWEAR:     9,
+  SUMMARY:      10,
+  CHECKOUT:     11,
+  END:          12,
 };
+
+console.assert(Object.keys(pages).find( (name,i) => { return pages[name] !== i} ) === undefined, 'Page Enum is incorrect');
 
 const countries = ['United States', 'Canada', 'Mexico', 'United Kingdom', '-----', 'Afghanistan', 'Åland Islands', 'Albania', 'Algeria', 'American Samoa', 'Andorra', 'Angola', 'Anguilla', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Aruba', 'Australia', 'Austria', 'Azerbaijan', 'Bangladesh', 'Barbados', 'Bahamas', 'Bahrain', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bermuda', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'British Indian Ocean Territory', 'British Virgin Islands', 'Brunei Darussalam', 'Bulgaria', 'Burkina Faso', 'Burma', 'Burundi', 'Cambodia', 'Cameroon', 'Cape Verde', 'Cayman Islands', 'Central African Republic', 'Chad', 'Chile', 'China', 'Christmas Island', 'Cocos (Keeling) Islands', 'Colombia', 'Comoros', 'Congo-Brazzaville', 'Congo-Kinshasa', 'Cook Islands', 'Costa Rica', 'Croatia', 'Curaçao', 'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'East Timor', 'Ecuador', 'El Salvador', 'Egypt', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Ethiopia', 'Falkland Islands', 'Faroe Islands', 'Federated States of Micronesia', 'Fiji', 'Finland', 'France', 'French Guiana', 'French Polynesia', 'French Southern Lands', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Gibraltar', 'Greece', 'Greenland', 'Grenada', 'Guadeloupe', 'Guam', 'Guatemala', 'Guernsey', 'Guinea', 'Guinea-Bissau', 'Guyana', 'Haiti', 'Heard and McDonald Islands', 'Honduras', 'Hong Kong', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iraq', 'Ireland', 'Isle of Man', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jersey', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Macau', 'Macedonia', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Martinique', 'Mauritania', 'Mauritius', 'Mayotte', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Montserrat', 'Morocco', 'Mozambique', 'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Caledonia', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'Niue', 'Norfolk Island', 'Northern Mariana Islands', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Pitcairn Islands', 'Poland', 'Portugal', 'Puerto Rico', 'Qatar', 'Réunion', 'Romania', 'Russia', 'Rwanda', 'Saint Barthélemy', 'Saint Helena', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Martin', 'Saint Pierre and Miquelon', 'Saint Vincent', 'Samoa', 'San Marino', 'São Tomé and Príncipe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Sint Maarten', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Georgia', 'South Korea', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Svalbard and Jan Mayen', 'Sweden', 'Swaziland', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Togo', 'Tokelau', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Turks and Caicos Islands', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'Uruguay', 'Uzbekistan', 'Vanuatu', 'Vatican City', 'Vietnam', 'Venezuela', 'Wallis and Futuna', 'Western Sahara', 'Yemen', 'Zambia', 'Zimbabwe'];
 
@@ -150,7 +147,17 @@ const customStylesPeopleTypes = {
   }),
 }
 
-
+function attendee(firstName, lastName, peopleType) {
+  return {
+    id: nextID++,
+    firstName,
+    lastName,
+    peopleType,
+    rembOuting: 0,
+    rembLunch:  '',
+    chapterChair: '',
+  };
+}
 
 class App extends Component {
 
@@ -158,9 +165,15 @@ class App extends Component {
     super(props);
 
     this.state = {
-      currentPage: pages.CONTACT,
+      currentPage: pages.WELCOME,
+      pageHistory: [],                //  Keep a history of the pages visited for use by the Back button
 
-      eventInfo: null,
+      eventInfo: {
+        eventTitle: '',
+        remembranceMenu: {},
+        dinnerMenu: [],
+        kidsMenu: []
+      },
 
       contactInfo: {
         firstName:   '',
@@ -178,17 +191,14 @@ class App extends Component {
       },
 
       attendees: [
-        { id: 5, firstName: "Steve", lastName: "Maguire", peopleType: peopleTypes.ADULT },
-        { id: 21, firstName: "Beth", lastName: "Mountjoy", peopleType: peopleTypes.CHILD },
-        { id: 37, firstName: "Terre", lastName: "Krotzer", peopleType: peopleTypes.PROFESSIONAL },
+        attendee("Steve", "Maguire", peopleTypes.ADULT),
+        attendee("Beth", "Mountjoy", peopleTypes.CHILD),
+        attendee("Terre", "Krotzer", peopleTypes.PROFESSIONAL),
+        // { id: 5, firstName: "Steve", lastName: "Maguire", peopleType: peopleTypes.ADULT, rembOuting: 0, rembLunch: '', chapterChair: '' },
+        // { id: 21, firstName: "Beth", lastName: "Mountjoy", peopleType: peopleTypes.CHILD, rembOuting: 0, rembLunch: '', chapterChair: '' },
+        // { id: 37, firstName: "Terre", lastName: "Krotzer", peopleType: peopleTypes.PROFESSIONAL, rembOuting: 0, rembLunch: '', chapterChair: '' },
       ],
 
-      //balloonReleases: [],
-
-      // OLD
-      result: null,
-      searchTerm: DEFAULT_QUERY,
-      page: 0,
     };
 
     this.setEventInfo         = this.setEventInfo.bind(this);
@@ -200,7 +210,10 @@ class App extends Component {
     this.onChangeAttendeeList = this.onChangeAttendeeList.bind(this);
     this.onChangePeopleType   = this.onChangePeopleType.bind(this);
 
-    this.smartFixContactInfo  = this.smartFixContactInfo.bind(this);
+    this.onChangeRembOuting   = this.onChangeRembOuting.bind(this);
+    this.onChangeRembLunch    = this.onChangeRembLunch.bind(this);
+
+    this.onChangeChapterChair = this.onChangeChapterChair.bind(this);
 
     this.onPrevPage           = this.onPrevPage.bind(this);
     this.onNextPage           = this.onNextPage.bind(this);
@@ -224,36 +237,18 @@ class App extends Component {
     });
   }
 
-  smartFixContactInfo() {
-    const contactInfo = this.state.contactInfo;
-    const contact = {
-        ...contactInfo,
-        firstName:   smartFixName(contactInfo.firstName),
-        lastName:    smartFixName(contactInfo.lastName),
-        address1:    smartFixAddress(contactInfo.address1),
-        address2:    smartFixAddress(contactInfo.address2),
-        city:        smartFixName(contactInfo.city),
-        stateProv:   smartFixStateProv(contactInfo.stateProv),
-        // country:     '',
-        postalCode:  smartFixPostalCode(contactInfo.postalCode),
-        // phoneMobile: '',
-        // phoneWork:   '',
-        // phoneHome:   '',
-        email:       smartFixEmail(contactInfo.email),
-      }
-
-    this.setState({
-      contactInfo: contact,
-    });
-  }
-
 
   setEventInfo(result) {
 
     // Override result for testing purpose
 
-    const eventInfo = {
+  const eventInfo = {
       eventTitle: '2019 Conference Registration',
+      remembranceMenu: {
+          V: 'Vegetarian',
+          C: 'Chicken',
+          T: 'Tuna Salad'
+        },
       dinnerMenu: [
           'Wild Mushroom Ravioli',
           'Lemon Herb Chicken Breast',
@@ -274,10 +269,11 @@ class App extends Component {
 
 
   fetchEventInfo(searchTerm, page = 0) {
-      fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}`)
-      .then(response => response.json())
-      .then(result => this.setEventInfo(result))
-      .catch(error => error);
+      // fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}`)
+      // .then(response => response.json())
+      // .then(result => this.setEventInfo(result))
+      // .catch(error => error);
+      this.setEventInfo(12345);
   }
 
 
@@ -289,7 +285,6 @@ class App extends Component {
 
   render() {
     const { eventInfo, currentPage, contactInfo, attendees } = this.state;
-
     return (
       <div className="body-boundary">
         <SoftHeader eventInfo={eventInfo} />
@@ -298,12 +293,16 @@ class App extends Component {
 
           {
             {
+              [pages.WELCOME]:
+                  <Welcome />,
+
               [pages.CONTACT]:
                   <ContactInfo 
                       contact={contactInfo}
                       onChangeContactInfo={this.onChangeContactInfo}
                       onChangeCountry={this.onChangeCountry} 
                   />,
+
               [pages.ATTENDEES]:
                   <Attendees
                     attendees={attendees} 
@@ -312,14 +311,35 @@ class App extends Component {
                     onChange={this.onChangeAttendeeList}
                     onChangePeopleType={this.onChangePeopleType}
                   />,
+
               [pages.REMEMBRANCE]:
-                  <Remembrance contact={contactInfo} />,
-              [pages.CHAPTERCHAIR]:
-                  <ChapterChair contact={contactInfo} />,
+                  <Remembrance
+                    attendees={attendees}
+                    onChange={this.onChangeRembOuting}
+                    menuInfo={eventInfo.remembranceMenu}
+                    onChangeLunch={this.onChangeRembLunch}
+                  />,
+
               [pages.SCHEDULES]:
                   <Schedules contact={contactInfo} />,
+
+              [pages.CHAPTERCHAIR]:
+                  <ChapterChair
+                    attendees={attendees}
+                    onChange={this.onChangeChapterChair}
+                    // menuInfo={eventInfo.remembranceMenu}
+                    // onChangeLunch={this.onChangeRembLunch}
+                  />,
+
+              [pages.DIRECTORY]:
+                  <Directory contact={contactInfo} />,
+
+              [pages.SOFTWEAR]:
+                  <SoftWear />,
+
               [pages.SUMMARY]:
                   <ContactSummary contact={contactInfo} />,
+
               // [pages.MERCHANDISE]:  <Merchancise merchandise={merchandise} />,
             }[currentPage]
           }
@@ -331,31 +351,189 @@ class App extends Component {
 
 
 
+  // FIX -- pageHistory should be a state variable, not a global
   onPrevPage(event) {
+    let { pageHistory } = this.state;
+
     //  The visitor can always to go a previous page.
-    let { currentPage } = this.state;
-    if (currentPage > pages.START+1) {
-      // let prevPage = currentPage-1;
+    if (pageHistory.length > 0) {
+      let newPage = pageHistory.pop();
+
       this.setState({
-        currentPage: currentPage-1,
+        pageHistory,
+        currentPage: newPage,
       });
     }
   }
 
 
   onNextPage(event) {
-    let { currentPage } = this.state;
+    let { attendees, currentPage, pageHistory } = this.state;
 
     //  Don't let visitor go to next page unless there are no errors on
     //  the current page.
-    this.smartFixContactInfo();
-    let nextPage = currentPage+1;
-    this.setState({
-      currentPage: nextPage,
-    });
+
+    switch (currentPage) {
+
+      case pages.WELCOME:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: pages.CONTACT,
+          });
+
+          break;
+
+      case pages.CONTACT:
+          const contactInfo = this.state.contactInfo;
+
+          //  Error check
+          //  alert() if errors
+
+          const contact = {
+              ...contactInfo,
+              firstName:   smartFixName(contactInfo.firstName),
+              lastName:    smartFixName(contactInfo.lastName),
+              address1:    smartFixAddress(contactInfo.address1),
+              address2:    smartFixAddress(contactInfo.address2),
+              city:        smartFixName(contactInfo.city),
+              stateProv:   smartFixStateProv(contactInfo.stateProv),
+              // country:     '',
+              postalCode:  smartFixPostalCode(contactInfo.postalCode),
+              // phoneMobile: '',
+              // phoneWork:   '',
+              // phoneHome:   '',
+              email:       smartFixEmail(contactInfo.email),
+            }
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            contactInfo: contact,
+            pageHistory,
+            currentPage: pages.ATTENDEES,
+          });
+
+          break;
+
+      case pages.ATTENDEES:
+          // let attendees = this.state.attendees;
+
+          //  Clean up entries
+          attendees = attendees.map(a => { 
+            a.firstName = a.firstName.trim();
+            a.lastName  = a.lastName.trim();
+            return a;
+          });
+
+          //  Remove totally empty rows
+          attendees = attendees.filter(a => { return (a.firstName !== ''  ||  a.lastName !== '') });
+
+          let $bad_attendee = attendees.find( a => { return (a.firstName ===''  ||  a.lastName === ''  ||  a.peopleType === '') });
+
+          if ($bad_attendee !== undefined) {
+            alert("Oops! Something is missing in the information for one or more of the people listed. Please fill in the missing information.");
+          }
+          else {
+            pageHistory.push(currentPage);
+            const newPage = attendees.length > 0 ? pages.REMEMBRANCE : pages.SOFTWEAR;
+
+            this.setState({
+              attendees,
+              pageHistory,
+              currentPage: newPage,
+            });
+          }
+          break;
+
+
+      case pages.REMEMBRANCE:
+          // let attendees = this.state.attendees;
+
+          //  Clean up entries
+          attendees = attendees.map(a => {
+            if (!a.rembOuting) {
+              a.rembLunch = '';               //  No lunches for people not attending
+            }
+            return a;
+          });
+
+          let $missing_lunch = attendees.find( a => { return (a.rembOuting  &&  a.rembLunch === '' ) });
+          if ($missing_lunch) {
+            alert("Oops! Please select a lunch for each person attending.");
+          }
+          else {
+            pageHistory.push(currentPage);
+            const newPage = pages.SCHEDULES;
+
+            this.setState({
+              attendees,
+              pageHistory,
+              currentPage: newPage,
+            });
+          }
+
+          break;
+
+      case pages.SCHEDULES:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+          const newPage = pages.CHAPTERCHAIR;
+
+          this.setState({
+            pageHistory,
+            currentPage: newPage,
+          });
+
+          break;
+
+      case pages.CHAPTERCHAIR:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: pages.DIRECTORY,
+          });
+
+          break;
+
+      case pages.DIRECTORY:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: pages.SOFTWEAR,
+          });
+
+          break;
+
+      case pages.SOFTWEAR:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: pages.SUMMARY,
+          });
+
+          break;
+
+      default:
+          console.log("Error in onNextPage")
+    }
   }
 
 
+  //-------------------------------------------------------------------------------------------
   //  Process Attendees page
   
   onAddAttendee(event) {
@@ -364,9 +542,11 @@ class App extends Component {
       attendees.push(
         {
           id: nextID++,
-          firstName: contactInfo.firstName,
-          lastName:  contactInfo.lastName,
+          firstName:  contactInfo.firstName,
+          lastName:   contactInfo.lastName,
           peopleType: peopleTypes.ADULT,
+          rembOuting: 0,
+          rembLunch:  '',
         }
       );
 
@@ -374,9 +554,11 @@ class App extends Component {
       attendees.push(
         {
           id: nextID++,
-          firstName: "",
-          lastName:  "",
-          peopleType: "",
+          firstName:  '',
+          lastName:   '',
+          peopleType: '',
+          rembOuting: 0,
+          rembLunch:  '', 
         }
       );
     this.setState({
@@ -407,13 +589,64 @@ class App extends Component {
     let i = attendees.findIndex(a => a.id === id);
     console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
     attendees[i].peopleType = opt.value;
-
     this.setState ({
       attendees
     });
   }
 
+
+
+  //-------------------------------------------------------------------------------------------
+  //  Process Remembrance page
+  
+
+  onChangeRembOuting(event, id) {
+    let { attendees } = this.state;
+    let i = attendees.findIndex(a => a.id === id);
+    console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
+
+    //  Flip state of attendance and lunch option
+    attendees[i].rembOuting = !attendees[i].rembOuting;
+    if (!attendees[i].rembOuting) {
+      attendees[i].rembLunch = '';
+    }
+    this.setState ({
+      attendees
+    });
+  }
+
+  onChangeRembLunch(opt, id) {
+    let { attendees } = this.state;
+    let i = attendees.findIndex(a => a.id === id);
+    console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
+    attendees[i].rembLunch = opt.value;
+    this.setState ({
+      attendees
+    });
+  }
+
+
+
+  //-------------------------------------------------------------------------------------------
+  //  Chapter Chair page
+  
+
+  onChangeChapterChair(event, id) {
+    let { attendees } = this.state;
+    let i = attendees.findIndex(a => a.id === id);
+    console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
+    attendees[i].chapterChair = !attendees[i].chapterChair;
+    this.setState ({
+      attendees
+    });
+  }
 }
+
+
+
+//-------------------------------------------------------------------------------------------
+
+
 
 
 const SoftHeader = ({eventInfo}) =>
@@ -431,19 +664,77 @@ const SoftHeader = ({eventInfo}) =>
   </div>
 
 
-const pageTitles = ['Welcome', "Contact", "Balloons", "Attendees", "Schedules", "Summary", "Checkout" ];
+const pageTabs = [ 'Welcome', 'Contact', 'Attendees', 'Schedules', 'Balloons', 'Summary', 'Checkout' ];
 
 const PageBar = ({pageNum}) =>
-  <div className="pagebar">
-    {pageTitles.map( (title, i) => {
-        const keyName = title.replace(/ /g, "-");
-        if (pageNum === (i+1)) {
-          return <div key={keyName} className={"pagebar-selected"}><FontAwesomeIcon icon="angle-double-right" /> {title}</div>;
-        }
-        else
-          return <div key={keyName} className={"pagebar-unselected"}>{title}</div>;
-      }
-    )}
+  {
+    let title = '';
+
+    switch (pageNum) {
+      case pages.WELCOME:
+        title = 'Welcome';
+        break;
+      case pages.CONTACT:
+        title = 'Contact';
+        break;
+      case pages.ATTENDEES:
+        title = 'Attendees';
+        break;
+      case pages.REMEMBRANCE:
+      case pages.SCHEDULES:
+      case pages.CHAPTERCHAIR:
+        title = 'Schedules';
+        break;
+      case pages.SOFTWEAR:
+        title = 'SOFT Wear';
+        break;
+      case pages.BALLOONS:
+        title = 'Balloons';
+        break;
+      case pages.SUMMARY:
+      case pages.CHECKOUT:
+        title = 'Summary';
+        break;
+      default:
+        console.log('Unfound title in PageBar');
+    }
+
+    return(
+      <div className="pagebar">
+        {pageTabs.map( (tab, i) => {
+            const keyName = tab.replace(/ /g, "-");
+            if (tab === title) {
+              return <div key={keyName} className={"pagebar-selected"}><FontAwesomeIcon icon="angle-double-right" /> {tab}</div>;
+            }
+            else
+              return <div key={keyName} className={"pagebar-unselected"}>{tab}</div>;
+          }
+        )}
+      </div>
+    );
+}
+
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const Welcome = () =>
+  <div className="welcome">
+    <h2>Welcome!</h2>
+    <p>Welcome to the Soft Conference Registration form!</p>
+    <p>The 2019 Soft Conference is going to be held from Thursday March 3rd to Saturday March 5th at the
+       Volcano Hotel in Kiwaluea Hawaii.
+    </p>
+    <p>If you haven't read the 2019 Conference Pamphlet yet, you'll want to do that first before going
+       through this form so you know exactly what's going on. Having the pamphlet available as you fill
+       out this registration form will be helpful.
+    </p>
+    <p>If you need a copy of the pamphlet, click this button:</p>
+    <div className="welcome-button">
+      <Button>Download Pamphlet</Button>
+    </div>
+    <p>To get started, click on the Next button.</p>
   </div>
 
 
@@ -455,15 +746,20 @@ const PageBar = ({pageNum}) =>
 const ContactInfo = ({contact, onChangeContactInfo, onChangeCountry}) =>
   <div>
     <h2>Contact Information</h2>
-    <EditName value={contact.firstName} field="firstName" onChange={onChangeContactInfo}>FIRST Name</EditName>
-    <EditName value={contact.lastName} field="lastName"  onChange={onChangeContactInfo}>LAST Name</EditName>
-    <EditAddress contact={contact} onChange={onChangeContactInfo} onChangeCountry={onChangeCountry}>Address</EditAddress>
-    <div className="phones">
-      <EditPhone value={contact.phoneMobile} field="phoneMobile" onChange={onChangeContactInfo}>Mobile Phone</EditPhone>
-      <EditPhone value={contact.phoneWork}   field="phoneWork"   onChange={onChangeContactInfo}>Work Phone</EditPhone>
-      <EditPhone value={contact.phoneHome}   field="phoneHome"   onChange={onChangeContactInfo}>Home Phone</EditPhone>
+    <p>Please enter the contact information for the person handling this registration. The contact person
+       does not need to be attending the conference.
+    </p>
+    <div style={{marginLeft: 20}}>
+      <EditName value={contact.firstName} field="firstName" onChange={onChangeContactInfo}>FIRST Name</EditName>
+      <EditName value={contact.lastName} field="lastName"  onChange={onChangeContactInfo}>LAST Name</EditName>
+      <EditAddress contact={contact} onChange={onChangeContactInfo} onChangeCountry={onChangeCountry}>Address</EditAddress>
+      <div className="phones">
+        <EditPhone value={contact.phoneMobile} field="phoneMobile" onChange={onChangeContactInfo}>Mobile Phone</EditPhone>
+        <EditPhone value={contact.phoneWork}   field="phoneWork"   onChange={onChangeContactInfo}>Work Phone</EditPhone>
+        <EditPhone value={contact.phoneHome}   field="phoneHome"   onChange={onChangeContactInfo}>Home Phone</EditPhone>
+      </div>
+      <EditEmail value={contact.email} onChange={onChangeContactInfo}>Best Email Address</EditEmail>
     </div>
-    <EditEmail value={contact.email} onChange={onChangeContactInfo}>Best Email Address</EditEmail>
   </div>
 
 
@@ -515,38 +811,103 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangePeopleType}) =
 
 
 
-const Remembrance = ({contact}) =>
+const Remembrance = ({ attendees, menuInfo, onChange, onChangeLunch }) =>
   <div>
     <h2>Remembrance Outing</h2>
     <p>There will be a Remembrance Outing for families who have lost a child. If you have lost
        a child and plan to attend, please put a checkmark next to each person who will be
        attending, and select the type of box lunch for each. Otherwise, simply click the Next button.
     </p>
+    <div className="remembrance">
+      {attendees.map( (a,i) => 
+          <div key={a.id} className="remb-row">
+            <Checkbox defaultChecked={a.rembOuting} onChange={event => onChange(event, a.id)} />
+            <span className="remb-name">{a.firstName} {a.lastName}</span>
+            <RembLunch value={a.rembLunch} menuInfo={menuInfo} isDisabled={!a.rembOuting} onChange={(opt) => onChangeLunch(opt, a.id)} />
+          </div>
+        )
+      }
+    </div>
   </div>
 
 
-
 //----------------------------------------------------------------------------------------------------
-
-
-
-const ChapterChair = ({contact}) =>
-  <div>
-    <h2>Chapter Chair Luncheon</h2>
-    <p>Is anyone in your party a registered or prospective Chapter Chair? If so, please check everyone
-       who will be attending the Chapter Chair Lunch; otherwise, simply click the Next buttton.
-    </p>
-  </div>
-
-
-
-//----------------------------------------------------------------------------------------------------
-
 
 
 const Schedules = ({contact}) =>
   <div>
     <h2>Schedules</h2>
+    <p>Next we need to know what events each person will be attending. If you have any questions
+       as you go down this list, please refer back to the schedule of events listed in the
+       conference pamphlet. That pamphlet gives a complete description of each event and when
+       it is being held.
+    </p>
+    <p>COMING SOON!</p>
+  </div>
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const ChapterChair = ({ attendees, menuInfo, onChange, onChangeLunch }) =>
+  <div>
+    <h2>Chapter Chair Luncheon</h2>
+    <p>Is anyone in your party a registered or prospective Chapter Chair? If so, please check everyone
+       who will be attending the Chapter Chair Lunch; otherwise, simply click the Next buttton.
+    </p>
+    <p><FontAwesomeIcon icon="question-circle" /> If you don't know what a Chapter Chair is, this doesn't apply to you. Click Next.</p>
+    <div className="chapter-chair">
+      {attendees.map( (a,i) => 
+          <div key={a.id} className="chair-row">
+            <Checkbox defaultChecked={a.chapterChair} onChange={event => onChange(event, a.id)} />
+            <span className="remb-name">{a.firstName} {a.lastName}</span>
+          </div>
+        )
+      }
+    </div>
+  </div>
+
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+
+const Directory = ({contact}) =>
+  <div>
+    <h2>Directory of Attendees</h2>
+    <p>SOFT creates a Directory of Conference Attendees to be given to the attendees. It contains
+       names, addresses, phone numbers, email addresses, and photos if you submit them.
+    </p>
+    <p>Check everything that you would like included in the Directory. By default, everything is
+       included. Uncheck those items that you would like to have excluded from the Directory:
+    </p>
+    <p><FontAwesomeIcon icon="hand-point-right" /> If you don't want to be included in the Directory at all, uncheck every item.</p>
+    <div className="chapter-chair">
+      <div className="chair-row">
+        <Checkbox defaultChecked={true} /> SOFT Child's name and Contact Person
+      </div>
+      <div className="chair-row">
+        <Checkbox defaultChecked={true} /> Any photos that have been submitted
+      </div>
+      <div className="chair-row">
+        <Checkbox defaultChecked={true} /> Contact person's email address
+      </div>
+      <div className="chair-row">
+        <Checkbox defaultChecked={true} /> Contact person's mobile phone number
+      </div>
+    </div>
+  </div>
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+
+const SoftWear = ({contact}) =>
+  <div>
+    <h2>SOFT Wear</h2>
+    <p>Get your shirts here!</p>
   </div>
 
 
@@ -675,6 +1036,23 @@ const PeopleType = ({value, onChange, className="edit-people"}) => {
         );
     }
 
+const RembLunch = ({value, menuInfo, isDisabled, onChange, className="edit-remb-lunch"}) => {
+      const optionsRembLunch = Object.keys(menuInfo).map(k => { return { label: menuInfo[k], value: k } });
+      const defaultOpt = optionsRembLunch.find(opt => (opt.value === value));
+      return (
+        <div className={className}>
+          <Select
+            options={optionsRembLunch}
+            defaultValue={defaultOpt}
+            placeholder={"Select..."}
+            isDisabled={isDisabled}
+            onChange={onChange}
+            styles={customStylesPeopleTypes}
+          />
+        </div>
+      );
+    }
+
 const Country = ({value, onChange, className="edit-country"}) => {
     const defaultOpt = optionsCountries.find(opt => (opt.value === value));
       return (
@@ -745,6 +1123,15 @@ const Button = ({ onClick = null, onSubmit = null, className = '', children, typ
     {children}
   </button>
 
+const Checkbox = ({ name, defaultChecked, onChange, className='edit-checkbox' }) =>
+  <input
+    type="checkbox"
+    name={name}
+    onChange={onChange}
+    className={className}
+    defaultChecked={defaultChecked}
+  />
+
 
 function ucFirst(string) 
 {
@@ -752,6 +1139,8 @@ function ucFirst(string)
 }
 
 function smartFixName(text) {
+
+    text = text.trim();
 
     // Don't do anything if the text has BOTH upper and lowercase letters
     if (text.match(/[A-Z]/)  &&  text.match(/[a-z]/)) {
@@ -849,14 +1238,8 @@ function smartFixAddress(address) {
 
 
 function smartFixStateProv(stateProv) {
-
-    if (stateProv.length <= 2) {
-      stateProv = stateProv.toUpperCase();
-    }
-    else {
-      stateProv = smartFixName(stateProv);
-    }
-    return stateProv;
+    stateProv = stateProv.trim();
+    return (stateProv.length <= 2) ? stateProv.toUpperCase() : smartFixName(stateProv);
 }
 
 
@@ -866,7 +1249,8 @@ function smartFixPostalCode(postalCode) {
 
 
 function smartFixEmail(email) {
-    email = email.replace(/\s+/g, "");
+    email = email.trim().replace(/\s+/g, "");
+    //  Correct misspellings of gmail.com, etc
     return email.toLowerCase();
 }
 

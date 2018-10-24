@@ -14,12 +14,14 @@
     color: #cccccc;
 }
 
+center {
+  text-align: center;
+}
 
 body {
   background-color: #eee;
   background-image: url(skyballoons.png);   
 }
-
 
 .logo-header {
 }
@@ -65,7 +67,7 @@ p {
 
 .page-boundary {
   max-width: 100%;
-  min-height: 400px;
+  /*min-height: 400px;*/
   padding: 20px;
   border: 1px solid grey;
   border-radius: 15px;
@@ -80,7 +82,7 @@ p {
 
 .pagebar-unselected {
   display: inline-block;
-  padding: 10px;
+  padding: 12px;
   background-color: #6a76cf;
   color: #afb7f6;
   border: 1px solid white;
@@ -88,7 +90,7 @@ p {
 
 .pagebar-selected {
   display: inline-block;
-  padding: 10px;
+  padding: 12px;
   background-color: #efd31c;
   border: 1px solid white;
 }
@@ -119,6 +121,22 @@ p {
     margin-top: 25px;
     text-align: left;
   }
+}
+
+.welcome>h2 {
+  text-align: center;
+  margin-top: 60px;
+  margin-bottom: 1em;
+}
+
+.welcome>p {
+  text-align: center;
+  margin: 0 50px 1em 50px;
+}
+
+.welcome-button {
+  text-align: center;
+  margin: 30px auto 30px auto;
 }
 
 .edit-name {
@@ -191,6 +209,9 @@ p {
   width: 150px;
 }
 
+.edit-checkbox {
+  height: 1em;
+}
 
 .phones {
 /*  float: left;
@@ -211,7 +232,31 @@ p {
   width: 150px;
 }
 
+.remembrance {
+  margin: 20px 0 40px 0;
+}
 
+.remb-row {
+  margin-left: 20px;
+}
+
+.remb-name {
+  display: inline-block;
+  padding-left: 10px;
+  width: 200px;
+}
+
+.edit-remb-lunch {
+    display: inline-block;
+}
+
+.chapter-chair {
+  margin: 30px 0 30px 0;
+}
+
+.chair-row {
+  margin: 15px 0 0 20px;
+}
 
 
 .edit-email {
@@ -271,62 +316,3 @@ p {
   text-align: center;
 }
 
-
-
-
-
-.table {
-  margin: 20px 0;
-}
-
-.table-header {
-  display: flex;
-  line-height: 24px;
-  font-size: 16px;
-  padding: 0 10px;
-  justify-content: space-between;
-}
-
-.table-empty {
-  margin: 200px;
-  text-align: center;
-  font-size: 16px;
-}
-
-.table-row {
-  display: flex;
-  line-height: 24px;
-  white-space: nowrap;
-  margin: 10px 0;
-  padding: 10px;
-  background: #ffffff;
-  border: 1px solid #e3e3e3;
-}
-
-.table-header > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 0 5px;
-}
-
-.table-row > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 0 5px;
-}
-
-.button-inline {
-  border-width: 0;
-  background: lightgrey;
-  color: inherit;
-  text-align: inherit;
-  -webkit-font-smoothing: inherit;
-  padding: 5px 5px 5px 15px;
-  font-size: inherit;
-  cursor: pointer;
-}
-
-.button-active {
-  border-radius: 0;
-  border-bottom: 1px solid #38BB6C;
-}
