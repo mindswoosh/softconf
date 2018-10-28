@@ -147,6 +147,7 @@ const customStylesPeopleTypes = {
   }),
 }
 
+
 function attendee(firstName, lastName, peopleType) {
   return {
     id: nextID++,
@@ -158,6 +159,7 @@ function attendee(firstName, lastName, peopleType) {
     chapterChair: '',
   };
 }
+
 
 class App extends Component {
 
@@ -191,12 +193,9 @@ class App extends Component {
       },
 
       attendees: [
-        // attendee("Steve", "Maguire", peopleTypes.ADULT),
-        // attendee("Beth", "Mountjoy", peopleTypes.CHILD),
-        // attendee("Terre", "Krotzer", peopleTypes.PROFESSIONAL),
-        // { id: 5, firstName: "Steve", lastName: "Maguire", peopleType: peopleTypes.ADULT, rembOuting: 0, rembLunch: '', chapterChair: '' },
-        // { id: 21, firstName: "Beth", lastName: "Mountjoy", peopleType: peopleTypes.CHILD, rembOuting: 0, rembLunch: '', chapterChair: '' },
-        // { id: 37, firstName: "Terre", lastName: "Krotzer", peopleType: peopleTypes.PROFESSIONAL, rembOuting: 0, rembLunch: '', chapterChair: '' },
+        attendee("Steve", "Maguire",  peopleTypes.ADULT),
+        attendee("Beth",  "Mountjoy", peopleTypes.CHILD),
+        attendee("Terre", "Krotzer",  peopleTypes.PROFESSIONAL),
       ],
 
     };
@@ -390,9 +389,6 @@ class App extends Component {
       case pages.CONTACT:
           const contactInfo = this.state.contactInfo;
 
-          //  Error check
-          //  alert() if errors
-
           const contact = {
               ...contactInfo,
               firstName:   smartFixName(contactInfo.firstName),
@@ -403,11 +399,14 @@ class App extends Component {
               stateProv:   smartFixStateProv(contactInfo.stateProv),
               // country:     '',
               postalCode:  smartFixPostalCode(contactInfo.postalCode),
-              // phoneMobile: '',
-              // phoneWork:   '',
-              // phoneHome:   '',
+              phoneMobile: smartFixPhone(contactInfo.phoneMobile),
+              phoneWork:   smartFixPhone(contactInfo.phoneWork),
+              phoneHome:   smartFixPhone(contactInfo.phoneHome),
               email:       smartFixEmail(contactInfo.email),
             }
+
+          //  Error check
+          //  alert() if errors
 
           pageHistory.push(currentPage);
 
@@ -538,29 +537,12 @@ class App extends Component {
   
   onAddAttendee(event) {
     let { attendees, contactInfo } = this.state;
-    if (attendees.length === 0)
-      attendees.push(
-        {
-          id: nextID++,
-          firstName:  contactInfo.firstName,
-          lastName:   contactInfo.lastName,
-          peopleType: peopleTypes.ADULT,
-          rembOuting: 0,
-          rembLunch:  '',
-        }
-      );
 
+    if (attendees.length === 0)
+      attendees.push( attendee(contactInfo.firstName, contactInfo.lastName,  peopleTypes.ADULT) );
     else
-      attendees.push(
-        {
-          id: nextID++,
-          firstName:  '',
-          lastName:   '',
-          peopleType: '',
-          rembOuting: 0,
-          rembLunch:  '', 
-        }
-      );
+      attendees.push( attendee('', '', '') );
+
     this.setState({
       attendees
     });
@@ -726,13 +708,13 @@ const Welcome = () =>
     <p>The 2019 Soft Conference is going to be held from Thursday March 3rd to Saturday March 5th at the
        Volcano Hotel in Kiwaluea Hawaii.
     </p>
-    <p>If you haven't read the 2019 Conference Pamphlet yet, you'll want to do that first before going
-       through this form so you know exactly what's going on. Having the pamphlet available as you fill
+    <p>If you haven't read the 2019 Conference brochure yet, you'll want to do that first before going
+       through this form so you know exactly what's going on. Having the brochure available as you fill
        out this registration form will be helpful.
     </p>
-    <p>If you need a copy of the pamphlet, click this button:</p>
+    <p>If you need a copy of the brochure, click this button:</p>
     <div className="welcome-button">
-      <Button>Download Pamphlet</Button>
+      <Button>Download Brochure</Button>
     </div>
     <p>To get started, click on the Next button.</p>
   </div>
@@ -839,7 +821,7 @@ const Schedules = ({contact}) =>
     <h2>Schedules</h2>
     <p>Next we need to know what events each person will be attending. If you have any questions
        as you go down this list, please refer back to the schedule of events listed in the
-       conference pamphlet. That pamphlet gives a complete description of each event and when
+       conference brochure. That brochure gives a complete description of each event and when
        it is being held.
     </p>
     <p>COMING SOON!</p>
@@ -1245,6 +1227,17 @@ function smartFixStateProv(stateProv) {
 
 function smartFixPostalCode(postalCode) {
     return postalCode.toUpperCase();
+}
+
+
+function smartFixPhone(phone) {
+    phone = phone.replace(/\D/g, '');
+    if (phone.length > 10) {
+      phone = phone.replace(/^(\d+)(\d{3})(\d{3})(\d{4})$/, "+$1 ($2) $3-$4");
+    } else if (phone.length === 10) {
+      phone = phone.replace(/^(\d{3})(\d{3})(\d{4})$/, "($1) $2-$3");
+    }
+    return (phone);
 }
 
 
