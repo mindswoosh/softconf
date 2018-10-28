@@ -105,10 +105,10 @@ const peopleTypes = {
 };
 
 const optionsPeopleTypes = [
-  { label: "SOFT child",   value: peopleTypes.SOFTCHILD },
-  { label: "Child",        value: peopleTypes.CHILD },  
-  { label: "Adult",        value: peopleTypes.ADULT },
-  { label: "Professional", value: peopleTypes.PROFESSIONAL },
+  { label: "SOFT child",    value: peopleTypes.SOFTCHILD },
+  { label: "Child",         value: peopleTypes.CHILD },  
+  { label: "Adult",         value: peopleTypes.ADULT },
+  { label: "Professional",  value: peopleTypes.PROFESSIONAL },
 ];
 
 
@@ -204,9 +204,9 @@ class App extends Component {
       },
 
       attendees: [
-        attendee("Steve", "Maguire",  peopleTypes.ADULT),
-        attendee("Beth",  "Mountjoy", peopleTypes.CHILD),
-        attendee("Terre", "Krotzer",  peopleTypes.PROFESSIONAL),
+        // attendee("Steve", "Maguire",  peopleTypes.ADULT),
+        // attendee("Beth",  "Mountjoy", peopleTypes.CHILD),
+        // attendee("Terre", "Krotzer",  peopleTypes.PROFESSIONAL),
       ],
 
     };
@@ -257,7 +257,8 @@ class App extends Component {
       remembranceMenu: {
           V: 'Vegetarian',
           C: 'Chicken',
-          T: 'Tuna Salad'
+          T: 'Tuna Salad',
+          N: 'No meal'
         },
       dinnerMenu: [
           'Wild Mushroom Ravioli',
@@ -443,13 +444,22 @@ class App extends Component {
           //  Error check
           //  alert() if errors
 
-          pageHistory.push(currentPage);
+          if (contact.firstName === ''  ||  contact.lastName === '') {
+            alert("Oops! Please enter the name of the Contact Person.");
+          }
+          else {
+            if (attendees.length === 0) {
+                attendees.push( attendee(contact.firstName, contact.lastName, peopleTypes.ADULT) );
+            }
 
-          this.setState({
-            contactInfo: contact,
-            pageHistory,
-            currentPage: pages.ATTENDEES,
-          });
+            pageHistory.push(currentPage);
+
+            this.setState({
+              contactInfo: contact,
+              pageHistory,
+              currentPage: pages.ATTENDEES,
+            });
+          }
 
           break;
 
@@ -591,18 +601,6 @@ class App extends Component {
 
           this.setState({
             pageHistory,
-            currentPage: pages.DIRECTORY,
-          });
-
-          break;
-
-      case pages.DIRECTORY:
-          // let attendees = this.state.attendees;
-
-          pageHistory.push(currentPage);
-
-          this.setState({
-            pageHistory,
             currentPage: pages.PHOTOS,
           });
 
@@ -615,10 +613,23 @@ class App extends Component {
 
           this.setState({
             pageHistory,
+            currentPage: pages.DIRECTORY,
+          });
+
+          break;
+
+      case pages.DIRECTORY:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
             currentPage: pages.SOFTWEAR,
           });
 
           break;
+
 
       case pages.SOFTWEAR:
           // let attendees = this.state.attendees;
@@ -865,18 +876,18 @@ const ContactInfo = ({contact, onChangeContactInfo, onChangeCountry}) =>
   <div>
     <h2>Contact Information</h2>
     <p>Please enter the contact information for the person handling this registration. The contact person
-       does not need to be attending the conference.
+       does not need to be attending the conference. Required information is starred "*".
     </p>
     <div style={{marginLeft: 20}}>
-      <EditName value={contact.firstName} field="firstName" onChange={onChangeContactInfo}>FIRST Name</EditName>
-      <EditName value={contact.lastName} field="lastName"  onChange={onChangeContactInfo}>LAST Name</EditName>
+      <EditName value={contact.firstName} field="firstName" onChange={onChangeContactInfo}>FIRST Name *</EditName>
+      <EditName value={contact.lastName} field="lastName"  onChange={onChangeContactInfo}>LAST Name * </EditName>
       <EditAddress contact={contact} onChange={onChangeContactInfo} onChangeCountry={onChangeCountry}>Address</EditAddress>
       <div className="phones">
         <EditPhone value={contact.phoneMobile} field="phoneMobile" onChange={onChangeContactInfo}>Mobile Phone</EditPhone>
         <EditPhone value={contact.phoneWork}   field="phoneWork"   onChange={onChangeContactInfo}>Work Phone</EditPhone>
         <EditPhone value={contact.phoneHome}   field="phoneHome"   onChange={onChangeContactInfo}>Home Phone</EditPhone>
       </div>
-      <EditEmail value={contact.email} onChange={onChangeContactInfo}>Best Email Address</EditEmail>
+      <EditEmail value={contact.email} onChange={onChangeContactInfo}>Best Email Address *</EditEmail>
     </div>
   </div>
 
@@ -892,8 +903,7 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangePeopleType}) =
     <p>Please list everybody in your party who will be attending any part of the Conference. If no one
        will be attending, simply click on the Next button.
     </p>
-    <p><FontAwesomeIcon icon="hand-point-right" /> Remember to include the contact person if that person will be attending.</p>
-    {attendees.length  ?
+    {attendees.length > 0  &&
       <div>
         <p className="row-num">1.</p>
         <Input value={attendees[0].firstName} placeHolder="First Name" onChange={event => onChange(event, attendees[0].id, "firstName")}>FIRST Name</Input>
@@ -913,7 +923,6 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangePeopleType}) =
           : null
         }
       </div>
-      : null
     }
     <br />
     {attendees.length === 0 ?
@@ -930,9 +939,19 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangePeopleType}) =
 const Clinics = ({contact}) =>
   <div>
     <h2>Clinics</h2>
-    <p>Blurb
+    <p>This year’s Soft Clinics will be held at Sonny's Children’s Hospital on Thursday July 35th. Please
+       number your clinic preferences (up to 5). We will attempt to schedule each child into 3 of the 5 preferences.
     </p>
-    <p>COMING SOON!</p>
+    <b>
+      <p>INFO TO GATHER:</p>
+      <p>Info needed from participants:<br />
+         Clinic preferences (up to 5 choices)<br />
+         <br />
+         Number attending adults? Kids? Soft kids?  Needed for bus<br />
+         Bus seats needed? Tie downs needed?<br />
+      </p>
+    </b>
+
   </div>
 
 
@@ -956,6 +975,7 @@ const Remembrance = ({ attendees, menuInfo, onChange, onChangeLunch }) =>
           </div>
         )
       }
+      <p><b><br />What other Info? Bus seats needed? Tie-downs?</b></p>
     </div>
   </div>
 
@@ -967,9 +987,17 @@ const Remembrance = ({ attendees, menuInfo, onChange, onChangeLunch }) =>
 const Youth = ({contact}) =>
   <div>
     <h2>Youth Outing</h2>
-    <p>Blurb
+    <p>Omaha’s famed "Henry Doorly Zoo and Aquarium" will be the focus of the Children’s Activities on 
+       Thursday – see the schedule for times and pick-up location. The cost for children aged 12+ is $35 
+       and for 5-11 the cost is $30. The outing includes transportation, a T-shirt and lunch as well as 
+       admission to the Zoo activities.
     </p>
-    <p>COMING SOON!</p>
+    <b>
+      <p>Normally these are separate events for children 11 and under, and 12 and older<br /><br />
+         Info to gather:  Age of each child, shirt size, what else?<br /><br />
+         It's assumed one bus seat per child. Any exceptions?<br />
+      </p>
+    </b>
   </div>
 
 
@@ -979,9 +1007,17 @@ const Youth = ({contact}) =>
 const Childcare = ({contact}) =>
   <div>
     <h2>Childcare</h2>
-    <p>Blurb
+    <p>Day care is available for kids ages infant to ? during the following hours..
     </p>
-    <p>COMING SOON!</p>
+    <b>
+    <p>INFO TO GATHER:</p>
+      <p>How to schedule this? For each child attending present a list of checkboxes of time slots? E.g.:<br /><br />
+          Todd Brown:<br />Thursday Morning, Thursday Afternnon, Friday Morning, Friday Afternnon<br /><br />
+          Wendy Brown:<br />Thursday Morning, Thursday Afternnon, Friday Morning, Friday Afternnon<br /><br />
+         <br />
+         Will that work for how childcare is provided?<br />
+      </p>
+    </b>
   </div>
 
 
@@ -992,9 +1028,13 @@ const Childcare = ({contact}) =>
 const Dinner = ({contact}) =>
   <div>
     <h2>Welcome Dinner</h2>
-    <p>Blurb
+    <p>Our annual welcome dinner will be held Thursday night from 6pm – 10pm.
     </p>
-    <p>COMING SOON!</p>
+    <b>
+      <p>Exactly like for the Remember Outing page, but with different meal choices?<br /><br />
+         Any transportation info needed for this?
+      </p>
+    </b>
   </div>
 
 
@@ -1004,9 +1044,12 @@ const Dinner = ({contact}) =>
 const Workshops = ({contact}) =>
   <div>
     <h2>Workshops</h2>
-    <p>Blurb
+    <p>Workshops will be held on Thursday July 35th from 9am–4pm. Please indicate workshops you would like to attend and number attending.
     </p>
-    <p>COMING SOON!</p>
+    <b>
+    <p>Present a list of Workshop names with a dropdown next to each one with number to attend? (Dropdown menu 
+       will range from 0 to the number of attendees in their party)</p>
+    </b>
   </div>
 
 
@@ -1017,9 +1060,16 @@ const Workshops = ({contact}) =>
 const Picnic = ({contact}) =>
   <div>
     <h2>Picnic</h2>
-    <p>Blurb
+    <p>The Annual Ryan Cantrell Memorial Picnic and Balloon release will be Saturday July 36th from 1–4pm at
+       the East Fork Lake picnic area. Please let us know who is attending, number of bus seats/tie downs if needed.
+       If you will are requesting a balloon release for your child we will gather that information on the next page.
     </p>
-    <p>COMING SOON!</p>
+    <b>
+    <p>Just like Remembrance Outing. Present list of people to check (w/o a meal choice) and whether a tie down
+       is needed.<br /><br />
+       Is it assumed that everybody needs a bus seat or a tie down? In other words is "no transportation
+       needed" a possibility?</p>
+    </b>
   </div>
 
 
@@ -1028,10 +1078,40 @@ const Picnic = ({contact}) =>
 
 const Balloons = ({contact}) =>
   <div>
-    <h2>Balloons</h2>
-    <p>Blurb
+    <h2>Balloon Release</h2>
+    <p>You are invited to honor your Soft Angel during our Memorial Balloon Release. It is not necessary to attend
+       the conference to request a balloon for your child.
     </p>
-    <p>COMING SOON!</p>
+    <b>
+      <p>Info to Collect:<br /><br />
+        Child's name<br />
+        Date of birth<br />
+        Date of death<br />
+        Diagnosis<br />
+        Parents' names<br /><br />
+        Anything else?
+      </p>
+    </b>
+  </div>
+
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const Photos = ({contact}) =>
+  <div>
+    <h2>Photos</h2>
+    <p>We invite you to share a family photo and a photo of your Soft Child. Photos may be used for 
+       display during the conference and/or included in the Soft Family Directory.
+    </p>
+    <b>
+      <p>Optional photos to ask for:<br /><br />
+        Child's photo<br />
+        Family photo<br /><br />
+        One each? Or do you want the ability to upload multiples of each?
+      </p>
+    </b>
   </div>
 
 
@@ -1042,22 +1122,27 @@ const Balloons = ({contact}) =>
 const Directory = ({contact}) =>
   <div>
     <h2>Directory</h2>
-    <p>Blurb
+    <p>Each year we create a conference directory with Name, address, email, phone numbers, Soft Child info 
+       and photos. Please check the items you would like included in your listing:
     </p>
-    <p>COMING SOON!</p>
+    <b>
+      <p>Info to Collect:<br /><br />
+        Name<br />
+        Address<br />
+        Email address<br />
+        Cell phone<br />
+        Home phone<br />
+        Soft child info (name, diagnosis, dates)<br />
+        Family photo<br /><br />
+        Anything else?<br />
+        Can we assume that this is the same info gathered for the contact person? If so, we can
+        just have them checkmark the information they're okay with providing. (We gathered the soft
+        child's info elsewhere.) In other words, this page could be really complex if we re-gather
+        the information, or instead it could be really simple if it's just a list of checkboxes.
+      </p>
+    </b>
   </div>
 
-
-//----------------------------------------------------------------------------------------------------
-
-
-const Photos = ({contact}) =>
-  <div>
-    <h2>Photos</h2>
-    <p>Blurb
-    </p>
-    <p>COMING SOON!</p>
-  </div>
 
 
 //----------------------------------------------------------------------------------------------------
@@ -1066,9 +1151,9 @@ const Photos = ({contact}) =>
 const Softwear = ({contact}) =>
   <div>
     <h2>SOFT Wear</h2>
-    <p>Blurb
+    <p>Get your SOFT Wear shirts here
     </p>
-    <p>COMING SOON!</p>
+    <p>Present shirt options: sizes and quantity.</p>
   </div>
 
 
