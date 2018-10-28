@@ -1,7 +1,13 @@
 //
 //  Soft Convention Registration
 //
-//   9/18/18 v0.1 Steve Maguire steve@stormdev.com
+//  9/18/18 v0.1 Steve Maguire steve@stormdev.com
+//
+//  Robin Weirich's book, page 191
+//  $ git add .
+//  $ git commit -m "..."
+//  $ git push heroku master
+//  $ heroku open 
 
 
 import React, { Component } from 'react';
@@ -23,15 +29,20 @@ const pages = {
   WELCOME:      1,
   CONTACT:      2,
   ATTENDEES:    3,
-  REMEMBRANCE:  4,
-  SCHEDULES:    5,
-  BALLOONS:     6, 
-  CHAPTERCHAIR: 7,
-  DIRECTORY:    8,
-  SOFTWEAR:     9,
-  SUMMARY:      10,
-  CHECKOUT:     11,
-  END:          12,
+  CLINICS:      4,
+  REMEMBRANCE:  5,
+  YOUTH:        6,
+  CHILDCARE:    7,
+  DINNER:       8,
+  WORKSHOPS:    9,
+  PICNIC:       10,
+  BALLOONS:     11,
+  DIRECTORY:    12,
+  PHOTOS:       13,
+  SOFTWEAR:     14,
+  SUMMARY:      15,
+  CHECKOUT:     16,
+  END:          17,
 };
 
 console.assert(Object.keys(pages).find( (name,i) => { return pages[name] !== i} ) === undefined, 'Page Enum is incorrect');
@@ -311,6 +322,9 @@ class App extends Component {
                     onChangePeopleType={this.onChangePeopleType}
                   />,
 
+              [pages.CLINICS]:
+                  <Clinics />,
+
               [pages.REMEMBRANCE]:
                   <Remembrance
                     attendees={attendees}
@@ -319,8 +333,23 @@ class App extends Component {
                     onChangeLunch={this.onChangeRembLunch}
                   />,
 
-              [pages.SCHEDULES]:
-                  <Schedules contact={contactInfo} />,
+              [pages.YOUTH]:
+                  <Youth />,
+
+              [pages.CHILDCARE]:
+                  <Childcare />,
+
+              [pages.DINNER]:
+                  <Dinner />,
+
+              [pages.WORKSHOPS]:
+                  <Workshops />,
+
+              [pages.PICNIC]:
+                  <Picnic />,
+
+              [pages.BALLOONS]:
+                  <Balloons />,
 
               [pages.CHAPTERCHAIR]:
                   <ChapterChair
@@ -333,11 +362,17 @@ class App extends Component {
               [pages.DIRECTORY]:
                   <Directory contact={contactInfo} />,
 
+              [pages.PHOTOS]:
+                  <Photos contact={contactInfo} />,
+
               [pages.SOFTWEAR]:
-                  <SoftWear />,
+                  <Softwear />,
 
               [pages.SUMMARY]:
-                  <ContactSummary contact={contactInfo} />,
+                  <Summary contact={contactInfo} />,
+
+              [pages.CHECKOUT]:
+                  <Checkout contact={contactInfo} />,
 
               // [pages.MERCHANDISE]:  <Merchancise merchandise={merchandise} />,
             }[currentPage]
@@ -438,7 +473,7 @@ class App extends Component {
           }
           else {
             pageHistory.push(currentPage);
-            const newPage = attendees.length > 0 ? pages.REMEMBRANCE : pages.SOFTWEAR;
+            const newPage = attendees.length > 0 ? pages.CLINICS : pages.SOFTWEAR;
 
             this.setState({
               attendees,
@@ -448,6 +483,18 @@ class App extends Component {
           }
           break;
 
+      case pages.CLINICS:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+          const newPage = pages.REMEMBRANCE;
+
+          this.setState({
+            pageHistory,
+            currentPage: newPage,
+          });
+
+          break;
 
       case pages.REMEMBRANCE:
           // let attendees = this.state.attendees;
@@ -466,7 +513,7 @@ class App extends Component {
           }
           else {
             pageHistory.push(currentPage);
-            const newPage = pages.SCHEDULES;
+            const newPage = pages.YOUTH;
 
             this.setState({
               attendees,
@@ -477,20 +524,67 @@ class App extends Component {
 
           break;
 
-      case pages.SCHEDULES:
+      case pages.YOUTH:
           // let attendees = this.state.attendees;
 
           pageHistory.push(currentPage);
-          const newPage = pages.CHAPTERCHAIR;
 
           this.setState({
             pageHistory,
-            currentPage: newPage,
+            currentPage: pages.CHILDCARE,
           });
 
           break;
 
-      case pages.CHAPTERCHAIR:
+      case pages.CHILDCARE:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: pages.DINNER,
+          });
+
+          break;
+
+      case pages.DINNER:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: pages.WORKSHOPS,
+          });
+
+          break;
+
+      case pages.WORKSHOPS:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: pages.PICNIC,
+          });
+
+          break;
+
+      case pages.PICNIC:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: pages.BALLOONS,
+          });
+
+          break;
+
+      case pages.BALLOONS:
           // let attendees = this.state.attendees;
 
           pageHistory.push(currentPage);
@@ -503,6 +597,18 @@ class App extends Component {
           break;
 
       case pages.DIRECTORY:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: pages.PHOTOS,
+          });
+
+          break;
+
+      case pages.PHOTOS:
           // let attendees = this.state.attendees;
 
           pageHistory.push(currentPage);
@@ -523,6 +629,30 @@ class App extends Component {
             pageHistory,
             currentPage: pages.SUMMARY,
           });
+
+          break;
+
+      case pages.SUMMARY:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: pages.CHECKOUT,
+          });
+
+          break;
+
+      case pages.CHECKOUT:
+          // let attendees = this.state.attendees;
+
+          // pageHistory.push(currentPage);
+
+          // this.setState({
+          //   pageHistory,
+          //   currentPage: pages.END,
+          // });
 
           break;
 
@@ -646,7 +776,7 @@ const SoftHeader = ({eventInfo}) =>
   </div>
 
 
-const pageTabs = [ 'Welcome', 'Contact', 'Attendees', 'Schedules', 'Balloons', 'Summary', 'Checkout' ];
+const pageTabs = [ 'Welcome', 'Attendees', 'Schedules', 'Picnic', 'Directory', 'SOFT Wear', 'Checkout' ];
 
 const PageBar = ({pageNum}) =>
   {
@@ -657,25 +787,31 @@ const PageBar = ({pageNum}) =>
         title = 'Welcome';
         break;
       case pages.CONTACT:
-        title = 'Contact';
-        break;
       case pages.ATTENDEES:
         title = 'Attendees';
         break;
+      case pages.CLINICS:
       case pages.REMEMBRANCE:
-      case pages.SCHEDULES:
-      case pages.CHAPTERCHAIR:
+      case pages.YOUTH:
+      case pages.CHILDCARE:
+      case pages.DINNER:
+      case pages.WORKSHOPS:
         title = 'Schedules';
+        break;
+      case pages.PICNIC:
+      case pages.BALLOONS:
+        title = 'Picnic';
+        break;
+      case pages.DIRECTORY:
+      case pages.PHOTOS:
+        title = 'Directory';
         break;
       case pages.SOFTWEAR:
         title = 'SOFT Wear';
-        break;
-      case pages.BALLOONS:
-        title = 'Balloons';
-        break;
+        break;      
       case pages.SUMMARY:
       case pages.CHECKOUT:
-        title = 'Summary';
+        title = 'Checkout';
         break;
       default:
         console.log('Unfound title in PageBar');
@@ -788,6 +924,17 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangePeopleType}) =
   </div>
 
 
+//----------------------------------------------------------------------------------------------------
+
+
+const Clinics = ({contact}) =>
+  <div>
+    <h2>Clinics</h2>
+    <p>Blurb
+    </p>
+    <p>COMING SOON!</p>
+  </div>
+
 
 //----------------------------------------------------------------------------------------------------
 
@@ -813,19 +960,120 @@ const Remembrance = ({ attendees, menuInfo, onChange, onChangeLunch }) =>
   </div>
 
 
+
 //----------------------------------------------------------------------------------------------------
 
 
-const Schedules = ({contact}) =>
+const Youth = ({contact}) =>
   <div>
-    <h2>Schedules</h2>
-    <p>Next we need to know what events each person will be attending. If you have any questions
-       as you go down this list, please refer back to the schedule of events listed in the
-       conference brochure. That brochure gives a complete description of each event and when
-       it is being held.
+    <h2>Youth Outing</h2>
+    <p>Blurb
     </p>
     <p>COMING SOON!</p>
   </div>
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const Childcare = ({contact}) =>
+  <div>
+    <h2>Childcare</h2>
+    <p>Blurb
+    </p>
+    <p>COMING SOON!</p>
+  </div>
+
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const Dinner = ({contact}) =>
+  <div>
+    <h2>Welcome Dinner</h2>
+    <p>Blurb
+    </p>
+    <p>COMING SOON!</p>
+  </div>
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const Workshops = ({contact}) =>
+  <div>
+    <h2>Workshops</h2>
+    <p>Blurb
+    </p>
+    <p>COMING SOON!</p>
+  </div>
+
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const Picnic = ({contact}) =>
+  <div>
+    <h2>Picnic</h2>
+    <p>Blurb
+    </p>
+    <p>COMING SOON!</p>
+  </div>
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const Balloons = ({contact}) =>
+  <div>
+    <h2>Balloons</h2>
+    <p>Blurb
+    </p>
+    <p>COMING SOON!</p>
+  </div>
+
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const Directory = ({contact}) =>
+  <div>
+    <h2>Directory</h2>
+    <p>Blurb
+    </p>
+    <p>COMING SOON!</p>
+  </div>
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const Photos = ({contact}) =>
+  <div>
+    <h2>Photos</h2>
+    <p>Blurb
+    </p>
+    <p>COMING SOON!</p>
+  </div>
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const Softwear = ({contact}) =>
+  <div>
+    <h2>SOFT Wear</h2>
+    <p>Blurb
+    </p>
+    <p>COMING SOON!</p>
+  </div>
+
+
+
+
 
 
 //----------------------------------------------------------------------------------------------------
@@ -855,42 +1103,31 @@ const ChapterChair = ({ attendees, menuInfo, onChange, onChangeLunch }) =>
 
 
 
-const Directory = ({contact}) =>
-  <div>
-    <h2>Directory of Attendees</h2>
-    <p>SOFT creates a Directory of Conference Attendees to be given to the attendees. It contains
-       names, addresses, phone numbers, email addresses, and photos if you submit them.
-    </p>
-    <p>Check everything that you would like included in the Directory. By default, everything is
-       included. Uncheck those items that you would like to have excluded from the Directory:
-    </p>
-    <p><FontAwesomeIcon icon="hand-point-right" /> If you don't want to be included in the Directory at all, uncheck every item.</p>
-    <div className="chapter-chair">
-      <div className="chair-row">
-        <Checkbox defaultChecked={true} /> SOFT Child's name and Contact Person
-      </div>
-      <div className="chair-row">
-        <Checkbox defaultChecked={true} /> Any photos that have been submitted
-      </div>
-      <div className="chair-row">
-        <Checkbox defaultChecked={true} /> Contact person's email address
-      </div>
-      <div className="chair-row">
-        <Checkbox defaultChecked={true} /> Contact person's mobile phone number
-      </div>
-    </div>
-  </div>
-
-
-//----------------------------------------------------------------------------------------------------
-
-
-
-const SoftWear = ({contact}) =>
-  <div>
-    <h2>SOFT Wear</h2>
-    <p>Get your shirts here!</p>
-  </div>
+// const DirectoryOLD = ({contact}) =>
+//   <div>
+//     <h2>Directory of Attendees</h2>
+//     <p>SOFT creates a Directory of Conference Attendees to be given to the attendees. It contains
+//        names, addresses, phone numbers, email addresses, and photos if you submit them.
+//     </p>
+//     <p>Check everything that you would like included in the Directory. By default, everything is
+//        included. Uncheck those items that you would like to have excluded from the Directory:
+//     </p>
+//     <p><FontAwesomeIcon icon="hand-point-right" /> If you don't want to be included in the Directory at all, uncheck every item.</p>
+//     <div className="chapter-chair">
+//       <div className="chair-row">
+//         <Checkbox defaultChecked={true} /> SOFT Child's name and Contact Person
+//       </div>
+//       <div className="chair-row">
+//         <Checkbox defaultChecked={true} /> Any photos that have been submitted
+//       </div>
+//       <div className="chair-row">
+//         <Checkbox defaultChecked={true} /> Contact person's email address
+//       </div>
+//       <div className="chair-row">
+//         <Checkbox defaultChecked={true} /> Contact person's mobile phone number
+//       </div>
+//     </div>
+//   </div>
 
 
 
@@ -898,7 +1135,7 @@ const SoftWear = ({contact}) =>
 
 
 
-const ContactSummary = ({contact}) =>
+const Summary = ({contact}) =>
   <div>
     <h2>Summary</h2>
     <br />
@@ -917,6 +1154,17 @@ const ContactSummary = ({contact}) =>
   </div>
 
 
+
+//----------------------------------------------------------------------------------------------------
+
+
+const Checkout = ({contact}) =>
+  <div>
+    <h2>Checkout</h2>
+    <p>Blurb
+    </p>
+    <p>COMING SOON!</p>
+  </div>
 
 
 
@@ -1087,7 +1335,9 @@ const PrevNextButtons = ({pageNum, contact, onClickPrev, onClickNext}) =>
     {pageNum > pages.START+1  &&
       <Button className="button button-prev" onClick={onClickPrev}>BACK</Button>
     }
-    <Button className="button button-next" onClick={onClickNext}>NEXT</Button>
+    {pageNum < pages.END-1  &&
+      <Button className="button button-next" onClick={onClickNext}>NEXT</Button>
+    }
   </div>
 
 
