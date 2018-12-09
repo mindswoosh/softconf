@@ -12,15 +12,21 @@
 
 import React, { Component } from 'react';
 import Select from 'react-select';
+import {RadioGroup, Radio} from 'react-radio-group';
 import './App.css';
+
+import FloatingLabelInput from 'react-floating-label-input';
+import 'react-floating-label-input/dist/react-floating-label-input.css';
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAngleDoubleRight, faHandPointRight, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 
+
 library.add(faAngleDoubleRight);
 library.add(faHandPointRight);
 library.add(faQuestionCircle);
+
 
 var nextID = 10000;
 
@@ -51,6 +57,155 @@ const countries = ['United States', 'Canada', 'Mexico', 'United Kingdom', '-----
 
 const optionsCountries = countries.map(opt => ({ label: opt, value: opt }));
 
+const eventInfoDefault = {
+  eventTitle: '2019 Conference Registration',
+  workshopSessions: [
+      {
+        id: 1,
+        name:   "Session 1",
+        workshops: [
+          {
+            id:           "1a",
+            title:        "None",
+            moderator:    "",
+            description:  ""
+          },
+          {
+            id:           "1b",
+            title:        "Guardianship & Trust",
+            moderator:    "Attorney Nancy Lee, WA State Bar",
+            description:  "When your child turns 18 - An attorney will discuss how to apply for Guardianship and understand why it's necessary. She will also discuss how a Trust can be helpful."
+          },
+          {
+            id:           "1c",
+            title:        "TRIS Project",
+            moderator:    "Deborah A. Bruns, Ph.D",
+            description:  "This session will provide an overview of activities of the Tracking Rare Incidence Syndromes (TRIS) project during the past 12 months highlighting areas of data analyses and results and recently published articles."
+          },
+          {
+            id:           "1d",
+            title:        "Digital Scrapbooking",
+            moderator:    "Chelsea Dye, MAcc, JD",
+            description:  "Learn how to create amazing professionally-bound photo books of your treasured family photos using your computer rather than boxes full of scissors, paper and glue."
+          },
+          {
+            id:           "1e",
+            title:        "Occupational Therapy/Floor Time - Part 1",
+            moderator:    "Joyce Vipond OT",
+            description:  "ntroduction to the floor time model of playful engagement for developing social & emotional development. Exploring its impact on cognition and the ability to be engaged in the world."
+          }
+        ]
+      },
+      {
+        id: 2,
+        name:   "Session 2",
+        workshops: [
+          {
+            id:           "2a",
+            title:        "None",
+            moderator:    "",
+            description:  ""
+          },
+          {
+            id:           "2b",
+            title:        "Occupational Therapy/Floor Time - Part 2",
+            moderator:    "Joyce Vipond OT",
+            description:  "Continuation from Part 1...Live treatment demonstrations, videos and practical ideas for engaging your children."
+          },
+          {
+            id:           "2c",
+            title:        "Genetics",
+            moderator:    "John Carey, M.D., MPH",
+            description:  "The goals of the workshop are to describe the syndrome patterns of Trisomy 13 & 18 and address the questions of the attendees."
+          },
+          {
+            id:           "2d",
+            title:        "'Tell Your Story'",
+            moderator:    "Sheryl Crosier, MA, MBA (Simon's Law)",
+            description:  "Create a Remembrance Sash and photo button for the Remembrance Outing and Picnic. For our Angel parents."
+          },
+          {
+            id:           "2e",
+            title:        "Transitioning Services ",
+            moderator:    "Tami McGrath, Pierce Co, WA Coalition for Developmental Disabilities",
+            description:  "When your child turns 18. Discuss how parents can find services and understand how to go through the transition process."
+          }
+        ]
+      },
+      {
+        id: 3,
+        name:   "Session 3",
+        workshops: [
+          {
+            id:           "3a",
+            title:        "None",
+            moderator:    "",
+            description:  ""
+          },
+          {
+            id:           "3b",
+            title:        "Bridging - Experiencing Loss & Going Forward",
+            moderator:    "Heather J. Neal, LICSW, CT",
+            description:  "Professional Counselor from Mary Bridge Children's Hospital who works with families and their loss."
+          },
+          {
+            id:           "3c",
+            title:        "I.E.P - Individualized Education Program",
+            moderator:    "Candice Webster - Exec. Dir. for Special Services & Intervention, Orting SD, WA",
+            description:  "When your child needs an I.E.P for school. Understanding how it works and communicating and advocating for your child's needs while in school."
+          },
+          {
+            id:           "3d",
+            title:        "Vision, light sensitivity & seizures",
+            moderator:    "Dr. Steve Cantrell, OD",
+            description:  "New information on how indoor and outdoor light affects your child and seizures. Detailed handouts with information on how to correct this newly discovered photosensitive issue. Benefits for mom and dad too!"
+          },
+        ]
+      },
+      {
+        id: 4,
+        name:   "Session 4",
+        workshops: [
+          {
+            id:           "4a",
+            title:        "None",
+            moderator:    "",
+            description:  ""
+          },
+          {
+            id:           "4b",
+            title:        "Dad's Only - Sharing Workshop",
+            moderator:    "Moderated by Eric Marohn, SOFT Board of Directors",
+            description:  ""
+          },
+          {
+            id:           "4c",
+            title:        "Mom's Only - Sharing Workshop",
+            moderator:    "Moderated by Cindy Cook, LCSW, SOFT Board of Directors",
+            description:  ""
+          },
+        ]
+      },
+    ],
+  remembranceMenu: {
+      V: 'Vegetarian',
+      C: 'Chicken',
+      T: 'Tuna Salad',
+      N: 'No meal'
+    },
+  dinnerMenu: [
+      'Wild Mushroom Ravioli',
+      'Lemon Herb Chicken Breast',
+      'Red Wine Marinated Grilled Top Sirloin'
+    ],
+  kidsMenu: [
+      'Chicken Tenders',
+      'Mac \'n Cheese',
+      'Carrots',
+      'Celery',
+    ]
+};
+
 const customStyles = {
   option: (base, state) => ({
     ...base,
@@ -60,9 +215,9 @@ const customStyles = {
   }),
   control: (base, state) => ({        /* Select line with drop-down arrow */
     ...base,
-    width: 336,
+    width: 325,
     padding: 0,
-    marginTop: 5,
+    marginTop: 10,
     borderRadius: 0,
     minHeight: 0,
     height: 30,
@@ -81,7 +236,7 @@ const customStyles = {
   },
   menuList: (base, state) => ({
     ...base,
-    height: 212,
+    height: 135,
     fontSize: 14,
     color: "#2e3a97",
   }),
@@ -92,7 +247,7 @@ const customStyles = {
   }),
   container: (base, state) => ({
     ...base,
-    width: 336,
+    width: 325,
   }),
 }
 
@@ -159,8 +314,10 @@ const customStylesPeopleTypes = {
 }
 
 
-function attendee(firstName, lastName, peopleType) {
-  return {
+
+function attendee(firstName, lastName, peopleType, sessions) {
+
+  let attendee = {
     id: nextID++,
     firstName,
     lastName,
@@ -168,8 +325,16 @@ function attendee(firstName, lastName, peopleType) {
     rembOuting: 0,
     rembLunch:  '',
     chapterChair: '',
+    workshops: {},
   };
+
+  sessions.forEach( (sess) => {
+    attendee.workshops[sess.id] = sess.workshops[0].id
+  });
+
+  return attendee;
 }
+
 
 
 class App extends Component {
@@ -183,6 +348,7 @@ class App extends Component {
 
       eventInfo: {
         eventTitle: '',
+        workshopSessions: [],
         remembranceMenu: {},
         dinnerMenu: [],
         kidsMenu: []
@@ -203,12 +369,9 @@ class App extends Component {
         email:       '',
       },
 
-      attendees: [
-        // attendee("Steve", "Maguire",  peopleTypes.ADULT),
-        // attendee("Beth",  "Mountjoy", peopleTypes.CHILD),
-        // attendee("Terre", "Krotzer",  peopleTypes.PROFESSIONAL),
-      ],
+      attendees: [],
 
+      workshopAttendee: 0,
     };
 
     this.setEventInfo         = this.setEventInfo.bind(this);
@@ -222,6 +385,8 @@ class App extends Component {
 
     this.onChangeRembOuting   = this.onChangeRembOuting.bind(this);
     this.onChangeRembLunch    = this.onChangeRembLunch.bind(this);
+
+    this.onChangeWorkshops    = this.onChangeWorkshops.bind(this);
 
     this.onChangeChapterChair = this.onChangeChapterChair.bind(this);
 
@@ -250,31 +415,17 @@ class App extends Component {
 
   setEventInfo(result) {
 
-    // Override result for testing purpose
+    const eventInfo = eventInfoDefault;    // Eventually, this will be pulled from the DB
 
-  const eventInfo = {
-      eventTitle: '2019 Conference Registration',
-      remembranceMenu: {
-          V: 'Vegetarian',
-          C: 'Chicken',
-          T: 'Tuna Salad',
-          N: 'No meal'
-        },
-      dinnerMenu: [
-          'Wild Mushroom Ravioli',
-          'Lemon Herb Chicken Breast',
-          'Red Wine Marinated Grilled Top Sirloin'
-        ],
-      kidsMenu: [
-          'Chicken Tenders',
-          'Mac \'n Cheese',
-          'Carrots',
-          'Celery',
-        ]
-    };
+    let attendees = [
+        attendee("Steve", "Maguire",  peopleTypes.ADULT, eventInfoDefault.workshopSessions),
+        attendee("Beth",  "Mountjoy", peopleTypes.CHILD, eventInfoDefault.workshopSessions),
+        attendee("Terre", "Krotzer",  peopleTypes.PROFESSIONAL, eventInfoDefault.workshopSessions),
+    ];
 
     this.setState({
-      eventInfo
+      eventInfo,
+      attendees
     });
   }
 
@@ -296,6 +447,7 @@ class App extends Component {
 
   render() {
     const { eventInfo, currentPage, contactInfo, attendees } = this.state;
+
     return (
       <div className="body-boundary">
         <SoftHeader eventInfo={eventInfo} />
@@ -344,7 +496,11 @@ class App extends Component {
                   <Dinner />,
 
               [pages.WORKSHOPS]:
-                  <Workshops />,
+                  <Workshops 
+                    attendee={attendees[this.state.workshopAttendee]} 
+                    sessions={eventInfo.workshopSessions}
+                    onChange={this.onChangeWorkshops}
+                  />,
 
               [pages.PICNIC]:
                   <Picnic />,
@@ -384,11 +540,25 @@ class App extends Component {
     );
   }
 
-
-
+  
   // FIX -- pageHistory should be a state variable, not a global
   onPrevPage(event) {
-    let { pageHistory } = this.state;
+    let { currentPage, pageHistory } = this.state;
+
+    if (currentPage === pages.WORKSHOPS) {
+
+      for (let i=this.state.workshopAttendee-1; i >= 0; i--) {
+        let peopleType = this.state.attendees[i].peopleType;
+
+        if (peopleType === peopleTypes.ADULT  ||  peopleType === peopleTypes.PROFESSIONAL) {
+          this.setState({
+            workshopAttendee: i,
+          });
+
+          return;
+        }
+      }
+    }
 
     //  The visitor can always to go a previous page.
     if (pageHistory.length > 0) {
@@ -449,7 +619,7 @@ class App extends Component {
           }
           else {
             if (attendees.length === 0) {
-                attendees.push( attendee(contact.firstName, contact.lastName, peopleTypes.ADULT) );
+                attendees.push( attendee(contact.firstName, contact.lastName, peopleTypes.ADULT, this.state.eventInfo.workshopSessions) );
             }
 
             pageHistory.push(currentPage);
@@ -571,14 +741,30 @@ class App extends Component {
           break;
 
       case pages.WORKSHOPS:
-          // let attendees = this.state.attendees;
 
-          pageHistory.push(currentPage);
+          let nextAdult = -1;
 
-          this.setState({
-            pageHistory,
-            currentPage: pages.PICNIC,
-          });
+          for (let i = this.state.workshopAttendee+1; i < attendees.length; i++) {
+            let peopleType = attendees[i].peopleType;
+            if (peopleType === peopleTypes.ADULT  ||  peopleType === peopleTypes.PROFESSIONAL) {
+              nextAdult = i;
+              break;
+            }
+          }
+
+          if (nextAdult !== -1) {               //  Stay on this page, just change attendees
+            this.setState({
+              workshopAttendee: nextAdult,
+            });
+          }
+          else {                                //  Move on to next page...
+            pageHistory.push(currentPage);
+
+            this.setState({
+              pageHistory,
+              currentPage: pages.PICNIC,
+            });
+          }
 
           break;
 
@@ -680,9 +866,9 @@ class App extends Component {
     let { attendees, contactInfo } = this.state;
 
     if (attendees.length === 0)
-      attendees.push( attendee(contactInfo.firstName, contactInfo.lastName,  peopleTypes.ADULT) );
+      attendees.push( attendee(contactInfo.firstName, contactInfo.lastName,  peopleTypes.ADULT, this.state.eventInfo.workshopSessions) );
     else
-      attendees.push( attendee('', '', '') );
+      attendees.push( attendee('', '', '', this.state.eventInfo.workshopSessions) );
 
     this.setState({
       attendees
@@ -751,6 +937,23 @@ class App extends Component {
 
 
   //-------------------------------------------------------------------------------------------
+  //  Workshop pages
+  
+
+  onChangeWorkshops(value, attendeeID, sessionID) {
+    let { attendees } = this.state;
+
+    let i = attendees.findIndex( (a) => { return (a.id === attendeeID) } );
+    attendees[i].workshops[sessionID] = value;
+
+    this.setState ({
+      attendees
+    });
+  }
+
+
+
+  //-------------------------------------------------------------------------------------------
   //  Chapter Chair page
   
 
@@ -763,6 +966,9 @@ class App extends Component {
       attendees
     });
   }
+
+
+
 }
 
 
@@ -848,6 +1054,7 @@ const PageBar = ({pageNum}) =>
 //----------------------------------------------------------------------------------------------------
 
 
+
 const Welcome = () =>
   <div className="welcome">
     <h2>Welcome!</h2>
@@ -875,19 +1082,30 @@ const Welcome = () =>
 const ContactInfo = ({contact, onChangeContactInfo, onChangeCountry}) =>
   <div>
     <h2>Contact Information</h2>
-    <p>Please enter the contact information for the person handling this registration. The contact person
-       does not need to be attending the conference. Required information is starred "*".
+    <p style={{marginBottom: 8}}>Please enter the contact information for the person handling this registration. The contact person
+       does not need to be attending the conference.
     </p>
-    <div style={{marginLeft: 20}}>
-      <EditName value={contact.firstName} field="firstName" onChange={onChangeContactInfo}>FIRST Name *</EditName>
-      <EditName value={contact.lastName} field="lastName"  onChange={onChangeContactInfo}>LAST Name * </EditName>
-      <EditAddress contact={contact} onChange={onChangeContactInfo} onChangeCountry={onChangeCountry}>Address</EditAddress>
-      <div className="phones">
-        <EditPhone value={contact.phoneMobile} field="phoneMobile" onChange={onChangeContactInfo}>Mobile Phone</EditPhone>
-        <EditPhone value={contact.phoneWork}   field="phoneWork"   onChange={onChangeContactInfo}>Work Phone</EditPhone>
-        <EditPhone value={contact.phoneHome}   field="phoneHome"   onChange={onChangeContactInfo}>Home Phone</EditPhone>
+    <div style={{marginLeft: 35}}>
+      <div>
+        <Input label="FIRST name" value={contact.firstName} field="firstName" id="contact-firstname" onChange={onChangeContactInfo} />
+        <Input label="LAST name"  value={contact.lastName}  field="lastName"  id="contact-lastname" onChange={onChangeContactInfo} />
       </div>
-      <EditEmail value={contact.email} onChange={onChangeContactInfo}>Best Email Address *</EditEmail>
+      <div>
+        <Input label="Address 1" value={contact.address1} field="address1" id="contact-address1" onChange={onChangeContactInfo} className="edit-input-2col" />
+        <Input label="Address 2" value={contact.address2} field="address2" id="contact-address2" onChange={onChangeContactInfo} className="edit-input-2col" />
+        <div>
+          <Input label="City" value={contact.city} field="city" id="contact-city" onChange={onChangeContactInfo} />
+          <Input label="State/Prov/Region" value={contact.stateProv} field="stateProv" id="contact-stateProv" onChange={onChangeContactInfo} />
+          <Input label="ZIP Code" value={contact.postalCode} field="postalCode" id="contact-postalCode" onChange={onChangeContactInfo} />
+        </div>
+        <Country value={contact.country} onChange={onChangeCountry}/>
+      </div>
+      <div className="phones">
+        <Input label="Mobile Phone" value={contact.phoneMobile} field="phoneMobile" id="contact-mobile" onChange={onChangeContactInfo} />
+        <Input label="Work Phone"   value={contact.phoneWork}   field="phoneWork"   id="contact-work"   onChange={onChangeContactInfo} />
+        <Input label="Home Phone"   value={contact.phoneHome}   field="phoneHome"   id="contact-home"   onChange={onChangeContactInfo} />
+      </div>
+      <Input label="Best Email Address"  value={contact.email}  field="email" id="contact-email" onChange={onChangeContactInfo} className="edit-input-2col" />
     </div>
   </div>
 
@@ -906,16 +1124,16 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangePeopleType}) =
     {attendees.length > 0  &&
       <div>
         <p className="row-num">1.</p>
-        <Input value={attendees[0].firstName} placeHolder="First Name" onChange={event => onChange(event, attendees[0].id, "firstName")}>FIRST Name</Input>
-        <Input value={attendees[0].lastName} placeHolder="Last Name" onChange={event => onChange(event, attendees[0].id, "lastName")}>LAST Name</Input>
+        <Input label="FIRST Name" value={attendees[0].firstName} id={"contact-firstname-" + attendees[0].id} onChange={event => onChange(event, attendees[0].id, "firstName")} />
+        <Input label="LAST Name"  value={attendees[0].lastName}  id={"contact-lastname-" + attendees[0].id}  onChange={event => onChange(event, attendees[0].id, "lastName")} />
         <PeopleType value={attendees[0].peopleType} onChange={(opt) => onChangePeopleType(opt, attendees[0].id)}/>
         <Button onClick={() => onRemove(attendees[0].id)}>Remove</Button>
         {attendees.length > 1 ?
           attendees.slice(1).map( (a, i) =>
             <div key={a.id}>
               <p className="row-num">{i+2}.</p>
-              <Input value={a.firstName} placeHolder="First Name" onChange={event => onChange(event, a.id, "firstName")} />
-              <Input value={a.lastName} placeHolder="Last Name"  onChange={event => onChange(event, a.id, "lastName")} />
+              <Input label="FIRST Name" value={a.firstName} id={"contact-firstname-" + a.id} onChange={event => onChange(event, a.id, "firstName")} />
+              <Input label="LAST Name"  value={a.lastName}  id={"contact-lsstname-" + a.id}  onChange={event => onChange(event, a.id, "lastName")} />
               <PeopleType value={a.peopleType} onChange={(opt) => onChangePeopleType(opt, a.id)}/>
               <Button onClick={() => onRemove(a.id)}>Remove</Button>
             </div>
@@ -968,7 +1186,7 @@ const Remembrance = ({ attendees, menuInfo, onChange, onChangeLunch }) =>
     </p>
     <div className="remembrance">
       {attendees.map( (a,i) => 
-          <div key={a.id} className="remb-row">
+          <div key={a.id} className="indent">
             <Checkbox defaultChecked={a.rembOuting} onChange={event => onChange(event, a.id)} />
             <span className="remb-name">{a.firstName} {a.lastName}</span>
             <RembLunch value={a.rembLunch} menuInfo={menuInfo} isDisabled={!a.rembOuting} onChange={(opt) => onChangeLunch(opt, a.id)} />
@@ -1041,15 +1259,27 @@ const Dinner = ({contact}) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const Workshops = ({contact}) =>
+const Workshops = ({attendee, sessions, onChange}) =>
   <div>
     <h2>Workshops</h2>
-    <p>Workshops will be held on Thursday July 35th from 9am–4pm. Please indicate workshops you would like to attend and number attending.
+    <p>Please choose which workshops that <strong>{attendee.firstName} {attendee.lastName}</strong> will be attending. Refer to the brochure for 
+       specific times that each workshop will be held.
     </p>
-    <b>
-    <p>Present a list of Workshop names with a dropdown next to each one with number to attend? (Dropdown menu 
-       will range from 0 to the number of attendees in their party)</p>
-    </b>
+    <p className="indent"><strong>{attendee.firstName} {attendee.lastName} plans to attend:</strong></p>
+    {
+      sessions.map( (sess,i) =>
+          <div key={sess.name} className="indent">
+            <strong>{sess.name}</strong>
+            <RadioGroup selectedValue={attendee.workshops[sess.id]} onChange={(val) => onChange(val, attendee.id, sess.id)}>
+            {
+              sess.workshops.map( (ws,i) =>
+                <div key={ws.id} className="indent"><Radio value={ws.id} /> {ws.title}</div>
+              )
+            }
+            </RadioGroup><br />
+          </div>
+        )
+    }
   </div>
 
 
@@ -1158,9 +1388,6 @@ const Softwear = ({contact}) =>
 
 
 
-
-
-
 //----------------------------------------------------------------------------------------------------
 
 
@@ -1181,38 +1408,6 @@ const ChapterChair = ({ attendees, menuInfo, onChange, onChangeLunch }) =>
       }
     </div>
   </div>
-
-
-
-//----------------------------------------------------------------------------------------------------
-
-
-
-// const DirectoryOLD = ({contact}) =>
-//   <div>
-//     <h2>Directory of Attendees</h2>
-//     <p>SOFT creates a Directory of Conference Attendees to be given to the attendees. It contains
-//        names, addresses, phone numbers, email addresses, and photos if you submit them.
-//     </p>
-//     <p>Check everything that you would like included in the Directory. By default, everything is
-//        included. Uncheck those items that you would like to have excluded from the Directory:
-//     </p>
-//     <p><FontAwesomeIcon icon="hand-point-right" /> If you don't want to be included in the Directory at all, uncheck every item.</p>
-//     <div className="chapter-chair">
-//       <div className="chair-row">
-//         <Checkbox defaultChecked={true} /> SOFT Child's name and Contact Person
-//       </div>
-//       <div className="chair-row">
-//         <Checkbox defaultChecked={true} /> Any photos that have been submitted
-//       </div>
-//       <div className="chair-row">
-//         <Checkbox defaultChecked={true} /> Contact person's email address
-//       </div>
-//       <div className="chair-row">
-//         <Checkbox defaultChecked={true} /> Contact person's mobile phone number
-//       </div>
-//     </div>
-//   </div>
 
 
 
@@ -1253,88 +1448,18 @@ const Checkout = ({contact}) =>
 
 
 
-
-//----------------------------------------------------------------------------------------------------
-//
-//  Support components
-//
-//
-
-const Input = ({ field, value, placeHolder="", onChange, className="edit-input", children="" }) =>
+const Input = ( {label, value, id, field="", onChange, className="edit-input-1col"}) =>
   <div className={className}>
-    {children &&
-      <p>{children}</p>
-    }
-    <input
+    <FloatingLabelInput
+      id={id}
       value={value}
-      type="text"
-      placeholder={placeHolder}
+      label={label}
+      shrink={50}
       onChange={(evt) => onChange(evt, field)}
     />
   </div>
 
 
-const EditName = ({ field, value, onChange, className="edit-name", children }) =>
-  <div className={className}>
-    <p>{children}</p>
-    <input
-      value={value}
-      type="text"
-      onChange={(evt) => onChange(evt, field)}
-    />
-  </div>
-
-
-// const EditAge = ({ field, value, onChange, className="edit-age", children }) =>
-//   <div className={className}>
-//     <p>{children}</p>
-//     <input
-//       value={value}
-//       type="text"
-//       onChange={(evt) => onChange(evt, field)}
-//     />
-//   </div>
-
-
-const EditAddress = ({contact,  onChange, onChangeCountry, className="edit-address", children}) =>
-  <div className={className}>
-    <p>{children}</p>
-    <Address value={contact.address1} field="address1" placeHolder="Address 1" onChange={onChange}/>
-    <Address value={contact.address2} field="address2" placeHolder="Address 2" onChange={onChange}/>
-    <div>
-      <City       value={contact.city}       onChange={onChange} />
-      <StateProv  value={contact.stateProv}  onChange={onChange} />
-      <PostalCode value={contact.postalCode} onChange={onChange}  />
-    </div>
-    <Country value={contact.country} onChange={onChangeCountry}/>
-  </div>
-
-
-const Address = ({value="", field, placeHolder="", onChange}) =>
-    <input
-      type="text"
-      value={value}
-      placeholder={placeHolder}
-      onChange={(evt) => onChange(evt, field)}
-    />
-
-const City = ({value="", onChange, className="edit-city"}) =>
-    <input
-      type="text"
-      value={value}
-      className={className}
-      placeholder="City"
-      onChange={(evt) => onChange(evt, "city")}
-    />
-
-const StateProv = ({value="",  onChange, className="edit-state-prov"}) =>
-    <input
-      type="text"
-      value={value}
-      className={className}
-      placeholder="State/Prov/Region"
-      onChange={(evt) => onChange(evt, "stateProv")}
-    />
 
 const PeopleType = ({value, onChange, className="edit-people"}) => {
       const defaultOpt = optionsPeopleTypes.find(opt => (opt.value === value));
@@ -1385,36 +1510,6 @@ const Country = ({value, onChange, className="edit-country"}) => {
     
 
 
-const PostalCode = ({value="", onChange, className="edit-postal-code"}) =>
-    <input
-      type="text"
-      value={value}
-      placeholder="   Zip/Postal Code..."
-      onChange={(evt) => onChange(evt, "postalCode")}
-      className={className}
-    />
-
-
-const EditPhone = ({value="", field, onChange, className="edit-phone", children}) =>
-  <div className={className}>
-    <p>{children}</p>
-    <input
-      type="text"
-      value={value}
-      onChange={(evt) => onChange(evt, field)}
-    />
-  </div>
-
-const EditEmail = ({value="", onChange, className="edit-email", children}) =>
-  <div className={className}>
-    <p>{children}</p>
-    <input
-      value={value}
-      type="text"
-      onChange={(evt) => onChange(evt, "email")}
-    />
-  </div>
-
 const PrevNextButtons = ({pageNum, contact, onClickPrev, onClickNext}) =>
   <div className="button-bar">
     {pageNum > pages.START+1  &&
@@ -1425,6 +1520,16 @@ const PrevNextButtons = ({pageNum, contact, onClickPrev, onClickNext}) =>
     }
   </div>
 
+
+
+const Checkbox = ({ name, defaultChecked, onChange, className }) =>
+  <input
+    type="checkbox"
+    name={name}
+    onChange={onChange}
+    className={className}
+    defaultChecked={defaultChecked}
+  />
 
 
 // OLD ----------------------------------------------------------------------------
@@ -1440,14 +1545,6 @@ const Button = ({ onClick = null, onSubmit = null, className = '', children, typ
     {children}
   </button>
 
-const Checkbox = ({ name, defaultChecked, onChange, className='edit-checkbox' }) =>
-  <input
-    type="checkbox"
-    name={name}
-    onChange={onChange}
-    className={className}
-    defaultChecked={defaultChecked}
-  />
 
 
 function ucFirst(string) 
