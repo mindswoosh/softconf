@@ -58,7 +58,7 @@ p {
 }*/
 
 .body-boundary {
-  max-width: 725px;
+  max-width: 900px;
   margin: auto;
 }
 
@@ -139,7 +139,7 @@ p {
 }
 
 
-.edit-age {
+/*.edit-age {
   display: inline-block;
   margin: 0px 25px 0px 0px;
 }
@@ -150,11 +150,20 @@ p {
 
 .edit-age>input {
   width: 30px;
+}*/
+
+.attendee-row {
+  margin-top: 20px;
+}
+.edit-people, .edit-diagnosis {
+  display: inline-block;
+  margin: 0 25px 0 0;
 }
 
-.edit-people {
-    display: inline-block;
-    margin: 0 25px 0 0;
+.edit-age {
+  display: inline-block;
+  width: 150px;
+  margin: 0 25px 0 0;
 }
 
 .edit-address {
@@ -240,7 +249,10 @@ p {
 }
 
 
-
+.small-gap {
+  display: inline-block;
+  width: 20px;
+}
 
 
 .button-bar {

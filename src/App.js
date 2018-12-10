@@ -18,6 +18,9 @@ import './App.css';
 import FloatingLabelInput from 'react-floating-label-input';
 import 'react-floating-label-input/dist/react-floating-label-input.css';
 
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAngleDoubleRight, faHandPointRight, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
@@ -189,9 +192,7 @@ const eventInfoDefault = {
     ],
   remembranceMenu: {
       V: 'Vegetarian',
-      C: 'Chicken',
-      T: 'Tuna Salad',
-      N: 'No meal'
+      N: 'Non-vegetarian',
     },
   dinnerMenu: [
       'Wild Mushroom Ravioli',
@@ -205,6 +206,8 @@ const eventInfoDefault = {
       'Celery',
     ]
 };
+
+
 
 const customStyles = {
   option: (base, state) => ({
@@ -252,27 +255,11 @@ const customStyles = {
 }
 
 
-const peopleTypes = {
-  SOFTCHILD:    "S",
-  CHILD:        "C",
-  ADULT:        "A",
-  PROFESSIONAL: "P",
-};
-
-const optionsPeopleTypes = [
-  { label: "SOFT child",    value: peopleTypes.SOFTCHILD },
-  { label: "Child",         value: peopleTypes.CHILD },  
-  { label: "Adult",         value: peopleTypes.ADULT },
-  { label: "Professional",  value: peopleTypes.PROFESSIONAL },
-];
-
 
 //  I should deep clone this from the previous style and change what's appropriate
 const customStylesPeopleTypes = {
   option: (base, state) => ({
     ...base,
-    // borderBottom: '1px dotted pink',
-    // color: state.isFullscreen ? 'red' : 'green',
     padding: 5,
   }),
   control: (base, state) => ({
@@ -315,6 +302,51 @@ const customStylesPeopleTypes = {
 
 
 
+const peopleTypes = {
+  SOFTCHILD:    "S",
+  CHILD:        "C",
+  ADULT:        "A",
+  PROFESSIONAL: "P",
+};
+
+const optionsPeopleTypes = [
+  { label: "SOFT child",    value: peopleTypes.SOFTCHILD },
+  { label: "Child",         value: peopleTypes.CHILD },  
+  { label: "Adult",         value: peopleTypes.ADULT },
+  { label: "Professional",  value: peopleTypes.PROFESSIONAL },
+];
+
+
+const optionsAges = [
+  { label: "< 6 months", value: 0 },
+  { label: "1 year old", value: 1 },  
+  { label: "2",          value: 2 },
+  { label: "3",          value: 3 },
+  { label: "4",          value: 4 },
+  { label: "5",          value: 5 },
+  { label: "6",          value: 6 },
+  { label: "7",          value: 7 },
+  { label: "8",          value: 8 },
+  { label: "9",          value: 9 },
+  { label: "10",         value: 10 },
+  { label: "11",         value: 11 },
+  { label: "12",         value: 12 },
+  { label: "13",         value: 13 },
+  { label: "14",         value: 14 },
+  { label: "15",         value: 15 },
+  { label: "16",         value: 16 },
+  { label: "17",         value: 17 },
+];
+
+
+const optionsDiagnoses = [
+  { label: "Trisomy 13",  value: "Trisomy 13" },
+  { label: "Trisomy 18",  value: "Trisomy 18" },
+  { label: "Trisomy 13 Mosaic",  value: "Trisomy 13 Mosaic" },
+  { label: "Trisomy 18 Mosaic",  value: "Trisomy 18 Mosaic" },
+];
+
+
 function attendee(firstName, lastName, peopleType, sessions) {
 
   let attendee = {
@@ -322,10 +354,24 @@ function attendee(firstName, lastName, peopleType, sessions) {
     firstName,
     lastName,
     peopleType,
+
+    // Adults
     rembOuting: 0,
     rembLunch:  '',
     chapterChair: '',
     workshops: {},
+
+    // Child
+    age:         null,
+    youthOuting: false,
+    shirtSize:   "m",
+
+    // SOFT Child
+    dateOfBirth: null,
+    diagnosis:   null,
+    eatsMeals:   true,
+
+    // Professional
   };
 
   sessions.forEach( (sess) => {
@@ -381,7 +427,9 @@ class App extends Component {
     this.onAddAttendee        = this.onAddAttendee.bind(this);
     this.onRemoveAttendee     = this.onRemoveAttendee.bind(this);
     this.onChangeAttendeeList = this.onChangeAttendeeList.bind(this);
-    this.onChangePeopleType   = this.onChangePeopleType.bind(this);
+    this.onChangeSelection    = this.onChangeSelection.bind(this);
+    this.onChangeMeals        = this.onChangeMeals.bind(this);
+    this.onChangeDate         = this.onChangeDate.bind(this);
 
     this.onChangeRembOuting   = this.onChangeRembOuting.bind(this);
     this.onChangeRembLunch    = this.onChangeRembLunch.bind(this);
@@ -472,7 +520,9 @@ class App extends Component {
                     onAdd={this.onAddAttendee}
                     onRemove={this.onRemoveAttendee}
                     onChange={this.onChangeAttendeeList}
-                    onChangePeopleType={this.onChangePeopleType}
+                    onChangeSelection={this.onChangeSelection}
+                    onChangeMeals={this.onChangeMeals}
+                    onChangeDate={this.onChangeDate}
                   />,
 
               [pages.CLINICS]:
@@ -638,17 +688,22 @@ class App extends Component {
 
           //  Clean up entries
           attendees = attendees.map(a => { 
-            a.firstName = a.firstName.trim();
-            a.lastName  = a.lastName.trim();
+            a.firstName = smartFixName(a.firstName.trim());
+            a.lastName  = smartFixName(a.lastName.trim());
             return a;
           });
 
           //  Remove totally empty rows
           attendees = attendees.filter(a => { return (a.firstName !== ''  ||  a.lastName !== '') });
 
-          let $bad_attendee = attendees.find( a => { return (a.firstName ===''  ||  a.lastName === ''  ||  a.peopleType === '') });
+          let bad_attendee = attendees.find( a => { 
+            return (  a.firstName === ''  ||  a.lastName === ''  ||  a.peopleType === ''  ||  (a.peopleType === peopleTypes.CHILD  &&  a.age === null) ||
+                      (a.peopleType === peopleTypes.SOFTCHILD  &&  (a.dateOfBirth === null  ||  a.diagnosis === null) )
+                   ) 
+          });
 
-          if ($bad_attendee !== undefined) {
+
+          if (bad_attendee !== undefined) {
             alert("Oops! Something is missing in the information for one or more of the people listed. Please fill in the missing information.");
           }
           else {
@@ -893,17 +948,36 @@ class App extends Component {
     });
   }
 
-  onChangePeopleType(opt, id) {
+
+  onChangeSelection(opt, id, field) {
     let { attendees } = this.state;
     let i = attendees.findIndex(a => a.id === id);
     console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
-    attendees[i].peopleType = opt.value;
+    attendees[i][field] = opt.value;
     this.setState ({
       attendees
     });
   }
 
+  onChangeMeals(opt, id) {
+    let { attendees } = this.state;
+    let i = attendees.findIndex(a => a.id === id);
+    console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
+    attendees[i].eatsMeals = !attendees[i].eatsMeals;
+    this.setState ({
+      attendees
+    });
+  }
 
+  onChangeDate(date, id) {
+    let { attendees } = this.state;
+    let i = attendees.findIndex(a => a.id === id);
+    console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
+    attendees[i].dateOfBirth = date;
+    this.setState({
+      attendees
+    });
+  }
 
   //-------------------------------------------------------------------------------------------
   //  Process Remembrance page
@@ -967,15 +1041,11 @@ class App extends Component {
     });
   }
 
-
-
 }
 
 
 
 //-------------------------------------------------------------------------------------------
-
-
 
 
 const SoftHeader = ({eventInfo}) =>
@@ -1091,7 +1161,9 @@ const ContactInfo = ({contact, onChangeContactInfo, onChangeCountry}) =>
         <Input label="LAST name"  value={contact.lastName}  field="lastName"  id="contact-lastname" onChange={onChangeContactInfo} />
       </div>
       <div>
+        <div>
         <Input label="Address 1" value={contact.address1} field="address1" id="contact-address1" onChange={onChangeContactInfo} className="edit-input-2col" />
+        </div>
         <Input label="Address 2" value={contact.address2} field="address2" id="contact-address2" onChange={onChangeContactInfo} className="edit-input-2col" />
         <div>
           <Input label="City" value={contact.city} field="city" id="contact-city" onChange={onChangeContactInfo} />
@@ -1115,7 +1187,7 @@ const ContactInfo = ({contact, onChangeContactInfo, onChangeCountry}) =>
 
 
 
-const Attendees = ({attendees, onRemove, onAdd, onChange, onChangePeopleType}) =>
+const Attendees = ({attendees, onRemove, onAdd, onChange, onChangeSelection, onChangeMeals, onChangeDate}) =>
   <div>
     <h2>Conference Attendees</h2>
     <p>Please list everybody in your party who will be attending any part of the Conference. If no one
@@ -1126,19 +1198,35 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangePeopleType}) =
         <p className="row-num">1.</p>
         <Input label="FIRST Name" value={attendees[0].firstName} id={"contact-firstname-" + attendees[0].id} onChange={event => onChange(event, attendees[0].id, "firstName")} />
         <Input label="LAST Name"  value={attendees[0].lastName}  id={"contact-lastname-" + attendees[0].id}  onChange={event => onChange(event, attendees[0].id, "lastName")} />
-        <PeopleType value={attendees[0].peopleType} onChange={(opt) => onChangePeopleType(opt, attendees[0].id)}/>
-        <Button onClick={() => onRemove(attendees[0].id)}>Remove</Button>
-        {attendees.length > 1 ?
+        <PeopleType value={attendees[0].peopleType} onChange={(opt) => onChangeSelection(opt, attendees[0].id, "peopleType")}/>
+        <div class="edit-age"></div><Button onClick={() => onRemove(attendees[0].id)}>Remove</Button>
+        {attendees.length > 1  &&
           attendees.slice(1).map( (a, i) =>
-            <div key={a.id}>
+            <div className="attendee-row" key={a.id}>
               <p className="row-num">{i+2}.</p>
               <Input label="FIRST Name" value={a.firstName} id={"contact-firstname-" + a.id} onChange={event => onChange(event, a.id, "firstName")} />
               <Input label="LAST Name"  value={a.lastName}  id={"contact-lsstname-" + a.id}  onChange={event => onChange(event, a.id, "lastName")} />
-              <PeopleType value={a.peopleType} onChange={(opt) => onChangePeopleType(opt, a.id)}/>
+              <PeopleType value={a.peopleType} onChange={(opt) => onChangeSelection(opt, a.id, "peopleType")}/>
+              {a.peopleType !== peopleTypes.CHILD  &&
+                <div class="edit-age"></div>
+              }
+              {a.peopleType === peopleTypes.CHILD  &&
+                <Age label="Age" value={a.age}  id={"contact-age-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "age")} />
+              }
               <Button onClick={() => onRemove(a.id)}>Remove</Button>
+              {a.peopleType === peopleTypes.SOFTCHILD  &&
+                <div>
+                  <p className="row-num"></p>
+                  Diagnosis: <Diagnosis label="Diagnosis" value={a.diagnosis} id={"contact-diagnosis-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "diagnosis")} /><span className="small-gap"></span>
+                  Birthdate: <DatePicker
+                    selected={a.dateOfBirth}
+                    onChange={date => onChangeDate(date, a.id)}
+                  /><span className="small-gap"></span>
+                  <Checkbox defaultChecked={a.eatsMeals} onChange={opt => onChangeMeals(opt, a.id)} /> Eats meals?
+                </div>
+              }
             </div>
           )
-          : null
         }
       </div>
     }
@@ -1475,6 +1563,40 @@ const PeopleType = ({value, onChange, className="edit-people"}) => {
           </div>
         );
     }
+
+
+
+const Age = ({value, onChange, className="edit-age"}) => {
+      const defaultOpt = optionsAges.find(opt => (opt.value === value));
+        return (
+          <div className={className}>
+            <Select
+              options={optionsAges}
+              defaultValue={defaultOpt}
+              placeholder={"Age"}
+              onChange={onChange}
+              styles={customStylesPeopleTypes}
+            />
+          </div>
+        );
+    }
+
+
+const Diagnosis = ({value, onChange, className="edit-diagnosis"}) => {
+      const defaultOpt = optionsDiagnoses.find(opt => (opt.value === value));
+        return (
+          <div className={className}>
+            <Select
+              options={optionsDiagnoses}
+              defaultValue={defaultOpt}
+              placeholder={"Diagnosis"}
+              onChange={onChange}
+              styles={customStylesPeopleTypes}
+            />
+          </div>
+        );
+    }
+
 
 const RembLunch = ({value, menuInfo, isDisabled, onChange, className="edit-remb-lunch"}) => {
       const optionsRembLunch = Object.keys(menuInfo).map(k => { return { label: menuInfo[k], value: k } });

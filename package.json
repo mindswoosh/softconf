@@ -12,6 +12,7 @@
     "npm": "^6.4.1",
     "rc-checkbox": "^2.1.5",
     "react": "^16.5.2",
+    "react-datepicker": "^2.0.0",
     "react-dom": "^16.5.2",
     "react-floating-label": "^1.0.0",
     "react-floating-label-input": "^3.0.5",
