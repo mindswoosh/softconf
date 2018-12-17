@@ -15,8 +15,8 @@ import Select from 'react-select';
 import {RadioGroup, Radio} from 'react-radio-group';
 import './App.css';
 
-import FloatingLabelInput from 'react-floating-label-input';
-import 'react-floating-label-input/dist/react-floating-label-input.css';
+// import FloatingLabelInput from 'react-floating-label-input';
+// import 'react-floating-label-input/dist/react-floating-label-input.css';
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -1785,17 +1785,27 @@ const Checkout = ({contact}) =>
   </div>
 
 
-
 const Input = ( {label, value, id, field="", onChange, className="edit-input-1col"}) =>
   <div className={className}>
-    <FloatingLabelInput
+    <input
       id={id}
       value={value}
-      label={label}
-      shrink={50}
+      placeholder={label}
       onChange={(evt) => onChange(evt, field)}
     />
   </div>
+
+
+// const Input = ( {label, value, id, field="", onChange, className="edit-input-1col"}) =>
+//   <div className={className}>
+//     <FloatingLabelInput
+//       id={id}
+//       value={value}
+//       label={label}
+//       shrink={50}
+//       onChange={(evt) => onChange(evt, field)}
+//     />
+//   </div>
 
 
 
