@@ -482,6 +482,7 @@ class App extends Component {
     this.nextAdultPro         = this.nextAdultPro.bind(this);
     this.nextYoungerSib       = this.nextYoungerSib.bind(this);
     this.nextOlderSib         = this.nextOlderSib.bind(this);
+    this.nextChildCare        = this.nextChildCare.bind(this);
 
     this.onClinicSortEnd      = this.onClinicSortEnd.bind(this);
 
@@ -696,6 +697,20 @@ class App extends Component {
     return -1;
   } 
 
+  //  Pass in -1 if you want to find the first child that qualifies for child care
+  nextChildCare(currentSib) {
+    let { attendees } = this.state;
+
+    for (let i = currentSib+1; i < attendees.length; i++) {
+      if (attendees[i].peopleType === peopleTypes.CHILD  &&  attendees[i].age <= 11) {
+        return i;
+      }
+    }
+    
+    return -1;
+  } 
+
+
   //  For draggable clinics lists
   onClinicSortEnd = ({oldIndex, newIndex}) => {
     const {eventInfo} = this.state;
@@ -884,13 +899,18 @@ class App extends Component {
             else if ((nextSib = this.nextOlderSib(-1)) !== -1) {     //  Skip older sibling page if none
                 this.setState({
                   pageHistory,
-                  olderSib: nextSib,
                   currentPage: pages.OLDERSIB,
+                });
+            }
+            else if ((nextSib = this.nextChildCare(-1)) !== -1) {     //  Skip child care page if none
+                this.setState({
+                  pageHistory,
+                  currentPage: pages.CHILDCARE,
                 });
             } else {
               this.setState({
                 pageHistory,
-                currentPage: pages.PICNIC,
+                currentPage: pages.REMEMBRANCE,
               });
             }
           }
@@ -918,13 +938,22 @@ class App extends Component {
               if (nextSib !== -1) {                         //  Skip older sibling page if none
                   this.setState({
                     pageHistory,
+                    attendees,
                     currentPage: pages.OLDERSIB,
                   });
               }
+              else if ((nextSib = this.nextChildCare(-1)) !== -1) {     //  Skip child care page if none
+                  this.setState({
+                    pageHistory,
+                    attendees,
+                    currentPage: pages.CHILDCARE,
+                  });
+              } 
               else {
                   this.setState({
                     pageHistory,
-                    currentPage: pages.PICNIC,
+                    attendees,
+                    currentPage: pages.REMEMBRANCE,
                   });
               }
             }
@@ -946,13 +975,21 @@ class App extends Component {
             }
             else {
               pageHistory.push(currentPage);
-              const newPage = pages.CHILDCARE;
 
-              this.setState({
-                attendees,
-                pageHistory,
-                currentPage: newPage,
-              });
+              if (this.nextChildCare(-1) !== -1) {     //  Skip child care page if none
+                this.setState({
+                  pageHistory,
+                  attendees,
+                  currentPage: pages.CHILDCARE,
+                });
+              } 
+              else {
+                this.setState({
+                  attendees,
+                  pageHistory,
+                  currentPage: pages.REMEMBRANCE,
+                });
+              }
             }
           }
           break;
@@ -1788,13 +1825,14 @@ const Checkout = ({contact}) =>
 const Input = ( {label, value, id, field="", onChange, className="edit-input-1col"}) =>
   <div className={className}>
     <input
+      type="text"
       id={id}
       value={value}
       placeholder={label}
+      className={className}
       onChange={(evt) => onChange(evt, field)}
     />
   </div>
-
 
 // const Input = ( {label, value, id, field="", onChange, className="edit-input-1col"}) =>
 //   <div className={className}>

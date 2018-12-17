@@ -33,13 +33,17 @@ h2 {
   margin: 10px 0 0 0;
 }
 
-input[type="text"] {
+input {
   height: 24px;
   font-size: 14px;
   color: black;
 }
 
 input[type="radio"] {
+  height: auto;
+}
+
+input[type="checkbox"] {
   height: auto;
 }
 
