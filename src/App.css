@@ -236,7 +236,7 @@ p {
   width: 200px;
 }
 
-.edit-remb-lunch {
+.edit-remb-lunch, .edit-shirt-size {
     display: inline-block;
 }
 
@@ -299,3 +299,48 @@ p {
   text-align: center;
 }
 
+.Showcase__style__handle {
+  position: relative;
+  top: 1px;
+  display: block;
+  width: 18px;
+  height: 11px;
+  opacity: .25;
+  margin-right: 20px;
+  cursor: row-resize;
+}
+
+.sortable-container {
+  padding-top: 15px;
+  padding-bottom: 20px;
+}
+
+.thumb-color {
+  color: blue;
+  padding: 0 5px;
+}
+
+.drag-thumb {
+  color: blue;
+  padding: 0 15px;
+}
+
+.drag-item {
+  width: 350px;
+  height: 35px;
+  display: block;
+  padding-top: 10px;
+  border: 1px solid lightgray;
+  color: black;
+  background-color:rgba(240,240,240,.7);
+}
+
+.clinic-name {
+  display: inline-block;
+  width: 200px;
+}
+
+.clinic-choice {
+  font-size: 80%;
+  color: green;
+}

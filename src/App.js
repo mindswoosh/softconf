@@ -21,37 +21,48 @@ import 'react-floating-label-input/dist/react-floating-label-input.css';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+import {
+  SortableContainer,
+  SortableElement,
+  SortableHandle,
+  arrayMove,
+} from 'react-sortable-hoc';
+
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAngleDoubleRight, faHandPointRight, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faAngleDoubleRight, faHandPointRight, faQuestionCircle, faBars } from '@fortawesome/free-solid-svg-icons'
 
 
 library.add(faAngleDoubleRight);
 library.add(faHandPointRight);
 library.add(faQuestionCircle);
+library.add(faBars);
 
+const DEBUG = false;  //  Set to false for production
 
 var nextID = 10000;
 
+var pageNum = 0;
+
 const pages = {
-  START:        0,
-  WELCOME:      1,
-  CONTACT:      2,
-  ATTENDEES:    3,
-  CLINICS:      4,
-  REMEMBRANCE:  5,
-  YOUTH:        6,
-  CHILDCARE:    7,
-  DINNER:       8,
-  WORKSHOPS:    9,
-  PICNIC:       10,
-  BALLOONS:     11,
-  DIRECTORY:    12,
-  PHOTOS:       13,
-  SOFTWEAR:     14,
-  SUMMARY:      15,
-  CHECKOUT:     16,
-  END:          17,
+  START:        pageNum++,
+  WELCOME:      pageNum++,
+  CONTACT:      pageNum++,
+  ATTENDEES:    pageNum++,
+  CLINICS:      pageNum++,
+  DINNER:       pageNum++,
+  WORKSHOPS:    pageNum++,
+  YOUNGERSIB:   pageNum++,
+  OLDERSIB:     pageNum++,
+  CHILDCARE:    pageNum++,
+  REMEMBRANCE:  pageNum++,
+  PICNIC:       pageNum++,
+  DIRECTORY:    pageNum++,
+  PHOTOS:       pageNum++,
+  SOFTWEAR:     pageNum++,
+  SUMMARY:      pageNum++,
+  CHECKOUT:     pageNum++,
+  END:          pageNum++,
 };
 
 console.assert(Object.keys(pages).find( (name,i) => { return pages[name] !== i} ) === undefined, 'Page Enum is incorrect');
@@ -190,6 +201,20 @@ const eventInfoDefault = {
         ]
       },
     ],
+  clinicsBlurb: "This year’s Soft Clinics will be held at Sonny's Children’s Hospital on Thursday July 35th. Please number your clinic preferences (up to 5). We will attempt to schedule each child into 3 of the 5 preferences.",
+  clinics: [
+      'Cardiology',
+      'Neurology',
+      'GI',
+      'Pulmonology',
+      'Vision',
+      'Orthopedic',
+      'Genetics',
+    ],
+  youngerSibOutingBlurb: "The Younger Sibling outing is for children ages 5 to 11 and will be at the Wild Waves water park where there are number of rides and attractions especially for younger kids, from the Enchanted Railway to the Kiddie Boats. Everyone will have plenty of fun! Lunch is included and so is a SOFT T-shirt!",
+  olderSibOutingBlurb: "The Older Sibling outing is for children 12 and up and will be at the Woodland Park Zoo where they can explore exhibits and get close to more than 1,100 animals and 300 species—including some of the world's most critically endangered. Lunch is included in the outing and every child will get a SOFT T-shirt.",
+  
+  remembranceBlurb: "There will be a Remembrance Outing for families who have lost a child. If you have lost a child and plan to attend, please put a checkmark next to each person who will be attending, and select the type of box lunch for each. Otherwise, simply click the Next button.",
   remembranceMenu: {
       V: 'Vegetarian',
       N: 'Non-vegetarian',
@@ -340,14 +365,30 @@ const optionsAges = [
 
 
 const optionsDiagnoses = [
-  { label: "Trisomy 13",  value: "Trisomy 13" },
   { label: "Trisomy 18",  value: "Trisomy 18" },
-  { label: "Trisomy 13 Mosaic",  value: "Trisomy 13 Mosaic" },
+  { label: "Trisomy 13",  value: "Trisomy 13" },
+  { label: "Trisomy 9 Mosaic",  value: "Trisomy 9 Mosaic" },
   { label: "Trisomy 18 Mosaic",  value: "Trisomy 18 Mosaic" },
+  { label: "Trisomy 13 Mosaic",  value: "Trisomy 13 Mosaic" },
+  { label: "Other", value: "Other"},
 ];
 
 
-function attendee(firstName, lastName, peopleType, sessions) {
+const optionsShirtSizes = [
+  { label: "Youth - S",    value: "ys"   },
+  { label: "Youth - M",    value: "ym"   },  
+  { label: "Youth - L",    value: "yl"   },
+  { label: "Youth - XL",   value: "yxl"  },
+  { label: "Adult - S",    value: "s"    },
+  { label: "Adult - M",    value: "m"    },
+  { label: "Adult - L",    value: "l"    },
+  { label: "Adult - XL",   value: "xl"   },
+  { label: "Adult - XXL",  value: "xxl"  },
+  { label: "Adult - XXXL", value: "xxxl" },
+];
+
+
+function attendee(firstName, lastName, peopleType, age, sessions) {
 
   let attendee = {
     id: nextID++,
@@ -362,9 +403,9 @@ function attendee(firstName, lastName, peopleType, sessions) {
     workshops: {},
 
     // Child
-    age:         null,
-    youthOuting: false,
-    shirtSize:   "m",
+    age:         age,
+    sibOuting:   false,
+    shirtSize:   '',
 
     // SOFT Child
     dateOfBirth: null,
@@ -380,7 +421,6 @@ function attendee(firstName, lastName, peopleType, sessions) {
 
   return attendee;
 }
-
 
 
 class App extends Component {
@@ -436,6 +476,15 @@ class App extends Component {
 
     this.onChangeWorkshops    = this.onChangeWorkshops.bind(this);
 
+    this.onChangeSibOuting    = this.onChangeSibOuting.bind(this);
+    this.onChangeShirtSize    = this.onChangeShirtSize.bind(this);
+
+    this.nextAdultPro         = this.nextAdultPro.bind(this);
+    this.nextYoungerSib       = this.nextYoungerSib.bind(this);
+    this.nextOlderSib         = this.nextOlderSib.bind(this);
+
+    this.onClinicSortEnd      = this.onClinicSortEnd.bind(this);
+
     this.onChangeChapterChair = this.onChangeChapterChair.bind(this);
 
     this.onPrevPage           = this.onPrevPage.bind(this);
@@ -465,11 +514,19 @@ class App extends Component {
 
     const eventInfo = eventInfoDefault;    // Eventually, this will be pulled from the DB
 
-    let attendees = [
-        attendee("Steve", "Maguire",  peopleTypes.ADULT, eventInfoDefault.workshopSessions),
-        attendee("Beth",  "Mountjoy", peopleTypes.CHILD, eventInfoDefault.workshopSessions),
-        attendee("Terre", "Krotzer",  peopleTypes.PROFESSIONAL, eventInfoDefault.workshopSessions),
-    ];
+    let attendees = [];
+
+    if (DEBUG) {
+      attendees = [
+        attendee("Steve", "Maguire",   peopleTypes.ADULT,        -1, eventInfoDefault.workshopSessions),
+        attendee("Beth",  "Mountjoy",  peopleTypes.CHILD,         5, eventInfoDefault.workshopSessions),
+        attendee("Terre", "Krotzer",   peopleTypes.PROFESSIONAL, -1, eventInfoDefault.workshopSessions),
+        attendee("Jane",  "Mountjoy",  peopleTypes.CHILD,        11, eventInfoDefault.workshopSessions),
+        attendee("Helen", "Mountjoy",  peopleTypes.CHILD,        12, eventInfoDefault.workshopSessions),
+        attendee("Cliff", "Mountjoy",  peopleTypes.CHILD,        17, eventInfoDefault.workshopSessions),
+        attendee("Baby",  "Mountjoy",  peopleTypes.CHILD,         3, eventInfoDefault.workshopSessions),
+      ];
+    }
 
     this.setState({
       eventInfo,
@@ -526,18 +583,20 @@ class App extends Component {
                   />,
 
               [pages.CLINICS]:
-                  <Clinics />,
+                  <Clinics
+                    clinics={eventInfo.clinics}
+                    onSortEnd={this.onClinicSortEnd}
+                    blurb={eventInfo.clinicsBlurb}
+                  />,
 
               [pages.REMEMBRANCE]:
                   <Remembrance
                     attendees={attendees}
                     onChange={this.onChangeRembOuting}
                     menuInfo={eventInfo.remembranceMenu}
+                    blurb={eventInfo.remembranceBlurb}
                     onChangeLunch={this.onChangeRembLunch}
                   />,
-
-              [pages.YOUTH]:
-                  <Youth />,
 
               [pages.CHILDCARE]:
                   <Childcare />,
@@ -551,6 +610,12 @@ class App extends Component {
                     sessions={eventInfo.workshopSessions}
                     onChange={this.onChangeWorkshops}
                   />,
+
+              [pages.YOUNGERSIB]:
+                  <YoungerSib attendees={attendees} onChange={this.onChangeSibOuting} onChangeShirtSize={this.onChangeShirtSize} blurb={eventInfo.youngerSibOutingBlurb} />,
+
+              [pages.OLDERSIB]:
+                  <OlderSib attendees={attendees} onChange={this.onChangeSibOuting} onChangeShirtSize={this.onChangeShirtSize} blurb={eventInfo.olderSibOutingBlurb} />,
 
               [pages.PICNIC]:
                   <Picnic />,
@@ -590,7 +655,58 @@ class App extends Component {
     );
   }
 
-  
+
+  //  Pass in -1 if you want to find the first adult or professional
+  nextAdultPro(currentAdult) {
+    let { attendees } = this.state;
+
+    for (let i = currentAdult+1; i < attendees.length; i++) {
+      if (attendees[i].peopleType === peopleTypes.ADULT  ||  attendees[i].peopleType === peopleTypes.PROFESSIONAL) {
+        return i;
+      }
+    }
+    
+    return -1;
+  } 
+
+
+  //  Pass in -1 if you want to find the first young child
+  nextYoungerSib(currentSib) {
+    let { attendees } = this.state;
+
+    for (let i = currentSib+1; i < attendees.length; i++) {
+      if (attendees[i].peopleType === peopleTypes.CHILD  &&  attendees[i].age >= 5  &&  attendees[i].age < 12) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
+  //  Pass in -1 if you want to find the first older child
+  nextOlderSib(currentSib) {
+    let { attendees } = this.state;
+
+    for (let i = currentSib+1; i < attendees.length; i++) {
+      if (attendees[i].peopleType === peopleTypes.CHILD  &&  attendees[i].age >= 12) {
+        return i;
+      }
+    }
+    
+    return -1;
+  } 
+
+  //  For draggable clinics lists
+  onClinicSortEnd = ({oldIndex, newIndex}) => {
+    const {eventInfo} = this.state;
+
+    eventInfo.clinics = arrayMove(eventInfo.clinics, oldIndex, newIndex)
+    this.setState({
+      eventInfo,
+    });
+  };
+
+
   // FIX -- pageHistory should be a state variable, not a global
   onPrevPage(event) {
     let { currentPage, pageHistory } = this.state;
@@ -664,12 +780,12 @@ class App extends Component {
           //  Error check
           //  alert() if errors
 
-          if (contact.firstName === ''  ||  contact.lastName === '') {
+          if (!DEBUG  &&  (contact.firstName === ''  ||  contact.lastName === '')) {
             alert("Oops! Please enter the name of the Contact Person.");
           }
           else {
             if (attendees.length === 0) {
-                attendees.push( attendee(contact.firstName, contact.lastName, peopleTypes.ADULT, this.state.eventInfo.workshopSessions) );
+                attendees.push( attendee(contact.firstName, contact.lastName, peopleTypes.ADULT, -1, this.state.eventInfo.workshopSessions) );
             }
 
             pageHistory.push(currentPage);
@@ -718,15 +834,137 @@ class App extends Component {
           }
           break;
 
+
+      case pages.DINNER:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: pages.WORKSHOPS,       //  This assumes that there will always be one adult
+          });
+
+          break;
+
       case pages.CLINICS:
           // let attendees = this.state.attendees;
 
           pageHistory.push(currentPage);
-          const newPage = pages.REMEMBRANCE;
+          const newPage = pages.WORKSHOPS;
 
           this.setState({
             pageHistory,
             currentPage: newPage,
+          });
+
+          break;
+
+      case pages.WORKSHOPS:
+
+          let nextAdult = this.nextAdultPro(this.state.workshopAttendee);
+
+          if (nextAdult !== -1) {               //  Stay on this page, just change attendees
+            this.setState({
+              workshopAttendee: nextAdult,
+            });
+          }
+          else {                                //  Move on to next page...
+            pageHistory.push(currentPage);
+
+            let nextSib;
+
+            if ((nextSib = this.nextYoungerSib(-1)) !== -1) {        //  Skip younger sibling page if none
+                this.setState({
+                  pageHistory,
+                  youngerSib: nextSib,
+                  currentPage: pages.YOUNGERSIB,
+                });
+            }
+            else if ((nextSib = this.nextOlderSib(-1)) !== -1) {     //  Skip older sibling page if none
+                this.setState({
+                  pageHistory,
+                  olderSib: nextSib,
+                  currentPage: pages.OLDERSIB,
+                });
+            } else {
+              this.setState({
+                pageHistory,
+                currentPage: pages.PICNIC,
+              });
+            }
+          }
+
+          break;
+
+
+      case pages.YOUNGERSIB:
+          {
+            attendees = attendees.map(a => {
+              if (!a.sibOuting) {
+                a.shirtSize = '';                        //  No shirts for people not attending
+              }
+              return a;
+            });
+
+            let $missing_shirt = attendees.find( a => { return (a.peopleType === peopleTypes.CHILD  &&  a.age >= 5  &&  a.age < 12  &&  a.sibOuting  &&  a.shirtSize === '' ) });
+            if ($missing_shirt) {
+              alert("Oops! Please select a shirt for each person attending the outing.");
+            }
+            else {
+              let nextSib = this.nextOlderSib(-1);
+
+              pageHistory.push(currentPage);
+              if (nextSib !== -1) {                         //  Skip older sibling page if none
+                  this.setState({
+                    pageHistory,
+                    currentPage: pages.OLDERSIB,
+                  });
+              }
+              else {
+                  this.setState({
+                    pageHistory,
+                    currentPage: pages.PICNIC,
+                  });
+              }
+            }
+          }
+          break;
+
+      case pages.OLDERSIB:
+          {
+            attendees = attendees.map(a => {
+              if (!a.sibOuting) {
+                a.shirtSize = '';                        //  No shirts for people not attending
+              }
+              return a;
+            });
+
+            let $missing_shirt = attendees.find( a => { return (a.peopleType === peopleTypes.CHILD  &&  a.age >= 12  &&  a.sibOuting  &&  a.shirtSize === '') });
+            if ($missing_shirt) {
+              alert("Oops! Please select a shirt for each person attending the outing.");
+            }
+            else {
+              pageHistory.push(currentPage);
+              const newPage = pages.CHILDCARE;
+
+              this.setState({
+                attendees,
+                pageHistory,
+                currentPage: newPage,
+              });
+            }
+          }
+          break;
+
+      case pages.CHILDCARE:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: pages.REMEMBRANCE,
           });
 
           break;
@@ -748,7 +986,7 @@ class App extends Component {
           }
           else {
             pageHistory.push(currentPage);
-            const newPage = pages.YOUTH;
+            const newPage = pages.PICNIC;
 
             this.setState({
               attendees,
@@ -759,83 +997,7 @@ class App extends Component {
 
           break;
 
-      case pages.YOUTH:
-          // let attendees = this.state.attendees;
-
-          pageHistory.push(currentPage);
-
-          this.setState({
-            pageHistory,
-            currentPage: pages.CHILDCARE,
-          });
-
-          break;
-
-      case pages.CHILDCARE:
-          // let attendees = this.state.attendees;
-
-          pageHistory.push(currentPage);
-
-          this.setState({
-            pageHistory,
-            currentPage: pages.DINNER,
-          });
-
-          break;
-
-      case pages.DINNER:
-          // let attendees = this.state.attendees;
-
-          pageHistory.push(currentPage);
-
-          this.setState({
-            pageHistory,
-            currentPage: pages.WORKSHOPS,
-          });
-
-          break;
-
-      case pages.WORKSHOPS:
-
-          let nextAdult = -1;
-
-          for (let i = this.state.workshopAttendee+1; i < attendees.length; i++) {
-            let peopleType = attendees[i].peopleType;
-            if (peopleType === peopleTypes.ADULT  ||  peopleType === peopleTypes.PROFESSIONAL) {
-              nextAdult = i;
-              break;
-            }
-          }
-
-          if (nextAdult !== -1) {               //  Stay on this page, just change attendees
-            this.setState({
-              workshopAttendee: nextAdult,
-            });
-          }
-          else {                                //  Move on to next page...
-            pageHistory.push(currentPage);
-
-            this.setState({
-              pageHistory,
-              currentPage: pages.PICNIC,
-            });
-          }
-
-          break;
-
       case pages.PICNIC:
-          // let attendees = this.state.attendees;
-
-          pageHistory.push(currentPage);
-
-          this.setState({
-            pageHistory,
-            currentPage: pages.BALLOONS,
-          });
-
-          break;
-
-      case pages.BALLOONS:
           // let attendees = this.state.attendees;
 
           pageHistory.push(currentPage);
@@ -921,9 +1083,9 @@ class App extends Component {
     let { attendees, contactInfo } = this.state;
 
     if (attendees.length === 0)
-      attendees.push( attendee(contactInfo.firstName, contactInfo.lastName,  peopleTypes.ADULT, this.state.eventInfo.workshopSessions) );
+      attendees.push( attendee(contactInfo.firstName, contactInfo.lastName,  peopleTypes.ADULT, -1, this.state.eventInfo.workshopSessions) );
     else
-      attendees.push( attendee('', '', '', this.state.eventInfo.workshopSessions) );
+      attendees.push( attendee('', '', '', -1, this.state.eventInfo.workshopSessions) );
 
     this.setState({
       attendees
@@ -1028,6 +1190,37 @@ class App extends Component {
 
 
   //-------------------------------------------------------------------------------------------
+  //  Process Sibling Outing pages
+  
+
+  onChangeSibOuting(event, id) {
+    let { attendees } = this.state;
+    let i = attendees.findIndex(a => a.id === id);
+    console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
+
+    //  Flip state of attendance and lunch option
+    attendees[i].sibOuting = !attendees[i].sibOuting;
+    if (!attendees[i].sibOuting) {
+      attendees[i].shirtSize = '';
+    }
+    this.setState ({
+      attendees
+    });
+  }
+
+  onChangeShirtSize(opt, id) {
+    let { attendees } = this.state;
+    let i = attendees.findIndex(a => a.id === id);
+    console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
+    attendees[i].shirtSize = opt.value;
+    this.setState ({
+      attendees
+    });
+  }
+
+
+
+  //-------------------------------------------------------------------------------------------
   //  Chapter Chair page
   
 
@@ -1042,6 +1235,47 @@ class App extends Component {
   }
 
 }
+
+
+//-------------------------------------------------------------------------------------------
+//  Implement draggable items
+
+const DragHandle = SortableHandle(() => <span className="drag-thumb"><FontAwesomeIcon icon="bars" /></span>);   // This can be any component you want
+
+const SortableItem = SortableElement(({value, index, i}) => {     //  TO-DO: Why is "index" undefined? Should be the same as "i"
+
+  let choice;
+  switch (i) {
+    case 0:
+      choice = 'Top Choice';
+      break;
+    case 1:
+      choice = '2nd Choice';
+      break;
+    case 2:
+      choice = '3rd Choice';
+      break;
+    default:
+      choice = '';
+  }
+
+  return (
+    <li className="drag-item">
+      <DragHandle />
+      <span className="clinic-name">{value}</span><span className="clinic-choice">{choice}</span>
+    </li>
+  );
+});
+
+const SortableList = SortableContainer(({items, i}) => {
+  return (
+    <ul className="sortable-container">
+      {items.map((value, index) => (
+        <SortableItem key={`item-${index}`} index={index} i={index} value={value} />
+      ))}
+    </ul>
+  );
+});
 
 
 
@@ -1063,7 +1297,7 @@ const SoftHeader = ({eventInfo}) =>
   </div>
 
 
-const pageTabs = [ 'Welcome', 'Attendees', 'Schedules', 'Picnic', 'Directory', 'SOFT Wear', 'Checkout' ];
+const pageTabs = [ 'Welcome', 'Attendees', 'Schedules', 'In Memory', 'Directory', 'SOFT Wear', 'Summary', 'Checkout' ];
 
 const PageBar = ({pageNum}) =>
   {
@@ -1078,16 +1312,16 @@ const PageBar = ({pageNum}) =>
         title = 'Attendees';
         break;
       case pages.CLINICS:
-      case pages.REMEMBRANCE:
-      case pages.YOUTH:
-      case pages.CHILDCARE:
       case pages.DINNER:
       case pages.WORKSHOPS:
+      case pages.YOUNGERSIB:
+      case pages.OLDERSIB:
+      case pages.CHILDCARE:
         title = 'Schedules';
         break;
+      case pages.REMEMBRANCE:
       case pages.PICNIC:
-      case pages.BALLOONS:
-        title = 'Picnic';
+        title = 'In Memory';
         break;
       case pages.DIRECTORY:
       case pages.PHOTOS:
@@ -1097,6 +1331,8 @@ const PageBar = ({pageNum}) =>
         title = 'SOFT Wear';
         break;      
       case pages.SUMMARY:
+        title = 'Summary';
+        break;
       case pages.CHECKOUT:
         title = 'Checkout';
         break;
@@ -1199,7 +1435,7 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangeSelection, onC
         <Input label="FIRST Name" value={attendees[0].firstName} id={"contact-firstname-" + attendees[0].id} onChange={event => onChange(event, attendees[0].id, "firstName")} />
         <Input label="LAST Name"  value={attendees[0].lastName}  id={"contact-lastname-" + attendees[0].id}  onChange={event => onChange(event, attendees[0].id, "lastName")} />
         <PeopleType value={attendees[0].peopleType} onChange={(opt) => onChangeSelection(opt, attendees[0].id, "peopleType")}/>
-        <div class="edit-age"></div><Button onClick={() => onRemove(attendees[0].id)}>Remove</Button>
+        <div className="edit-age"></div><Button onClick={() => onRemove(attendees[0].id)}>Remove</Button>
         {attendees.length > 1  &&
           attendees.slice(1).map( (a, i) =>
             <div className="attendee-row" key={a.id}>
@@ -1208,7 +1444,7 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangeSelection, onC
               <Input label="LAST Name"  value={a.lastName}  id={"contact-lsstname-" + a.id}  onChange={event => onChange(event, a.id, "lastName")} />
               <PeopleType value={a.peopleType} onChange={(opt) => onChangeSelection(opt, a.id, "peopleType")}/>
               {a.peopleType !== peopleTypes.CHILD  &&
-                <div class="edit-age"></div>
+                <div className="edit-age"></div>
               }
               {a.peopleType === peopleTypes.CHILD  &&
                 <Age label="Age" value={a.age}  id={"contact-age-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "age")} />
@@ -1239,110 +1475,6 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangeSelection, onC
   </div>
 
 
-//----------------------------------------------------------------------------------------------------
-
-
-const Clinics = ({contact}) =>
-  <div>
-    <h2>Clinics</h2>
-    <p>This year’s Soft Clinics will be held at Sonny's Children’s Hospital on Thursday July 35th. Please
-       number your clinic preferences (up to 5). We will attempt to schedule each child into 3 of the 5 preferences.
-    </p>
-    <b>
-      <p>INFO TO GATHER:</p>
-      <p>Info needed from participants:<br />
-         Clinic preferences (up to 5 choices)<br />
-         <br />
-         Number attending adults? Kids? Soft kids?  Needed for bus<br />
-         Bus seats needed? Tie downs needed?<br />
-      </p>
-    </b>
-
-  </div>
-
-
-//----------------------------------------------------------------------------------------------------
-
-
-
-const Remembrance = ({ attendees, menuInfo, onChange, onChangeLunch }) =>
-  <div>
-    <h2>Remembrance Outing</h2>
-    <p>There will be a Remembrance Outing for families who have lost a child. If you have lost
-       a child and plan to attend, please put a checkmark next to each person who will be
-       attending, and select the type of box lunch for each. Otherwise, simply click the Next button.
-    </p>
-    <div className="remembrance">
-      {attendees.map( (a,i) => 
-          <div key={a.id} className="indent">
-            <Checkbox defaultChecked={a.rembOuting} onChange={event => onChange(event, a.id)} />
-            <span className="remb-name">{a.firstName} {a.lastName}</span>
-            <RembLunch value={a.rembLunch} menuInfo={menuInfo} isDisabled={!a.rembOuting} onChange={(opt) => onChangeLunch(opt, a.id)} />
-          </div>
-        )
-      }
-      <p><b><br />What other Info? Bus seats needed? Tie-downs?</b></p>
-    </div>
-  </div>
-
-
-
-//----------------------------------------------------------------------------------------------------
-
-
-const Youth = ({contact}) =>
-  <div>
-    <h2>Youth Outing</h2>
-    <p>Omaha’s famed "Henry Doorly Zoo and Aquarium" will be the focus of the Children’s Activities on 
-       Thursday – see the schedule for times and pick-up location. The cost for children aged 12+ is $35 
-       and for 5-11 the cost is $30. The outing includes transportation, a T-shirt and lunch as well as 
-       admission to the Zoo activities.
-    </p>
-    <b>
-      <p>Normally these are separate events for children 11 and under, and 12 and older<br /><br />
-         Info to gather:  Age of each child, shirt size, what else?<br /><br />
-         It's assumed one bus seat per child. Any exceptions?<br />
-      </p>
-    </b>
-  </div>
-
-
-//----------------------------------------------------------------------------------------------------
-
-
-const Childcare = ({contact}) =>
-  <div>
-    <h2>Childcare</h2>
-    <p>Day care is available for kids ages infant to ? during the following hours..
-    </p>
-    <b>
-    <p>INFO TO GATHER:</p>
-      <p>How to schedule this? For each child attending present a list of checkboxes of time slots? E.g.:<br /><br />
-          Todd Brown:<br />Thursday Morning, Thursday Afternnon, Friday Morning, Friday Afternnon<br /><br />
-          Wendy Brown:<br />Thursday Morning, Thursday Afternnon, Friday Morning, Friday Afternnon<br /><br />
-         <br />
-         Will that work for how childcare is provided?<br />
-      </p>
-    </b>
-  </div>
-
-
-
-//----------------------------------------------------------------------------------------------------
-
-
-const Dinner = ({contact}) =>
-  <div>
-    <h2>Welcome Dinner</h2>
-    <p>Our annual welcome dinner will be held Thursday night from 6pm – 10pm.
-    </p>
-    <b>
-      <p>Exactly like for the Remember Outing page, but with different meal choices?<br /><br />
-         Any transportation info needed for this?
-      </p>
-    </b>
-  </div>
-
 
 //----------------------------------------------------------------------------------------------------
 
@@ -1370,6 +1502,124 @@ const Workshops = ({attendee, sessions, onChange}) =>
     }
   </div>
 
+
+//----------------------------------------------------------------------------------------------------
+
+
+const YoungerSib = ({attendees, onChange, onChangeShirtSize, blurb}) =>
+  <div>
+    <h2>Younger Sibling Outing</h2>
+    <p>{blurb}</p>
+    <p>Check each child who will be attending the outing and choose a shirt size.</p>
+    <div className="remembrance">
+      {attendees.map( (a,i) => 
+        {return a.peopleType === peopleTypes.CHILD  &&  a.age >= 5  &&  a.age < 12  &&
+          <div key={a.id} className="indent">
+            <Checkbox defaultChecked={a.sibOuting} onChange={event => onChange(event, a.id)} />
+            <span className="remb-name">{a.firstName} {a.lastName}</span>
+            <ShirtSize value={a.shirtSize} isDisabled={!a.sibOuting} onChange={(opt) => onChangeShirtSize(opt, a.id)} />
+          </div>
+        })
+      }
+      <p></p>
+    </div>
+  </div>
+
+
+const OlderSib = ({attendees, onChange, onChangeShirtSize, blurb}) => 
+  <div>
+    <h2>Older Sibling Outing</h2>
+    <p>{blurb}</p>
+    <p>Check each child who will be attending the outing and choose a shirt size.</p>
+    <div className="remembrance">
+      {attendees.map( (a,i) => 
+        { return a.peopleType === peopleTypes.CHILD  &&  a.age >= 12  &&
+          <div key={a.id} className="indent">
+            <Checkbox defaultChecked={a.sibOuting} onChange={event => onChange(event, a.id)} />
+            <span className="remb-name">{a.firstName} {a.lastName}</span>
+            <ShirtSize value={a.shirtSize} isDisabled={!a.sibOuting} onChange={(opt) => onChangeShirtSize(opt, a.id)} />
+          </div>
+        })
+      }
+      <p></p>
+    </div>
+  </div>
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const Clinics = ({clinics, onSortEnd, blurb}) => 
+  <div>
+    <h2>Clinics</h2>
+    <p>{blurb}</p>
+    <p>Rearrange the names of the clinics below from Most Interested to Least Interested by simultaneously clicking and dragging on the <span className="thumb-color"><FontAwesomeIcon icon="bars" /></span> character and moving
+    the name of the clinic up or down.</p>
+    <p>Move <strong>MOST Interested</strong> Clinic to the top:</p>
+    <SortableList items={clinics} onSortEnd={onSortEnd} useDragHandle={true} />
+    <p>Move the <strong>LEAST Interested</strong> Clinic to the bottom.</p>
+    <p>Again, you must click and drag <i>simultaneously</i> on the <span className="thumb-color"><FontAwesomeIcon icon="bars" /></span> character to move the clinic name up or down.</p>
+  </div>
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+
+const Remembrance = ({ attendees, blurb, menuInfo, onChange, onChangeLunch }) =>
+  <div>
+    <h2>Remembrance Outing</h2>
+    <p>{blurb}</p>
+    <div className="remembrance">
+      {attendees.map( (a,i) => 
+        {return (a.peopleType === peopleTypes.ADULT)  && 
+          <div key={a.id} className="indent">
+            <Checkbox defaultChecked={a.rembOuting} onChange={event => onChange(event, a.id)} />
+            <span className="remb-name">{a.firstName} {a.lastName}</span>
+            <RembLunch value={a.rembLunch} menuInfo={menuInfo} isDisabled={!a.rembOuting} onChange={(opt) => onChangeLunch(opt, a.id)} />
+          </div>
+        })
+      }
+    </div>
+  </div>
+
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const Childcare = ({contact}) =>
+  <div>
+    <h2>Childcare</h2>
+    <p>Day care is available for kids ages infant to ? during the following hours..
+    </p>
+    <b>
+    <p>INFO TO GATHER:</p>
+      <p>
+          Todd Brown:<br />Thursday Morning, Thursday Afternnon, Friday Morning, Friday Afternnon<br /><br />
+          Wendy Brown:<br />Thursday Morning, Thursday Afternnon, Friday Morning, Friday Afternnon<br /><br />
+         <br />
+         Will that work for how childcare is provided?<br />
+      </p>
+    </b>
+  </div>
+
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const Dinner = ({contact}) =>
+  <div>
+    <h2>Welcome Dinner</h2>
+    <p>Our annual welcome dinner will be held Thursday night from 6pm – 10pm.
+    </p>
+    <b>
+      <p>Exactly like for the Remember Outing page, but with different meal choices?<br /><br />
+         Any transportation info needed for this?
+      </p>
+    </b>
+  </div>
 
 
 //----------------------------------------------------------------------------------------------------
@@ -1615,6 +1865,7 @@ const RembLunch = ({value, menuInfo, isDisabled, onChange, className="edit-remb-
       );
     }
 
+
 const Country = ({value, onChange, className="edit-country"}) => {
     const defaultOpt = optionsCountries.find(opt => (opt.value === value));
       return (
@@ -1629,7 +1880,23 @@ const Country = ({value, onChange, className="edit-country"}) => {
         </div>
       );
     }
-    
+
+
+const ShirtSize = ({value, isDisabled, onChange, className="edit-shirt-size"}) => {
+      const defaultOpt = optionsShirtSizes.find(opt => (opt.value === value));
+      return (
+        <div className={className}>
+          <Select
+            options={optionsShirtSizes}
+            defaultValue={defaultOpt}
+            placeholder={"Select..."}
+            isDisabled={isDisabled}
+            onChange={onChange}
+            styles={customStylesPeopleTypes}
+          />
+        </div>
+      );
+    }
 
 
 const PrevNextButtons = ({pageNum, contact, onClickPrev, onClickNext}) =>
