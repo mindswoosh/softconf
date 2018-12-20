@@ -24,7 +24,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import {
   SortableContainer,
   SortableElement,
-  SortableHandle,
   arrayMove,
 } from 'react-sortable-hoc';
 
@@ -38,7 +37,7 @@ library.add(faHandPointRight);
 library.add(faQuestionCircle);
 library.add(faBars);
 
-const DEBUG = false;  //  Set to false for production
+const DEBUG = true;  //  Set to false for production
 
 var nextID = 10000;
 
@@ -201,6 +200,7 @@ const eventInfoDefault = {
         ]
       },
     ],
+
   clinicsBlurb: "This year’s Soft Clinics will be held at Sonny's Children’s Hospital on Thursday July 35th. Please number your clinic preferences (up to 5). We will attempt to schedule each child into 3 of the 5 preferences.",
   clinics: [
       'Cardiology',
@@ -211,9 +211,30 @@ const eventInfoDefault = {
       'Orthopedic',
       'Genetics',
     ],
+
   youngerSibOutingBlurb: "The Younger Sibling outing is for children ages 5 to 11 and will be at the Wild Waves water park where there are number of rides and attractions especially for younger kids, from the Enchanted Railway to the Kiddie Boats. Everyone will have plenty of fun! Lunch is included and so is a SOFT T-shirt!",
   olderSibOutingBlurb: "The Older Sibling outing is for children 12 and up and will be at the Woodland Park Zoo where they can explore exhibits and get close to more than 1,100 animals and 300 species—including some of the world's most critically endangered. Lunch is included in the outing and every child will get a SOFT T-shirt.",
   
+  childCareBlurb: "Childcare will be available during the Workshops and Clinics and is available for children up to age 11 and for SOFT children of any age. Please refer to the brochure for the times of the Workshops and Clinics you plan to attend in which you might need childcare.",
+  childCareSessions: [
+    {
+      id: 'cc1',
+      title: "Thursday 8am-Noon",
+    },
+    {
+      id: 'cc2',
+      title: "Thursday 1pm-5pm",
+    },
+    {
+      id: 'cc3',
+      title: "Friday 8am-Noon",
+    },
+    {
+      id: 'cc4',
+      title: "Friday 1pm-5pm",
+    },
+  ],
+
   remembranceBlurb: "There will be a Remembrance Outing for families who have lost a child. If you have lost a child and plan to attend, please put a checkmark next to each person who will be attending, and select the type of box lunch for each. Otherwise, simply click the Next button.",
   remembranceMenu: {
       V: 'Vegetarian',
@@ -388,7 +409,7 @@ const optionsShirtSizes = [
 ];
 
 
-function attendee(firstName, lastName, peopleType, age, sessions) {
+function attendee(firstName, lastName, peopleType, age, eventInfo) {
 
   let attendee = {
     id: nextID++,
@@ -401,6 +422,7 @@ function attendee(firstName, lastName, peopleType, age, sessions) {
     rembLunch:  '',
     chapterChair: '',
     workshops: {},
+    childCareSessions: {},
 
     // Child
     age:         age,
@@ -415,8 +437,12 @@ function attendee(firstName, lastName, peopleType, age, sessions) {
     // Professional
   };
 
-  sessions.forEach( (sess) => {
+  eventInfo.workshopSessions.forEach( (sess) => {
     attendee.workshops[sess.id] = sess.workshops[0].id
+  });
+
+  eventInfo.childCareSessions.forEach( (sess) => {
+    attendee.childCareSessions[sess.id] = false;
   });
 
   return attendee;
@@ -486,6 +512,8 @@ class App extends Component {
 
     this.onClinicSortEnd      = this.onClinicSortEnd.bind(this);
 
+    this.onChangeChildCare    = this.onChangeChildCare.bind(this);
+
     this.onChangeChapterChair = this.onChangeChapterChair.bind(this);
 
     this.onPrevPage           = this.onPrevPage.bind(this);
@@ -519,13 +547,13 @@ class App extends Component {
 
     if (DEBUG) {
       attendees = [
-        attendee("Steve", "Maguire",   peopleTypes.ADULT,        -1, eventInfoDefault.workshopSessions),
-        attendee("Beth",  "Mountjoy",  peopleTypes.CHILD,         5, eventInfoDefault.workshopSessions),
-        attendee("Terre", "Krotzer",   peopleTypes.PROFESSIONAL, -1, eventInfoDefault.workshopSessions),
-        attendee("Jane",  "Mountjoy",  peopleTypes.CHILD,        11, eventInfoDefault.workshopSessions),
-        attendee("Helen", "Mountjoy",  peopleTypes.CHILD,        12, eventInfoDefault.workshopSessions),
-        attendee("Cliff", "Mountjoy",  peopleTypes.CHILD,        17, eventInfoDefault.workshopSessions),
-        attendee("Baby",  "Mountjoy",  peopleTypes.CHILD,         3, eventInfoDefault.workshopSessions),
+        attendee("Steve", "Maguire",   peopleTypes.ADULT,        -1, eventInfoDefault),
+        attendee("Beth",  "Mountjoy",  peopleTypes.CHILD,         5, eventInfoDefault),
+        attendee("Terre", "Krotzer",   peopleTypes.PROFESSIONAL, -1, eventInfoDefault),
+        attendee("Jane",  "Mountjoy",  peopleTypes.CHILD,        11, eventInfoDefault),
+        attendee("Helen", "Mountjoy",  peopleTypes.CHILD,        12, eventInfoDefault),
+        attendee("Cliff", "Mountjoy",  peopleTypes.CHILD,        17, eventInfoDefault),
+        attendee("Baby",  "Mountjoy",  peopleTypes.CHILD,         3, eventInfoDefault),
       ];
     }
 
@@ -600,7 +628,7 @@ class App extends Component {
                   />,
 
               [pages.CHILDCARE]:
-                  <Childcare />,
+                  <Childcare attendees={attendees} childCareSessions={eventInfo.childCareSessions} blurb={eventInfo.childCareBlurb} onChange={this.onChangeChildCare} />,
 
               [pages.DINNER]:
                   <Dinner />,
@@ -800,7 +828,7 @@ class App extends Component {
           }
           else {
             if (attendees.length === 0) {
-                attendees.push( attendee(contact.firstName, contact.lastName, peopleTypes.ADULT, -1, this.state.eventInfo.workshopSessions) );
+                attendees.push( attendee(contact.firstName, contact.lastName, peopleTypes.ADULT, -1, this.state.eventInfo) );
             }
 
             pageHistory.push(currentPage);
@@ -1120,9 +1148,9 @@ class App extends Component {
     let { attendees, contactInfo } = this.state;
 
     if (attendees.length === 0)
-      attendees.push( attendee(contactInfo.firstName, contactInfo.lastName,  peopleTypes.ADULT, -1, this.state.eventInfo.workshopSessions) );
+      attendees.push( attendee(contactInfo.firstName, contactInfo.lastName,  peopleTypes.ADULT, -1, this.state.eventInfo) );
     else
-      attendees.push( attendee('', '', '', -1, this.state.eventInfo.workshopSessions) );
+      attendees.push( attendee('', '', '', -1, this.state.eventInfo) );
 
     this.setState({
       attendees
@@ -1258,6 +1286,21 @@ class App extends Component {
 
 
   //-------------------------------------------------------------------------------------------
+  //  Childcare pages
+  
+
+  onChangeChildCare(event, attendeeID, sessionID) {
+    let { attendees } = this.state;
+    let i = attendees.findIndex( (a) => { return (a.id === attendeeID) } );
+    attendees[i].childCareSessions[sessionID] = !attendees[i].childCareSessions[sessionID];
+
+    this.setState ({
+      attendees
+    });
+  }
+
+
+  //-------------------------------------------------------------------------------------------
   //  Chapter Chair page
   
 
@@ -1277,7 +1320,7 @@ class App extends Component {
 //-------------------------------------------------------------------------------------------
 //  Implement draggable items
 
-const DragHandle = SortableHandle(() => <span className="drag-thumb"><FontAwesomeIcon icon="bars" /></span>);   // This can be any component you want
+// const DragHandle = SortableHandle(() => <span className="drag-thumb"><FontAwesomeIcon icon="bars" /></span>);   // This can be any component you want
 
 const SortableItem = SortableElement(({value, index, i}) => {     //  TO-DO: Why is "index" undefined? Should be the same as "i"
 
@@ -1298,8 +1341,7 @@ const SortableItem = SortableElement(({value, index, i}) => {     //  TO-DO: Why
 
   return (
     <li className="drag-item">
-      <DragHandle />
-      <span className="clinic-name">{value}</span><span className="clinic-choice">{choice}</span>
+      <span className="drag-thumb"><FontAwesomeIcon icon="bars" /></span><span className="clinic-name">{value}</span><span className="clinic-choice">{choice}</span>
     </li>
   );
 });
@@ -1593,7 +1635,7 @@ const Clinics = ({clinics, onSortEnd, blurb}) =>
     <p>Rearrange the names of the clinics below from Most Interested to Least Interested by simultaneously clicking and dragging on the <span className="thumb-color"><FontAwesomeIcon icon="bars" /></span> character and moving
     the name of the clinic up or down.</p>
     <p>Move <strong>MOST Interested</strong> Clinic to the top:</p>
-    <SortableList items={clinics} onSortEnd={onSortEnd} useDragHandle={true} />
+    <SortableList items={clinics} onSortEnd={onSortEnd} />
     <p>Move the <strong>LEAST Interested</strong> Clinic to the bottom.</p>
     <p>Again, you must click and drag <i>simultaneously</i> on the <span className="thumb-color"><FontAwesomeIcon icon="bars" /></span> character to move the clinic name up or down.</p>
   </div>
@@ -1625,20 +1667,27 @@ const Remembrance = ({ attendees, blurb, menuInfo, onChange, onChangeLunch }) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const Childcare = ({contact}) =>
+const Childcare = ({attendees, childCareSessions, onChange, blurb}) =>
   <div>
     <h2>Childcare</h2>
-    <p>Day care is available for kids ages infant to ? during the following hours..
-    </p>
-    <b>
-    <p>INFO TO GATHER:</p>
-      <p>
-          Todd Brown:<br />Thursday Morning, Thursday Afternnon, Friday Morning, Friday Afternnon<br /><br />
-          Wendy Brown:<br />Thursday Morning, Thursday Afternnon, Friday Morning, Friday Afternnon<br /><br />
-         <br />
-         Will that work for how childcare is provided?<br />
-      </p>
-    </b>
+    <p>{blurb}</p>
+    <p>Please put a checkmark next to each timeslot where you will need childcare.</p>
+    <div className="remembrance">
+      {attendees.map( (a,i) => 
+        {return (a.peopleType === peopleTypes.SOFTCHILD  ||  (a.peopleType === peopleTypes.CHILD  &&  a.age < 12))  &&
+          <div key={a.id} className="indent">
+            <span className="remb-name"><strong>{a.firstName} {a.lastName}</strong></span>
+            {childCareSessions.map( (c,i) =>
+              <div key={a.id + "-" + c.id} className="indent" >
+                <Checkbox defaultChecked={a.childCareSessions[c.id]} onChange={event => onChange(event, a.id, c.id)} />
+                {c.title}
+              </div>
+            )}
+            <br />
+          </div>
+        })
+      }
+    </div>
   </div>
 
 
