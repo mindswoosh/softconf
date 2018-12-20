@@ -37,7 +37,7 @@ library.add(faHandPointRight);
 library.add(faQuestionCircle);
 library.add(faBars);
 
-const DEBUG = true;  //  Set to false for production
+const DEBUG = false;  //  Set to false for production
 
 var nextID = 10000;
 
