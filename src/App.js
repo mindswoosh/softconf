@@ -1350,7 +1350,7 @@ const SortableList = SortableContainer(({items, i}) => {
   return (
     <ul className="sortable-container">
       {items.map((value, index) => (
-        <SortableItem key={`item-${index}`} index={index} i={index} value={value} />
+        <SortableItem key={"item-"+index} index={index} i={index} value={value} />
       ))}
     </ul>
   );
@@ -1701,9 +1701,7 @@ const Dinner = ({contact}) =>
     <p>Our annual welcome dinner will be held Thursday night from 6pm – 10pm.
     </p>
     <b>
-      <p>Exactly like for the Remember Outing page, but with different meal choices?<br /><br />
-         Any transportation info needed for this?
-      </p>
+      <p></p>
     </b>
   </div>
 
@@ -1719,10 +1717,7 @@ const Picnic = ({contact}) =>
        If you will are requesting a balloon release for your child we will gather that information on the next page.
     </p>
     <b>
-    <p>Just like Remembrance Outing. Present list of people to check (w/o a meal choice) and whether a tie down
-       is needed.<br /><br />
-       Is it assumed that everybody needs a bus seat or a tie down? In other words is "no transportation
-       needed" a possibility?</p>
+    <p></p>
     </b>
   </div>
 
@@ -1737,14 +1732,7 @@ const Balloons = ({contact}) =>
        the conference to request a balloon for your child.
     </p>
     <b>
-      <p>Info to Collect:<br /><br />
-        Child's name<br />
-        Date of birth<br />
-        Date of death<br />
-        Diagnosis<br />
-        Parents' names<br /><br />
-        Anything else?
-      </p>
+      <p></p>
     </b>
   </div>
 
@@ -1760,11 +1748,7 @@ const Photos = ({contact}) =>
        display during the conference and/or included in the Soft Family Directory.
     </p>
     <b>
-      <p>Optional photos to ask for:<br /><br />
-        Child's photo<br />
-        Family photo<br /><br />
-        One each? Or do you want the ability to upload multiples of each?
-      </p>
+      <p></p>
     </b>
   </div>
 
@@ -1780,20 +1764,7 @@ const Directory = ({contact}) =>
        and photos. Please check the items you would like included in your listing:
     </p>
     <b>
-      <p>Info to Collect:<br /><br />
-        Name<br />
-        Address<br />
-        Email address<br />
-        Cell phone<br />
-        Home phone<br />
-        Soft child info (name, diagnosis, dates)<br />
-        Family photo<br /><br />
-        Anything else?<br />
-        Can we assume that this is the same info gathered for the contact person? If so, we can
-        just have them checkmark the information they're okay with providing. (We gathered the soft
-        child's info elsewhere.) In other words, this page could be really complex if we re-gather
-        the information, or instead it could be really simple if it's just a list of checkboxes.
-      </p>
+      <p></p>
     </b>
   </div>
 
@@ -1807,7 +1778,7 @@ const Softwear = ({contact}) =>
     <h2>SOFT Wear</h2>
     <p>Get your SOFT Wear shirts here
     </p>
-    <p>Present shirt options: sizes and quantity.</p>
+    <p></p>
   </div>
 
 
@@ -1842,19 +1813,7 @@ const ChapterChair = ({ attendees, menuInfo, onChange, onChangeLunch }) =>
 const Summary = ({contact}) =>
   <div>
     <h2>Summary</h2>
-    <br />
-    First name: {contact.firstName}<br />
-    Last name: {contact.lastName}<br />
-    Address 1: {contact.address1}<br />
-    Address 2: {contact.address2}<br />
-    City: {contact.city}<br />
-    State: {contact.stateProv}<br />
-    Zip: {contact.postalCode}<br />
-    Country: {contact.country}<br />
-    Mobile Phone: {contact.phoneMobile}<br />
-    Work Phone: {contact.phoneWork}<br />
-    Home Phone: {contact.phoneHome}<br />
-    Email: {contact.email}<br />
+    <br /><br />
   </div>
 
 
@@ -1865,9 +1824,7 @@ const Summary = ({contact}) =>
 const Checkout = ({contact}) =>
   <div>
     <h2>Checkout</h2>
-    <p>Blurb
-    </p>
-    <p>COMING SOON!</p>
+    <p></p>
   </div>
 
 
