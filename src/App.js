@@ -240,6 +240,47 @@ const eventInfoDefault = {
       V: 'Vegetarian',
       N: 'Non-vegetarian',
     },
+
+  picnicBlurb: "The Annual Ryan Cantrell Memorial Picnic and Balloon release will be Saturday July 36th from 1–4pm at the East Fork Lake picnic area. Please let us know who is attending, number of bus seats/tie downs if needed. If you will are requesting a balloon release for your child we will gather that information on the next page.",
+
+  shirtsBlurb: "Order your SOFT shirts ahead of time so they'll be ready and waiting for you when you sign in at the conference. Note that the shirts given to the children at the Sibling Outings are different than these shirts.",
+
+  shirtTypes: [
+      {
+        id: "shirt1",
+        description: "Youth Short Sleeve T-shirt with Front & Back Logo. $12 each.",
+        cost: 12,
+        sizes: [
+            'Small',
+            'Medium',
+            'Large',
+            'Extra Large',
+          ]
+      },
+      {
+        id: "shirt2",
+        description: "Unisex ADULT Short Sleeve T-shirt with Front & Back Logo. $15 each.",
+        cost: 15,
+        sizes: [
+            'Small',
+            'Medium',
+            'Large',
+            'Extra Large',
+          ]
+      },
+      {
+        id: "shirt3",
+        description: "Unisex Pull-over hooded sweatshirt (ADULT ONLY) in Blue. $25 each.",
+        cost: 25,
+        sizes: [
+            'Small',
+            'Medium',
+            'Large',
+            'Extra Large',
+          ]
+      }
+  ],
+
   dinnerMenu: [
       'Wild Mushroom Ravioli',
       'Lemon Herb Chicken Breast',
@@ -348,6 +389,56 @@ const customStylesPeopleTypes = {
 
 
 
+const customStylesNarrow = {
+  option: (base, state) => ({
+    ...base,
+    padding: 5,
+  }),
+  control: (base, state) => ({
+    ...base,
+    width: 120,
+    padding: 0,
+    marginTop: 5,
+    borderRadius: 0,
+    minHeight: 0,
+    height: 30,
+    fontSize: 14,
+    backgroundColor: "white",
+  }),
+  singleValue: (base, state) => {
+    const opacity = state.isDisabled ? 0.5 : 1;
+    const transition = 'opacity 300ms';
+
+    return {
+       ...base, 
+       opacity, 
+       transition,
+    };
+  },
+  menuList: (base, state) => ({
+    ...base,
+    height: 110,
+    fontSize: 14,
+    color: "#2e3a97",
+  }),
+  placeholder: (base, state) => ({
+    ...base,
+    color: "#999",
+    fontSize: 12,
+  }),
+  container: (base, state) => ({
+    ...base,
+    width: 120,
+  }),
+}
+
+
+
+const optionsYesNo = [
+  { label: "Yes", value: 1 },
+  { label: "No",  value: 0 },  
+];
+
 const peopleTypes = {
   SOFTCHILD:    "S",
   CHILD:        "C",
@@ -394,6 +485,17 @@ const optionsDiagnoses = [
   { label: "Other", value: "Other"},
 ];
 
+const optionsShirtQuantity = [
+  { label: 1,  value: 1 },
+  { label: 2,  value: 2 },
+  { label: 3,  value: 3 },
+  { label: 4,  value: 4 },
+  { label: 5,  value: 5 },
+  { label: 6,  value: 6 },
+  { label: 7,  value: 7 },
+  { label: 8,  value: 8 },
+  { label: 9,  value: 9 },
+];
 
 const optionsShirtSizes = [
   { label: "Youth - S",    value: "ys"   },
@@ -407,6 +509,19 @@ const optionsShirtSizes = [
   { label: "Adult - XXL",  value: "xxl"  },
   { label: "Adult - XXXL", value: "xxxl" },
 ];
+
+const shirtDisplay = {
+  ys:   "Youth - S",
+  ym:   "Youth - M",
+  yl:   "Youth - L",
+  yxl:  "Youth - XL",
+  s:    "Adult - S",
+  m:    "Adult - M",
+  l:    "Adult - L",
+  xl:   "Adult - XL",
+  xxl:  "Adult - XXL",
+  xxxl: "Adult - XXXL",
+}
 
 
 function attendee(firstName, lastName, peopleType, age, eventInfo) {
@@ -433,6 +548,10 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     dateOfBirth: null,
     diagnosis:   null,
     eatsMeals:   true,
+
+    // Picnic
+    picnic: 0,
+    picnicTiedown: 0,
 
     // Professional
   };
@@ -483,7 +602,22 @@ class App extends Component {
 
       attendees: [],
 
+      directory: {
+        name:             false,
+        age:              false,
+        diagnosis:        false,
+        photos:           false,
+        contactInfo:      false,
+        phone:            false,
+        email:            false,
+        fullAddress:      false,
+        partialAddress:   false,
+      },
+
+      shirtsOrdered: [],
+
       workshopAttendee: 0,
+      shirtDropdowns: {},
     };
 
     this.setEventInfo         = this.setEventInfo.bind(this);
@@ -513,6 +647,15 @@ class App extends Component {
     this.onClinicSortEnd      = this.onClinicSortEnd.bind(this);
 
     this.onChangeChildCare    = this.onChangeChildCare.bind(this);
+
+    this.onChangePicnic       = this.onChangePicnic.bind(this);
+    this.onChangePicnicTiedown = this.onChangePicnicTiedown.bind(this);
+
+    this.onChangeDirectory    = this.onChangeDirectory.bind(this);
+
+    this.onRemoveShirt        = this.onRemoveShirt.bind(this);
+    this.onShirtDropdown      = this.onShirtDropdown.bind(this);
+    this.onAddShirt           = this.onAddShirt.bind(this);
 
     this.onChangeChapterChair = this.onChangeChapterChair.bind(this);
 
@@ -557,9 +700,30 @@ class App extends Component {
       ];
     }
 
+    // let shirtDropdowns = eventInfo.shirtTypes.map( (shirt) => {
+    //   console.log(shirt);
+    //   return {
+    //     [shirt.id]: {
+    //       size:     "",
+    //       quantity: 0,
+    //     }
+    //   }
+    // });
+    // console.log("shirtDropdowns");
+    // console.log(shirtDropdowns);
+
+    let shirtDropdowns = {};
+
+    eventInfo.shirtTypes.forEach( (shirt) => {
+      shirtDropdowns[shirt.id] = {};
+      shirtDropdowns[shirt.id].size = "";
+      shirtDropdowns[shirt.id].quantity = 0;
+    });
+
     this.setState({
       eventInfo,
-      attendees
+      attendees,
+      shirtDropdowns
     });
   }
 
@@ -647,7 +811,12 @@ class App extends Component {
                   <OlderSib attendees={attendees} onChange={this.onChangeSibOuting} onChangeShirtSize={this.onChangeShirtSize} blurb={eventInfo.olderSibOutingBlurb} />,
 
               [pages.PICNIC]:
-                  <Picnic />,
+                  <Picnic
+                    blurb={eventInfo.picnicBlurb}
+                    attendees={attendees}
+                    onChange={this.onChangePicnic}
+                    onChangeTiedown={this.onChangePicnicTiedown}
+                  />,
 
               [pages.BALLOONS]:
                   <Balloons />,
@@ -661,13 +830,23 @@ class App extends Component {
                   />,
 
               [pages.DIRECTORY]:
-                  <Directory contact={contactInfo} />,
+                  <Directory
+                    directory={this.state.directory}
+                    onChange={this.onChangeDirectory}
+                  />,
 
               [pages.PHOTOS]:
                   <Photos contact={contactInfo} />,
 
               [pages.SOFTWEAR]:
-                  <Softwear />,
+                  <SoftWear
+                    blurb={eventInfo.shirtsBlurb}
+                    shirtTypes={eventInfo.shirtTypes}
+                    shirtsOrdered={this.state.shirtsOrdered}
+                    onRemove={this.onRemoveShirt}
+                    onDropdown={this.onShirtDropdown}
+                    onAdd={this.onAddShirt}
+                  />,
 
               [pages.SUMMARY]:
                   <Summary contact={contactInfo} />,
@@ -1069,22 +1248,22 @@ class App extends Component {
 
           this.setState({
             pageHistory,
-            currentPage: pages.PHOTOS,
-          });
-
-          break;
-
-      case pages.PHOTOS:
-          // let attendees = this.state.attendees;
-
-          pageHistory.push(currentPage);
-
-          this.setState({
-            pageHistory,
             currentPage: pages.DIRECTORY,
           });
 
           break;
+
+      // case pages.PHOTOS:
+      //     // let attendees = this.state.attendees;
+
+      //     pageHistory.push(currentPage);
+
+      //     this.setState({
+      //       pageHistory,
+      //       currentPage: pages.DIRECTORY,
+      //     });
+
+      //     break;
 
       case pages.DIRECTORY:
           // let attendees = this.state.attendees;
@@ -1106,7 +1285,7 @@ class App extends Component {
 
           this.setState({
             pageHistory,
-            currentPage: pages.SUMMARY,
+            currentPage: pages.CHECKOUT,
           });
 
           break;
@@ -1301,6 +1480,36 @@ class App extends Component {
 
 
   //-------------------------------------------------------------------------------------------
+  //  Process Remembrance page
+  
+
+  onChangePicnic(event, id) {
+    let { attendees } = this.state;
+    let i = attendees.findIndex(a => a.id === id);
+    console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
+
+    //  Flip state of attendance and lunch option
+    attendees[i].picnic = !attendees[i].picnic;
+    if (!attendees[i].picnic) {
+      attendees[i].picnicTiedown = 0;
+    }
+    this.setState ({
+      attendees
+    });
+  }
+
+  onChangePicnicTiedown(opt, id) {
+    let { attendees } = this.state;
+    let i = attendees.findIndex(a => a.id === id);
+    console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
+    attendees[i].picnicTiedown = opt.value;
+    this.setState ({
+      attendees
+    });
+  }
+
+
+  //-------------------------------------------------------------------------------------------
   //  Chapter Chair page
   
 
@@ -1312,6 +1521,78 @@ class App extends Component {
     this.setState ({
       attendees
     });
+  }
+
+
+  //-------------------------------------------------------------------------------------------
+  //  Directory page
+
+  onChangeDirectory(opt, field) {
+    let { directory } = this.state;
+    directory[field] = !directory[field];
+
+    if (field === "contactInfo") {
+      directory.phone = false;
+      directory.email = false;
+      directory.fullAddress = false;
+      directory.partialAddress = false;
+    }
+
+    //  fullAddress and partialAddress can't both be checked simultaneously
+    if (field === "fullAddress"  &&  directory.fullAddress) {
+      directory.partialAddress = false;
+    }
+
+    if (field === "partialAddress"  &&  directory.partialAddress) {
+      directory.fullAddress = false;
+    }
+
+    this.setState ({
+      directory
+    });
+  }
+
+
+  //-------------------------------------------------------------------------------------------
+  //  SOFT Wear page
+
+  onRemoveShirt(id) {
+    let { shirtsOrdered } = this.state;
+    shirtsOrdered = shirtsOrdered.filter(shirt => shirt.id !== id);
+    this.setState({
+      shirtsOrdered
+    });
+  }
+
+  onShirtDropdown(opt, id, field) {
+    let { shirtDropdowns } = this.state;
+    shirtDropdowns[id][field] = opt.value;
+    this.setState({
+      shirtDropdowns
+    });
+  }
+
+  onAddShirt(id) {
+    let { shirtsOrdered } = this.state;
+    let choices = this.state.shirtDropdowns[id];
+
+    if (choices.size === ''  ||  choices.quantity === 0) {
+      alert('Please select both a quantity and size');
+    }
+    else {
+      let newOrder = {
+        id:       nextID++,
+        shirtID:  id,
+        size:     choices.size,
+        quantity: choices.quantity
+      }
+
+      shirtsOrdered.push(newOrder);
+
+      this.setState({
+        shirtsOrdered
+      });
+    }
   }
 
 }
@@ -1691,6 +1972,31 @@ const Childcare = ({attendees, childCareSessions, onChange, blurb}) =>
   </div>
 
 
+//----------------------------------------------------------------------------------------------------
+
+
+const Picnic = ({attendees, onChange, onChangeTiedown, blurb}) =>
+  <div>
+    <h2>Picnic</h2>
+    <p>{blurb}</p>
+    <p>Please place a checkmark next to each person who will need bus transportation. If wheelchair tie-downs are
+       needed for the bus, choose that too.
+    </p>
+    <div className="remembrance">
+      {attendees.map( (a,i) => 
+        <div key={a.id} className="indent select-height">
+          <Checkbox defaultChecked={a.picnic} onChange={event => onChange(event, a.id)} />
+          <span className="remb-name">{a.firstName} {a.lastName}</span>
+          {a.picnic  &&  a.peopleType === peopleTypes.SOFTCHILD  ?
+            <span>Needs tie-downs? <SelectYesNo value={a.picnicTiedown} isDisabled={!a.picnic} onChange={(opt) => onChangeTiedown(opt, a.id)} /></span>
+            : null
+          }
+        </div>
+      )}
+    </div>
+  </div>
+
+
 
 //----------------------------------------------------------------------------------------------------
 
@@ -1705,21 +2011,6 @@ const Dinner = ({contact}) =>
     </b>
   </div>
 
-
-//----------------------------------------------------------------------------------------------------
-
-
-const Picnic = ({contact}) =>
-  <div>
-    <h2>Picnic</h2>
-    <p>The Annual Ryan Cantrell Memorial Picnic and Balloon release will be Saturday July 36th from 1–4pm at
-       the East Fork Lake picnic area. Please let us know who is attending, number of bus seats/tie downs if needed.
-       If you will are requesting a balloon release for your child we will gather that information on the next page.
-    </p>
-    <b>
-    <p></p>
-    </b>
-  </div>
 
 
 //----------------------------------------------------------------------------------------------------
@@ -1757,28 +2048,75 @@ const Photos = ({contact}) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const Directory = ({contact}) =>
+const Directory = ({directory, onChange}) =>
   <div>
     <h2>Directory</h2>
-    <p>Each year we create a conference directory with Name, address, email, phone numbers, Soft Child info 
-       and photos. Please check the items you would like included in your listing:
+    <p>Each year we create a conference directory of all the SOFT children. If you would like your child to be
+       included in the directory, please place a checkmark next to the information you would like to share
+       with other families:
     </p>
-    <b>
-      <p></p>
-    </b>
+    <div className="indent">
+      <p><Checkbox defaultChecked={directory.name}           onChange={event => onChange(event, "name")} /> Child's Name</p>
+      <p><Checkbox defaultChecked={directory.age}            onChange={event => onChange(event, "age")} /> Age</p>
+      <p><Checkbox defaultChecked={directory.diagnosis}      onChange={event => onChange(event, "diagnosis")} /> Diagnosis</p>
+      <p><Checkbox defaultChecked={directory.photos}         onChange={event => onChange(event, "photos")} /> Allow photos</p>
+      <p><Checkbox defaultChecked={directory.contactInfo}    onChange={event => onChange(event, "contactInfo")} /> Include Parent's contact information</p>
+      {directory.contactInfo &&
+        <div className="indent-twice">
+          <p><Checkbox defaultChecked={directory.phone}          onChange={event => onChange(event, "phone")} /> Include phone number</p>
+          <p><Checkbox defaultChecked={directory.email}          onChange={event => onChange(event, "email")} /> Include email address</p>
+          <p><Checkbox defaultChecked={directory.fullAddress}    onChange={event => onChange(event, "fullAddress")} /> Include full mailing address</p>
+          <p><Checkbox defaultChecked={directory.partialAddress} onChange={event => onChange(event, "partialAddress")} /> Include only City and Country</p>
+        </div>
+      }
+    </div>
   </div>
-
 
 
 //----------------------------------------------------------------------------------------------------
 
 
-const Softwear = ({contact}) =>
+const SoftWear = ({blurb, shirtTypes, shirtsOrdered, onChange, onRemove, onDropdown, onAdd}) =>
   <div>
     <h2>SOFT Wear</h2>
-    <p>Get your SOFT Wear shirts here
-    </p>
-    <p></p>
+    <p>{blurb}</p>
+    {shirtTypes.map( (shirtType, i) =>
+      <div key={shirtType.id}>
+        <p className="indent"><b>{i+1}. {shirtType.description}</b></p>
+        {shirtsOrdered.map( (shirt) => {
+            if (shirt.shirtID === shirtType.id) {
+              return <div key={shirt.id} className="indent-twice">
+                  <div className="shirt-ordered">Ordered:</div>{shirt.quantity}<div className="shirt-size">{shirtDisplay[shirt.size]}</div>
+                  <Button onClick={() => onRemove(shirt.id)}>Remove</Button>
+                </div>
+            }
+            return null;
+          }
+        )}
+        <div className="indent-twice">
+          Quantity:
+          <div className="shirt-select">
+            <Select
+              options={optionsShirtQuantity}
+              defaultValue={0}
+              onChange={(opt) => onDropdown(opt, shirtType.id, "quantity")}
+              styles={customStylesNarrow}
+            />
+          </div>
+          Select Size:
+          <div className="shirt-select">
+            <Select
+              options={optionsShirtSizes}
+              placeholder={"Select..."}
+              onChange={(opt) => onDropdown(opt, shirtType.id, "size")}
+              styles={customStylesNarrow}
+            />
+          </div>
+          <Button onClick={() => onAdd(shirtType.id)}>Add to Order</Button>
+        </div>
+        <br />
+      </div>
+    )}
   </div>
 
 
@@ -1920,6 +2258,23 @@ const RembLunch = ({value, menuInfo, isDisabled, onChange, className="edit-remb-
     }
 
 
+const SelectYesNo = ({value, isDisabled, onChange, className="edit-remb-lunch"}) => {
+      const defaultOpt = optionsYesNo.find(opt => (opt.value === value));
+      return (
+        <div className={className}>
+          <Select
+            options={optionsYesNo}
+            defaultValue={defaultOpt}
+            placeholder={"Select..."}
+            isDisabled={isDisabled}
+            onChange={onChange}
+            styles={customStylesPeopleTypes}
+          />
+        </div>
+      );
+    }
+
+
 const Country = ({value, onChange, className="edit-country"}) => {
     const defaultOpt = optionsCountries.find(opt => (opt.value === value));
       return (
@@ -1971,7 +2326,7 @@ const Checkbox = ({ name, defaultChecked, onChange, className }) =>
     name={name}
     onChange={onChange}
     className={className}
-    defaultChecked={defaultChecked}
+    checked={defaultChecked}
   />
 
 

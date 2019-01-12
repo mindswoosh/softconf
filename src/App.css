@@ -57,6 +57,23 @@ p {
   margin-left: 20px;
 }
 
+.indent-twice {
+  margin-left: 40px;
+}
+
+.select-height {
+  line-height: 40px;
+  height: 40px;
+}
+
+.select-middle {
+  padding-top: 10px;
+}
+
+.tall {
+  height: 35px;
+}
+
 /*.remb-row {
   margin-left: 20px;
 }*/
@@ -108,7 +125,6 @@ p {
   margin: 6px 25px 0px 0px;
   width: 325px;
 }
-
 
 .row-num {
   display: inline-block;
@@ -256,6 +272,25 @@ p {
 .small-gap {
   display: inline-block;
   width: 20px;
+}
+
+
+.shirt-select {
+  display: inline-block;
+  margin: 6px 25px 0px 5px;
+  width: 150px;
+}
+
+.shirt-ordered {
+  display: inline-block;
+  margin: 6px 30px 0px 0px;
+  width: 60px;
+}
+
+.shirt-size {
+  display: inline-block;
+  margin: 6px 30px 0px 15px;
+  width: 100px;
 }
 
 
