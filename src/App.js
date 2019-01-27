@@ -37,7 +37,7 @@ library.add(faHandPointRight);
 library.add(faQuestionCircle);
 library.add(faBars);
 
-const DEBUG = false;  //  Set to false for production
+const DEBUG = true;  //  Set to false for production
 
 var nextID = 10000;
 
@@ -213,8 +213,11 @@ const eventInfoDefault = {
     ],
 
   youngerSibOutingBlurb: "The Younger Sibling outing is for children ages 5 to 11 and will be at the Wild Waves water park where there are number of rides and attractions especially for younger kids, from the Enchanted Railway to the Kiddie Boats. Everyone will have plenty of fun! Lunch is included and so is a SOFT T-shirt!",
+  youngerSibCost: 25,
+
   olderSibOutingBlurb: "The Older Sibling outing is for children 12 and up and will be at the Woodland Park Zoo where they can explore exhibits and get close to more than 1,100 animals and 300 species—including some of the world's most critically endangered. Lunch is included in the outing and every child will get a SOFT T-shirt.",
-  
+  olderSibCost: 35,
+
   childCareBlurb: "Childcare will be available during the Workshops and Clinics and is available for children up to age 11 and for SOFT children of any age. Please refer to the brochure for the times of the Workshops and Clinics you plan to attend in which you might need childcare.",
   childCareSessions: [
     {
@@ -547,7 +550,7 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     // SOFT Child
     dateOfBirth: null,
     diagnosis:   null,
-    eatsMeals:   true,
+    eatsMeals:   false,
 
     // Picnic
     picnic: 0,
@@ -805,10 +808,10 @@ class App extends Component {
                   />,
 
               [pages.YOUNGERSIB]:
-                  <YoungerSib attendees={attendees} onChange={this.onChangeSibOuting} onChangeShirtSize={this.onChangeShirtSize} blurb={eventInfo.youngerSibOutingBlurb} />,
+                  <YoungerSib attendees={attendees} onChange={this.onChangeSibOuting} onChangeShirtSize={this.onChangeShirtSize} cost={eventInfo.youngerSibCost} blurb={eventInfo.youngerSibOutingBlurb} />,
 
               [pages.OLDERSIB]:
-                  <OlderSib attendees={attendees} onChange={this.onChangeSibOuting} onChangeShirtSize={this.onChangeShirtSize} blurb={eventInfo.olderSibOutingBlurb} />,
+                  <OlderSib attendees={attendees} onChange={this.onChangeSibOuting} onChangeShirtSize={this.onChangeShirtSize} cost={eventInfo.olderSibCost} blurb={eventInfo.olderSibOutingBlurb} />,
 
               [pages.PICNIC]:
                   <Picnic
@@ -852,7 +855,7 @@ class App extends Component {
                   <Summary contact={contactInfo} />,
 
               [pages.CHECKOUT]:
-                  <Checkout contact={contactInfo} />,
+                  <Checkout thisState={this.state} />,
 
               // [pages.MERCHANDISE]:  <Merchancise merchandise={merchandise} />,
             }[currentPage]
@@ -1046,7 +1049,16 @@ class App extends Component {
           }
           else {
             pageHistory.push(currentPage);
-            const newPage = attendees.length > 0 ? pages.CLINICS : pages.SOFTWEAR;
+
+            let anySoftChildren = attendees.find( a => { 
+              return (a.peopleType === peopleTypes.SOFTCHILD);
+            });
+
+            let newPage = pages.SOFTWEAR;     //  Assume no attendees case
+
+            if (attendees.length > 0) {
+              newPage = anySoftChildren ? pages.CLINICS : pages.WORKSHOPS;
+            }
 
             this.setState({
               attendees,
@@ -1818,7 +1830,7 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangeSelection, onC
                     selected={a.dateOfBirth}
                     onChange={date => onChangeDate(date, a.id)}
                   /><span className="small-gap"></span>
-                  <Checkbox defaultChecked={a.eatsMeals} onChange={opt => onChangeMeals(opt, a.id)} /> Eats meals?
+                  <Checkbox defaultChecked={a.eatsMeals} onChange={opt => onChangeMeals(opt, a.id)} /> Eats conference meals?
                 </div>
               }
             </div>
@@ -1866,7 +1878,7 @@ const Workshops = ({attendee, sessions, onChange}) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const YoungerSib = ({attendees, onChange, onChangeShirtSize, blurb}) =>
+const YoungerSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
   <div>
     <h2>Younger Sibling Outing</h2>
     <p>{blurb}</p>
@@ -1876,7 +1888,7 @@ const YoungerSib = ({attendees, onChange, onChangeShirtSize, blurb}) =>
         {return a.peopleType === peopleTypes.CHILD  &&  a.age >= 5  &&  a.age < 12  &&
           <div key={a.id} className="indent">
             <Checkbox defaultChecked={a.sibOuting} onChange={event => onChange(event, a.id)} />
-            <span className="remb-name">{a.firstName} {a.lastName}</span>
+            <span className="remb-name">{a.firstName} {a.lastName}{a.sibOuting ? " - $" + cost : ""}</span>
             <ShirtSize value={a.shirtSize} isDisabled={!a.sibOuting} onChange={(opt) => onChangeShirtSize(opt, a.id)} />
           </div>
         })
@@ -1886,7 +1898,7 @@ const YoungerSib = ({attendees, onChange, onChangeShirtSize, blurb}) =>
   </div>
 
 
-const OlderSib = ({attendees, onChange, onChangeShirtSize, blurb}) => 
+const OlderSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) => 
   <div>
     <h2>Older Sibling Outing</h2>
     <p>{blurb}</p>
@@ -1896,7 +1908,7 @@ const OlderSib = ({attendees, onChange, onChangeShirtSize, blurb}) =>
         { return a.peopleType === peopleTypes.CHILD  &&  a.age >= 12  &&
           <div key={a.id} className="indent">
             <Checkbox defaultChecked={a.sibOuting} onChange={event => onChange(event, a.id)} />
-            <span className="remb-name">{a.firstName} {a.lastName}</span>
+            <span className="remb-name">{a.firstName} {a.lastName}{a.sibOuting ? " - $" + cost : ""}</span>
             <ShirtSize value={a.shirtSize} isDisabled={!a.sibOuting} onChange={(opt) => onChangeShirtSize(opt, a.id)} />
           </div>
         })
@@ -2086,7 +2098,7 @@ const SoftWear = ({blurb, shirtTypes, shirtsOrdered, onChange, onRemove, onDropd
         {shirtsOrdered.map( (shirt) => {
             if (shirt.shirtID === shirtType.id) {
               return <div key={shirt.id} className="indent-twice">
-                  <div className="shirt-ordered">Ordered:</div>{shirt.quantity}<div className="shirt-size">{shirtDisplay[shirt.size]}</div>
+                  <div className="shirt-ordered">Ordered:</div>{shirt.quantity}<div className="shirt-size">{shirtDisplay[shirt.size]}</div><div className="shirt-total">${shirt.quantity*shirtType.cost}</div>
                   <Button onClick={() => onRemove(shirt.id)}>Remove</Button>
                 </div>
             }
@@ -2094,21 +2106,21 @@ const SoftWear = ({blurb, shirtTypes, shirtsOrdered, onChange, onRemove, onDropd
           }
         )}
         <div className="indent-twice">
-          Quantity:
-          <div className="shirt-select">
-            <Select
-              options={optionsShirtQuantity}
-              defaultValue={0}
-              onChange={(opt) => onDropdown(opt, shirtType.id, "quantity")}
-              styles={customStylesNarrow}
-            />
-          </div>
           Select Size:
           <div className="shirt-select">
             <Select
               options={optionsShirtSizes}
               placeholder={"Select..."}
               onChange={(opt) => onDropdown(opt, shirtType.id, "size")}
+              styles={customStylesNarrow}
+            />
+          </div>
+          Quantity:
+          <div className="shirt-select">
+            <Select
+              options={optionsShirtQuantity}
+              defaultValue={0}
+              onChange={(opt) => onDropdown(opt, shirtType.id, "quantity")}
               styles={customStylesNarrow}
             />
           </div>
@@ -2158,12 +2170,34 @@ const Summary = ({contact}) =>
 
 //----------------------------------------------------------------------------------------------------
 
+function setJSON(thisState) {
 
-const Checkout = ({contact}) =>
+  var userData = {
+    contactInfo:   thisState.contactInfo,
+    attendees:     thisState.attendees,
+    directory:     thisState.directory,
+    shirtsOrdered: thisState.shirtsOrdered,
+  }
+
+  return JSON.stringify(userData);
+}
+
+const Checkout = ({thisState}) =>
   <div>
     <h2>Checkout</h2>
-    <p></p>
+    <p>
+    Enter some more data:
+    </p>
+    <form method="post" action="http://softconf.org/index.pl">
+      <input id="json-data" type="hidden" name="data" value={setJSON(thisState)}/>
+      <button type="submit">Send Data</button>
+    </form>
   </div>
+
+
+
+//----------------------------------------------------------------------------------------------------
+
 
 
 const Input = ( {label, value, id, field="", onChange, className="edit-input-1col"}) =>
