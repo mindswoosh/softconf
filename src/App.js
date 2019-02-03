@@ -29,15 +29,17 @@ import {
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAngleDoubleRight, faHandPointRight, faQuestionCircle, faBars } from '@fortawesome/free-solid-svg-icons'
+import { faAngleDoubleLeft, faAngleDoubleRight, faHandPointRight, faQuestionCircle, faBars, faRibbon } from '@fortawesome/free-solid-svg-icons'
 
 
+library.add(faAngleDoubleLeft);
 library.add(faAngleDoubleRight);
 library.add(faHandPointRight);
 library.add(faQuestionCircle);
 library.add(faBars);
+library.add(faRibbon);
 
-const DEBUG = true;  //  Set to false for production
+const DEBUG = false;  //  Set to false for production
 
 var nextID = 10000;
 
@@ -46,8 +48,10 @@ var pageNum = 0;
 const pages = {
   START:        pageNum++,
   WELCOME:      pageNum++,
+  BASICS:       pageNum++,
   CONTACT:      pageNum++,
   ATTENDEES:    pageNum++,
+  SOFTANGELS:   pageNum++,
   CLINICS:      pageNum++,
   DINNER:       pageNum++,
   WORKSHOPS:    pageNum++,
@@ -56,6 +60,7 @@ const pages = {
   CHILDCARE:    pageNum++,
   REMEMBRANCE:  pageNum++,
   PICNIC:       pageNum++,
+  CHAPTERCHAIR: pageNum++,
   DIRECTORY:    pageNum++,
   PHOTOS:       pageNum++,
   SOFTWEAR:     pageNum++,
@@ -70,8 +75,19 @@ const countries = ['United States', 'Canada', 'Mexico', 'United Kingdom', '-----
 
 const optionsCountries = countries.map(opt => ({ label: opt, value: opt }));
 
+
+
 const eventInfoDefault = {
+
   eventTitle: '2019 Conference Registration',
+
+  costAdult:            135,         // One free registration for board members
+  costChild:             90,         // Children under 5? are free
+  costSoftChild:          0,
+  costProfessional:     135,
+  costYoungerSibOuting:  35,
+  costOlderSibOuting:    35,
+
   workshopSessions: [
       {
         id: 1,
@@ -223,18 +239,26 @@ const eventInfoDefault = {
     {
       id: 'cc1',
       title: "Thursday 8am-Noon",
+      pre5Only: true,
+      boardOnly: false,
     },
     {
       id: 'cc2',
       title: "Thursday 1pm-5pm",
+      pre5Only: true,
+      boardOnly: false,
     },
     {
       id: 'cc3',
       title: "Friday 8am-Noon",
+      pre5Only: false,
+      boardOnly: true,
     },
     {
       id: 'cc4',
       title: "Friday 1pm-5pm",
+      pre5Only: false,
+      boardOnly: false,
     },
   ],
 
@@ -436,6 +460,49 @@ const customStylesNarrow = {
 }
 
 
+const customStylesWide = {
+  option: (base, state) => ({
+    ...base,
+    padding: 5,
+  }),
+  control: (base, state) => ({
+    ...base,
+    width: 180,
+    padding: 0,
+    marginTop: 5,
+    borderRadius: 0,
+    minHeight: 0,
+    height: 30,
+    fontSize: 14,
+    backgroundColor: "white",
+  }),
+  singleValue: (base, state) => {
+    const opacity = state.isDisabled ? 0.5 : 1;
+    const transition = 'opacity 300ms';
+
+    return {
+       ...base, 
+       opacity, 
+       transition,
+    };
+  },
+  menuList: (base, state) => ({
+    ...base,
+    height: 110,
+    fontSize: 14,
+    color: "#2e3a97",
+  }),
+  placeholder: (base, state) => ({
+    ...base,
+    color: "#999",
+    fontSize: 12,
+  }),
+  container: (base, state) => ({
+    ...base,
+    width: 180,
+  }),
+}
+
 
 const optionsYesNo = [
   { label: "Yes", value: 1 },
@@ -447,6 +514,7 @@ const peopleTypes = {
   CHILD:        "C",
   ADULT:        "A",
   PROFESSIONAL: "P",
+  SOFTANGEL:    "D",
 };
 
 const optionsPeopleTypes = [
@@ -483,8 +551,10 @@ const optionsDiagnoses = [
   { label: "Trisomy 18",  value: "Trisomy 18" },
   { label: "Trisomy 13",  value: "Trisomy 13" },
   { label: "Trisomy 9 Mosaic",  value: "Trisomy 9 Mosaic" },
-  { label: "Trisomy 18 Mosaic",  value: "Trisomy 18 Mosaic" },
   { label: "Trisomy 13 Mosaic",  value: "Trisomy 13 Mosaic" },
+  { label: "Trisomy 18 Mosaic",  value: "Trisomy 18 Mosaic" },
+  { label: "Partial Trisomy 13",  value: "Partial Trisomy 13" },
+  { label: "Partial Trisomy 18",  value: "Partial Trisomy 18" },
   { label: "Other", value: "Other"},
 ];
 
@@ -547,9 +617,12 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     sibOuting:   false,
     shirtSize:   '',
 
-    // SOFT Child
+    // SOFT Child / Angel
+    softAngel:   false,
     dateOfBirth: null,
+    dateOfDeath: null,
     diagnosis:   null,
+    otherDiagnosis: "",
     eatsMeals:   false,
 
     // Picnic
@@ -603,7 +676,13 @@ class App extends Component {
         email:       '',
       },
 
+      attendance:         "full",     //  "full", "picnic" (only), "balloon" release - not attending 
+      reception:          false,
+      sundayBreakfast:    false,
+      boardMember:        false, 
+
       attendees: [],
+      softAngels: [],
 
       directory: {
         name:             false,
@@ -633,6 +712,13 @@ class App extends Component {
     this.onChangeSelection    = this.onChangeSelection.bind(this);
     this.onChangeMeals        = this.onChangeMeals.bind(this);
     this.onChangeDate         = this.onChangeDate.bind(this);
+    this.onChangeFieldValue   = this.onChangeFieldValue.bind(this);
+
+    this.onAddSoftAngel       = this.onAddSoftAngel.bind(this);
+    this.onRemoveSoftAngel    = this.onRemoveSoftAngel.bind(this);
+    this.onChangeSoftAngelList = this.onChangeSoftAngelList.bind(this);
+    this.onChangeSoftAngelDiagnosis = this.onChangeSoftAngelDiagnosis.bind(this);
+    this.onChangeSoftAngelDate = this.onChangeSoftAngelDate.bind(this);
 
     this.onChangeRembOuting   = this.onChangeRembOuting.bind(this);
     this.onChangeRembLunch    = this.onChangeRembLunch.bind(this);
@@ -646,6 +732,7 @@ class App extends Component {
     this.nextYoungerSib       = this.nextYoungerSib.bind(this);
     this.nextOlderSib         = this.nextOlderSib.bind(this);
     this.nextChildCare        = this.nextChildCare.bind(this);
+    this.nextPage             = this.nextPage.bind(this);
 
     this.onClinicSortEnd      = this.onClinicSortEnd.bind(this);
 
@@ -690,6 +777,7 @@ class App extends Component {
     const eventInfo = eventInfoDefault;    // Eventually, this will be pulled from the DB
 
     let attendees = [];
+    let softAngels = [];
 
     if (DEBUG) {
       attendees = [
@@ -701,6 +789,10 @@ class App extends Component {
         attendee("Cliff", "Mountjoy",  peopleTypes.CHILD,        17, eventInfoDefault),
         attendee("Baby",  "Mountjoy",  peopleTypes.CHILD,         3, eventInfoDefault),
       ];
+
+      // softAngels = [
+      //   attendee("Johnny",  "Crutcher",  peopleTypes.SOFTCHILD,   3, eventInfoDefault),
+      // ];
     }
 
     // let shirtDropdowns = eventInfo.shirtTypes.map( (shirt) => {
@@ -726,6 +818,7 @@ class App extends Component {
     this.setState({
       eventInfo,
       attendees,
+      softAngels,
       shirtDropdowns
     });
   }
@@ -760,11 +853,30 @@ class App extends Component {
               [pages.WELCOME]:
                   <Welcome />,
 
+              [pages.BASICS]:
+                  <Basics 
+                    attendance={this.state.attendance}
+                    reception={this.state.reception}
+                    sundayBreakfast={this.state.sundayBreakfast}
+                    boardMember={this.state.boardMember}
+                    handleRadioGroup={this.onChangeFieldValue}
+                  />,
+
               [pages.CONTACT]:
                   <ContactInfo 
                       contact={contactInfo}
                       onChangeContactInfo={this.onChangeContactInfo}
                       onChangeCountry={this.onChangeCountry} 
+                  />,
+
+              [pages.SOFTANGELS]:
+                  <SoftAngels
+                    softAngels={this.state.softAngels} 
+                    onAdd={this.onAddSoftAngel}
+                    onRemove={this.onRemoveSoftAngel}
+                    onChange={this.onChangeSoftAngelList}
+                    onChangeDiagnosis={this.onChangeSoftAngelDiagnosis}
+                    onChangeDate={this.onChangeSoftAngelDate}
                   />,
 
               [pages.ATTENDEES]:
@@ -777,6 +889,7 @@ class App extends Component {
                     onChangeMeals={this.onChangeMeals}
                     onChangeDate={this.onChangeDate}
                   />,
+
 
               [pages.CLINICS]:
                   <Clinics
@@ -795,7 +908,13 @@ class App extends Component {
                   />,
 
               [pages.CHILDCARE]:
-                  <Childcare attendees={attendees} childCareSessions={eventInfo.childCareSessions} blurb={eventInfo.childCareBlurb} onChange={this.onChangeChildCare} />,
+                  <Childcare 
+                    attendees={attendees} 
+                    childCareSessions={eventInfo.childCareSessions}
+                    boardMember={this.state.boardMember}
+                    blurb={eventInfo.childCareBlurb} 
+                    onChange={this.onChangeChildCare}
+                  />,
 
               [pages.DINNER]:
                   <Dinner />,
@@ -828,8 +947,7 @@ class App extends Component {
                   <ChapterChair
                     attendees={attendees}
                     onChange={this.onChangeChapterChair}
-                    // menuInfo={eventInfo.remembranceMenu}
-                    // onChangeLunch={this.onChangeRembLunch}
+                    menuInfo={eventInfo.remembranceMenu}
                   />,
 
               [pages.DIRECTORY]:
@@ -963,8 +1081,63 @@ class App extends Component {
   }
 
 
+  // See if we should skip "curPage" and move on to the page after that, and
+  // then check THAT page too...
+
+  nextPage(curPage) {
+
+    let checkNext = true;
+
+    do {
+      switch (curPage) {
+
+        case pages.WORKSHOPS:
+          checkNext = (this.nextAdultPro(-1) === -1);     // Skip workshops if no adults
+          if (checkNext) {
+            curPage = pages.YOUNGERSIB;
+          }
+          break;
+
+        case pages.YOUNGERSIB:
+          checkNext = (this.nextYoungerSib(-1) === -1);   // Skip younger sibs if none
+          if (checkNext) {
+            curPage = pages.OLDERSIB;
+          }
+          break;
+
+        case pages.OLDERSIB:
+          checkNext = (this.nextOlderSib(-1) === -1);     // Skip older sibs if none
+          if (checkNext) {
+            curPage = pages.CHILDCARE;
+          }
+          break;
+
+        case pages.CHILDCARE:
+          checkNext = (this.nextChildCare(-1) === -1);    // Skip childcare if none appropriate
+          if (checkNext) {
+            curPage = pages.CHAPTERCHAIR;
+          }
+          break;
+
+        case pages.REMEMBRANCE:
+          checkNext = (this.state.softAngels.length === 0);          // Skip Remembrance
+          if (checkNext) {
+            curPage = pages.PICNIC;
+          }
+          break;
+
+        default:                        // Go to current page
+          checkNext = false;
+      }
+
+    } while (checkNext);
+
+    return (curPage);
+  }
+
+
   onNextPage(event) {
-    let { attendees, currentPage, pageHistory } = this.state;
+    let { attendees, currentPage, pageHistory} = this.state;
 
     //  Don't let visitor go to next page unless there are no errors on
     //  the current page.
@@ -972,6 +1145,18 @@ class App extends Component {
     switch (currentPage) {
 
       case pages.WELCOME:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: pages.BASICS,
+          });
+
+          break;
+
+      case pages.BASICS:
           // let attendees = this.state.attendees;
 
           pageHistory.push(currentPage);
@@ -1018,9 +1203,21 @@ class App extends Component {
             this.setState({
               contactInfo: contact,
               pageHistory,
-              currentPage: pages.ATTENDEES,
+              currentPage: pages.SOFTANGELS,
             });
           }
+
+          break;
+
+      case pages.SOFTANGELS:
+          // let attendees = this.state.attendees;
+
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: pages.ATTENDEES,
+          });
 
           break;
 
@@ -1031,6 +1228,7 @@ class App extends Component {
           attendees = attendees.map(a => { 
             a.firstName = smartFixName(a.firstName.trim());
             a.lastName  = smartFixName(a.lastName.trim());
+            a.otherDiagnosis = a.otherDiagnosis.trim();
             return a;
           });
 
@@ -1039,7 +1237,7 @@ class App extends Component {
 
           let bad_attendee = attendees.find( a => { 
             return (  a.firstName === ''  ||  a.lastName === ''  ||  a.peopleType === ''  ||  (a.peopleType === peopleTypes.CHILD  &&  a.age === null) ||
-                      (a.peopleType === peopleTypes.SOFTCHILD  &&  (a.dateOfBirth === null  ||  a.diagnosis === null) )
+                      (a.peopleType === peopleTypes.SOFTCHILD  &&  (a.dateOfBirth === null  ||  a.diagnosis === null  ||  (a.diagnosis === "Other" && a.otherDiagnosis === "")) )
                    ) 
           });
 
@@ -1063,7 +1261,7 @@ class App extends Component {
             this.setState({
               attendees,
               pageHistory,
-              currentPage: newPage,
+              currentPage: newPage,     //  Can't call newPage(pages.CLINICS) because attendees isn't in state yet
             });
           }
           break;
@@ -1085,11 +1283,10 @@ class App extends Component {
           // let attendees = this.state.attendees;
 
           pageHistory.push(currentPage);
-          const newPage = pages.WORKSHOPS;
 
           this.setState({
             pageHistory,
-            currentPage: newPage,
+            currentPage: pages.WORKSHOPS,
           });
 
           break;
@@ -1106,32 +1303,10 @@ class App extends Component {
           else {                                //  Move on to next page...
             pageHistory.push(currentPage);
 
-            let nextSib;
-
-            if ((nextSib = this.nextYoungerSib(-1)) !== -1) {        //  Skip younger sibling page if none
-                this.setState({
-                  pageHistory,
-                  youngerSib: nextSib,
-                  currentPage: pages.YOUNGERSIB,
-                });
-            }
-            else if ((nextSib = this.nextOlderSib(-1)) !== -1) {     //  Skip older sibling page if none
-                this.setState({
-                  pageHistory,
-                  currentPage: pages.OLDERSIB,
-                });
-            }
-            else if ((nextSib = this.nextChildCare(-1)) !== -1) {     //  Skip child care page if none
-                this.setState({
-                  pageHistory,
-                  currentPage: pages.CHILDCARE,
-                });
-            } else {
-              this.setState({
-                pageHistory,
-                currentPage: pages.REMEMBRANCE,
-              });
-            }
+            this.setState({
+              pageHistory,
+              currentPage: this.nextPage(pages.YOUNGERSIB),
+            });
           }
 
           break;
@@ -1151,30 +1326,13 @@ class App extends Component {
               alert("Oops! Please select a shirt for each person attending the outing.");
             }
             else {
-              let nextSib = this.nextOlderSib(-1);
-
               pageHistory.push(currentPage);
-              if (nextSib !== -1) {                         //  Skip older sibling page if none
-                  this.setState({
-                    pageHistory,
-                    attendees,
-                    currentPage: pages.OLDERSIB,
-                  });
-              }
-              else if ((nextSib = this.nextChildCare(-1)) !== -1) {     //  Skip child care page if none
-                  this.setState({
-                    pageHistory,
-                    attendees,
-                    currentPage: pages.CHILDCARE,
-                  });
-              } 
-              else {
-                  this.setState({
-                    pageHistory,
-                    attendees,
-                    currentPage: pages.REMEMBRANCE,
-                  });
-              }
+
+              this.setState({
+                pageHistory,
+                attendees,
+                currentPage: this.nextPage(pages.OLDERSIB),
+              });
             }
           }
           break;
@@ -1195,38 +1353,36 @@ class App extends Component {
             else {
               pageHistory.push(currentPage);
 
-              if (this.nextChildCare(-1) !== -1) {     //  Skip child care page if none
-                this.setState({
-                  pageHistory,
-                  attendees,
-                  currentPage: pages.CHILDCARE,
-                });
-              } 
-              else {
-                this.setState({
-                  attendees,
-                  pageHistory,
-                  currentPage: pages.REMEMBRANCE,
-                });
-              }
+              this.setState({
+                pageHistory,
+                attendees,
+                currentPage: this.nextPage(pages.CHILDCARE),
+              });
             }
           }
           break;
 
       case pages.CHILDCARE:
-          // let attendees = this.state.attendees;
-
           pageHistory.push(currentPage);
 
           this.setState({
             pageHistory,
-            currentPage: pages.REMEMBRANCE,
+            currentPage: pages.CHAPTERCHAIR,
+          });
+
+          break;
+
+      case pages.CHAPTERCHAIR:
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: this.nextPage(pages.REMEMBRANCE),
           });
 
           break;
 
       case pages.REMEMBRANCE:
-          // let attendees = this.state.attendees;
 
           //  Clean up entries
           attendees = attendees.map(a => {
@@ -1237,25 +1393,23 @@ class App extends Component {
           });
 
           let $missing_lunch = attendees.find( a => { return (a.rembOuting  &&  a.rembLunch === '' ) });
+
           if ($missing_lunch) {
             alert("Oops! Please select a lunch for each person attending.");
           }
           else {
             pageHistory.push(currentPage);
-            const newPage = pages.PICNIC;
 
             this.setState({
               attendees,
               pageHistory,
-              currentPage: newPage,
+              currentPage: pages.PICNIC,
             });
           }
 
           break;
 
       case pages.PICNIC:
-          // let attendees = this.state.attendees;
-
           pageHistory.push(currentPage);
 
           this.setState({
@@ -1264,6 +1418,8 @@ class App extends Component {
           });
 
           break;
+
+
 
       // case pages.PHOTOS:
       //     // let attendees = this.state.attendees;
@@ -1372,6 +1528,9 @@ class App extends Component {
     let i = attendees.findIndex(a => a.id === id);
     console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
     attendees[i][field] = opt.value;
+    if (field === "diagnosis"  &&  opt.value !== "Other") {
+      attendees[i].otherDiagnosis = "";
+    }
     this.setState ({
       attendees
     });
@@ -1396,6 +1555,70 @@ class App extends Component {
       attendees
     });
   }
+
+  onChangeFieldValue(field, value) {
+    this.setState({
+      [field]: value
+    });
+  }
+
+
+
+  //-------------------------------------------------------------------------------------------
+  //  Process Soft Angels page
+  
+  onAddSoftAngel(event) {
+    let { softAngels } = this.state;
+
+    softAngels.push( attendee('', '', peopleTypes.SOFTANGEL, -1, this.state.eventInfo) );
+
+    this.setState({
+      softAngels
+    });
+  }
+
+  onRemoveSoftAngel(id) {
+    let { softAngels } = this.state;
+    softAngels = softAngels.filter(softAngel => softAngel.id !== id);
+    this.setState({
+      softAngels
+    });
+  }
+
+  onChangeSoftAngelList(event, id, field) {
+    let { softAngels } = this.state;
+    let i = softAngels.findIndex(a => a.id === id);
+    console.assert(i !== -1, "Warning -- didn't find SOFT Angel in softAngels list: id = " + id);
+    softAngels[i][field] = event.target.value;
+    this.setState ({
+      softAngels
+    });
+  }
+
+
+  onChangeSoftAngelDiagnosis(opt, id, field) {
+    let { softAngels } = this.state;
+    let i = softAngels.findIndex(a => a.id === id);
+    console.assert(i !== -1, "Warning -- didn't find SOFT Angel in softAngels list: id = " + id);
+    softAngels[i][field] = opt.value;
+    this.setState ({
+      softAngels
+    });
+  }
+
+
+  onChangeSoftAngelDate(date, id, field) {
+    let { softAngels } = this.state;
+    let i = softAngels.findIndex(a => a.id === id);
+    console.log("id = " + i, "Field = " + field);
+    console.assert(i !== -1, "Warning -- didn't find SOFT Angel in softAngels list: id = " + id);
+    softAngels[i][field] = date;
+    this.setState({
+      softAngels
+    });
+  }
+
+
 
   //-------------------------------------------------------------------------------------------
   //  Process Remembrance page
@@ -1677,10 +1900,12 @@ const PageBar = ({pageNum}) =>
 
     switch (pageNum) {
       case pages.WELCOME:
+      case pages.BASICS:
         title = 'Welcome';
         break;
       case pages.CONTACT:
       case pages.ATTENDEES:
+      case pages.SOFTANGELS:
         title = 'Attendees';
         break;
       case pages.CLINICS:
@@ -1689,6 +1914,7 @@ const PageBar = ({pageNum}) =>
       case pages.YOUNGERSIB:
       case pages.OLDERSIB:
       case pages.CHILDCARE:
+      case pages.CHAPTERCHAIR:
         title = 'Schedules';
         break;
       case pages.REMEMBRANCE:
@@ -1717,7 +1943,7 @@ const PageBar = ({pageNum}) =>
         {pageTabs.map( (tab, i) => {
             const keyName = tab.replace(/ /g, "-");
             if (tab === title) {
-              return <div key={keyName} className={"pagebar-selected"}><FontAwesomeIcon icon="angle-double-right" /> {tab}</div>;
+              return <div key={keyName} className={"pagebar-selected"}><FontAwesomeIcon icon="ribbon" /> {tab}</div>;
             }
             else
               return <div key={keyName} className={"pagebar-unselected"}>{tab}</div>;
@@ -1751,6 +1977,60 @@ const Welcome = () =>
     <p>To get started, click on the Next button.</p>
   </div>
 
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+
+const Basics = ({attendance, reception, sundayBreakfast, boardMember, handleRadioGroup}) =>
+  <div>
+    <h2>Getting Started</h2>
+    <p>Welcome to the Soft Conference Registration form!</p>
+    <p>In the next few pages, you'll be asked a series of questions so that we can tailor this year's
+       SOFT convention specifically for you and your family. If you're only requesting a balloon
+       in memory of a SOFT Angel, you will only be asked about that. To get started, please 
+       answer the following questions:
+    </p>
+    <div className="indent">
+      <p><b>How much, if any, of the conference are you planning to attend?</b></p>
+
+      <div className="indent-twice">
+        <RadioGroup name="attendance" selectedValue={attendance} onChange={(val) => handleRadioGroup("attendance", val)}>
+          <Radio value="full" /> Full Conference<br />
+          <Radio value="picnic" /> Only attending the picnic<br />
+          <Radio value="balloon" /> Requesting a Balloon (not attending the conference)
+        </RadioGroup>
+      </div>
+      <div className="v-indent">
+        <span className="bold">Are you planning to attend the welcome reception on Wednesday evening?</span>
+        <div className="inline">
+          <RadioGroup name="reception" selectedValue={reception} onChange={(val) => handleRadioGroup("reception", val)}>
+            <span className="radio-yes"><Radio value={true} /> Yes</span>
+            <Radio value={false} /> No
+          </RadioGroup>
+        </div>
+      </div>
+      <div className="v-indent">
+        <span className="bold">Are you planning to attend the final breakfast on Sunday morning?</span>
+        <div className="inline">
+          <RadioGroup name="sundayBreakfast" selectedValue={sundayBreakfast} onChange={(val) => handleRadioGroup("sundayBreakfast", val)}>
+            <span className="radio-yes"><Radio value={true} /> Yes</span>
+            <Radio value={false} /> No
+          </RadioGroup>
+        </div>
+      <div className="v-indent">
+        <span className="bold">Is anybody in your group a board member?</span>
+        <div className="inline">
+          <RadioGroup name="boardMember" selectedValue={boardMember} onChange={(val) => handleRadioGroup("boardMember", val)}>
+            <span className="radio-yes"><Radio value={true} /> Yes</span>
+            <Radio value={false} /> No
+          </RadioGroup>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
 
 
 //----------------------------------------------------------------------------------------------------
@@ -1803,49 +2083,98 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangeSelection, onC
     </p>
     {attendees.length > 0  &&
       <div>
-        <p className="row-num">1.</p>
-        <Input label="FIRST Name" value={attendees[0].firstName} id={"contact-firstname-" + attendees[0].id} onChange={event => onChange(event, attendees[0].id, "firstName")} />
-        <Input label="LAST Name"  value={attendees[0].lastName}  id={"contact-lastname-" + attendees[0].id}  onChange={event => onChange(event, attendees[0].id, "lastName")} />
-        <PeopleType value={attendees[0].peopleType} onChange={(opt) => onChangeSelection(opt, attendees[0].id, "peopleType")}/>
-        <div className="edit-age"></div><Button onClick={() => onRemove(attendees[0].id)}>Remove</Button>
-        {attendees.length > 1  &&
-          attendees.slice(1).map( (a, i) =>
-            <div className="attendee-row" key={a.id}>
-              <p className="row-num">{i+2}.</p>
-              <Input label="FIRST Name" value={a.firstName} id={"contact-firstname-" + a.id} onChange={event => onChange(event, a.id, "firstName")} />
-              <Input label="LAST Name"  value={a.lastName}  id={"contact-lsstname-" + a.id}  onChange={event => onChange(event, a.id, "lastName")} />
-              <PeopleType value={a.peopleType} onChange={(opt) => onChangeSelection(opt, a.id, "peopleType")}/>
-              {a.peopleType !== peopleTypes.CHILD  &&
-                <div className="edit-age"></div>
-              }
-              {a.peopleType === peopleTypes.CHILD  &&
-                <Age label="Age" value={a.age}  id={"contact-age-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "age")} />
-              }
-              <Button onClick={() => onRemove(a.id)}>Remove</Button>
-              {a.peopleType === peopleTypes.SOFTCHILD  &&
-                <div>
-                  <p className="row-num"></p>
-                  Diagnosis: <Diagnosis label="Diagnosis" value={a.diagnosis} id={"contact-diagnosis-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "diagnosis")} /><span className="small-gap"></span>
-                  Birthdate: <DatePicker
-                    selected={a.dateOfBirth}
-                    onChange={date => onChangeDate(date, a.id)}
-                  /><span className="small-gap"></span>
-                  <Checkbox defaultChecked={a.eatsMeals} onChange={opt => onChangeMeals(opt, a.id)} /> Eats conference meals?
-                </div>
-              }
-            </div>
-          )
-        }
+        {attendees.map( (a, i) =>
+          <div className="attendee-row" key={a.id}>
+            <p className="row-num">{i+1}.</p>
+            <Input label="FIRST Name" value={a.firstName} id={"contact-firstname-" + a.id} onChange={event => onChange(event, a.id, "firstName")} />
+            <Input label="LAST Name"  value={a.lastName}  id={"contact-lsstname-" + a.id}  onChange={event => onChange(event, a.id, "lastName")} />
+            <PeopleType value={a.peopleType} onChange={(opt) => onChangeSelection(opt, a.id, "peopleType")}/>
+            {a.peopleType !== peopleTypes.CHILD  &&
+              <div className="edit-age"></div>
+            }
+            {a.peopleType === peopleTypes.CHILD  &&
+              <Age label="Age" value={a.age}  id={"contact-age-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "age")} />
+            }
+            <Button onClick={() => onRemove(a.id)}>Remove</Button>
+            {a.peopleType === peopleTypes.SOFTCHILD  &&
+              <div>
+                <p className="row-num"></p>
+                Diagnosis: <Diagnosis label="Diagnosis" value={a.diagnosis} id={"contact-diagnosis-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "diagnosis")} /><span className="small-gap"></span>
+                Birthdate: <DatePicker
+                  selected={a.dateOfBirth}
+                  onChange={date => onChangeDate(date, a.id)}
+                /><span className="small-gap"></span>
+                <Checkbox defaultChecked={a.eatsMeals} onChange={opt => onChangeMeals(opt, a.id)} /> Eats conference meals?
+                {a.diagnosis === "Other" &&
+                  <div>
+                    <p className="row-num"></p>
+                    Enter other Diagnosis: <Input value={a.otherDiagnosis} id={"contact-diag-" + a.id} className="other-diag" onChange={event => onChange(event, a.id, "otherDiagnosis")} />
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        )}
       </div>
     }
-    <br />
-    {attendees.length === 0 ?
-        <Button onClick={onAdd}>Add a Person</Button>
-      :
-        <Button onClick={onAdd}>Add Another Person</Button>
-    }
+    <div className="add-person-btn">
+      {attendees.length === 0 ?
+          <Button onClick={onAdd}>Add a Person</Button>
+        :
+          <Button onClick={onAdd}>Add Another Person</Button>
+      }
+    </div>
   </div>
 
+
+//----------------------------------------------------------------------------------------------------
+
+
+
+const SoftAngels = ({softAngels, onRemove, onAdd, onChange, onChangeDiagnosis, onChangeDate}) =>
+  <div>
+    <h2>SOFT Angels</h2>
+    <p>Every year at the convention, we have a balloon release for SOFT children who have passed away.
+       If you would like to have a balloon released for any SOFT Angels in your family, please give us
+       their names and information here. Otherwise, click on the NEXT button below.
+    </p>
+    {softAngels.length > 0  &&
+      <div>
+        {softAngels.map( (a, i) =>
+          <div className="attendee-row" key={a.id}>
+            <p className="row-num">{i+1}.</p>
+            <Input label="FIRST Name" value={a.firstName} id={"contact-firstname-" + a.id} onChange={event => onChange(event, a.id, "firstName")} />
+            <Input label="LAST Name"  value={a.lastName}  id={"contact-lsstname-" + a.id}  onChange={event => onChange(event, a.id, "lastName")} />
+            <Diagnosis label="Diagnosis" value={a.diagnosis} id={"contact-diagnosis-" + a.id}  onChange={opt => onChangeDiagnosis(opt, a.id, "diagnosis")} />
+            <br />
+            <p className="row-num"></p>
+            <div className="soft-angel-date">
+              Date of Birth: <DatePicker
+                selected={a.dateOfBirth}
+                onChange={date => onChangeDate(date, a.id, "dateOfBirth")}
+              />
+            </div>
+            <span className="small-gap"></span>
+            <div className="soft-angel-date">
+              Date of Death: <DatePicker
+                selected={a.dateOfDeath}
+                onChange={date => onChangeDate(date, a.id, "dateOfDeath")}
+              />
+            </div>
+            <span className="small-gap"></span>
+            <Button onClick={() => onRemove(a.id)}>Remove</Button>
+          </div>
+        )}
+      </div>
+    }
+    <div className="add-person-btn">
+      {softAngels.length === 0 ?
+          <Button onClick={onAdd}>Add a SOFT Angel</Button>
+        :
+          <Button onClick={onAdd}>Add Another SOFT Angel</Button>
+      }
+    </div>
+  </div>
 
 
 //----------------------------------------------------------------------------------------------------
@@ -1960,7 +2289,7 @@ const Remembrance = ({ attendees, blurb, menuInfo, onChange, onChangeLunch }) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const Childcare = ({attendees, childCareSessions, onChange, blurb}) =>
+const Childcare = ({attendees, childCareSessions, boardMember, onChange, blurb}) =>
   <div>
     <h2>Childcare</h2>
     <p>{blurb}</p>
@@ -1970,11 +2299,15 @@ const Childcare = ({attendees, childCareSessions, onChange, blurb}) =>
         {return (a.peopleType === peopleTypes.SOFTCHILD  ||  (a.peopleType === peopleTypes.CHILD  &&  a.age < 12))  &&
           <div key={a.id} className="indent">
             <span className="remb-name"><strong>{a.firstName} {a.lastName}</strong></span>
-            {childCareSessions.map( (c,i) =>
-              <div key={a.id + "-" + c.id} className="indent" >
-                <Checkbox defaultChecked={a.childCareSessions[c.id]} onChange={event => onChange(event, a.id, c.id)} />
-                {c.title}
-              </div>
+            {childCareSessions.map( (ccs,i) =>
+              { return ((!ccs.pre5Only || a.age < 5) && (!ccs.boardOnly || boardMember) ?
+                  <div key={a.id + "-" + ccs.id} className="indent" >
+                    <Checkbox defaultChecked={a.childCareSessions[ccs.id]} onChange={event => onChange(event, a.id, ccs.id)} />
+                    {ccs.title}
+                  </div>
+                :
+                  null
+              )}
             )}
             <br />
           </div>
@@ -2008,6 +2341,30 @@ const Picnic = ({attendees, onChange, onChangeTiedown, blurb}) =>
     </div>
   </div>
 
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const ChapterChair = ({ attendees, menuInfo, onChange, onChangeLunch }) =>
+  <div>
+    <h2>Chapter Chair Luncheon</h2>
+    <p>Is anyone in your party a registered or prospective Chapter Chair? If so, please check everyone
+       who will be attending the Chapter Chair Lunch; otherwise, simply click the Next buttton.
+    </p>
+    <p><i>(If you don't know what a Chapter Chair is, this doesn't apply to you. Pleas click NEXT.)</i></p>
+    <div className="chapter-chair">
+      {attendees.map( (a,i) =>
+        {return a.peopleType === peopleTypes.ADULT ? 
+          <div key={a.id} className="chair-row">
+            <Checkbox defaultChecked={a.chapterChair} onChange={event => onChange(event, a.id)} />
+            <span className="remb-name">{a.firstName} {a.lastName}</span>
+          </div>
+          : null
+        }
+      )}
+    </div>
+  </div>
 
 
 //----------------------------------------------------------------------------------------------------
@@ -2133,28 +2490,6 @@ const SoftWear = ({blurb, shirtTypes, shirtsOrdered, onChange, onRemove, onDropd
 
 
 
-//----------------------------------------------------------------------------------------------------
-
-
-const ChapterChair = ({ attendees, menuInfo, onChange, onChangeLunch }) =>
-  <div>
-    <h2>Chapter Chair Luncheon</h2>
-    <p>Is anyone in your party a registered or prospective Chapter Chair? If so, please check everyone
-       who will be attending the Chapter Chair Lunch; otherwise, simply click the Next buttton.
-    </p>
-    <p><FontAwesomeIcon icon="question-circle" /> If you don't know what a Chapter Chair is, this doesn't apply to you. Click Next.</p>
-    <div className="chapter-chair">
-      {attendees.map( (a,i) => 
-          <div key={a.id} className="chair-row">
-            <Checkbox defaultChecked={a.chapterChair} onChange={event => onChange(event, a.id)} />
-            <span className="remb-name">{a.firstName} {a.lastName}</span>
-          </div>
-        )
-      }
-    </div>
-  </div>
-
-
 
 //----------------------------------------------------------------------------------------------------
 
@@ -2181,6 +2516,31 @@ function setJSON(thisState) {
 
   return JSON.stringify(userData);
 }
+
+
+// Using fetch() to send data
+// https://developers.google.com/web/updates/2015/03/introduction-to-fetch
+
+// fetch('./api/some.json')
+//   .then(
+//     function(response) {
+//       if (response.status !== 200) {
+//         console.log('Looks like there was a problem. Status Code: ' +
+//           response.status);
+//         return;
+//       }
+
+//       // Examine the text in the response
+//       response.json().then(function(data) {
+//         console.log(data);
+//       });
+//     }
+//   )
+//   .catch(function(err) {
+//     console.log('Fetch Error :-S', err);
+//   });
+
+  
 
 const Checkout = ({thisState}) =>
   <div>
@@ -2211,17 +2571,6 @@ const Input = ( {label, value, id, field="", onChange, className="edit-input-1co
       onChange={(evt) => onChange(evt, field)}
     />
   </div>
-
-// const Input = ( {label, value, id, field="", onChange, className="edit-input-1col"}) =>
-//   <div className={className}>
-//     <FloatingLabelInput
-//       id={id}
-//       value={value}
-//       label={label}
-//       shrink={50}
-//       onChange={(evt) => onChange(evt, field)}
-//     />
-//   </div>
 
 
 
@@ -2267,7 +2616,7 @@ const Diagnosis = ({value, onChange, className="edit-diagnosis"}) => {
               defaultValue={defaultOpt}
               placeholder={"Diagnosis"}
               onChange={onChange}
-              styles={customStylesPeopleTypes}
+              styles={customStylesWide}
             />
           </div>
         );
@@ -2345,10 +2694,10 @@ const ShirtSize = ({value, isDisabled, onChange, className="edit-shirt-size"}) =
 const PrevNextButtons = ({pageNum, contact, onClickPrev, onClickNext}) =>
   <div className="button-bar">
     {pageNum > pages.START+1  &&
-      <Button className="button button-prev" onClick={onClickPrev}>BACK</Button>
+      <Button className="button button-prev" onClick={onClickPrev}><FontAwesomeIcon icon="angle-double-left" /> BACK</Button>
     }
     {pageNum < pages.END-1  &&
-      <Button className="button button-next" onClick={onClickNext}>NEXT</Button>
+      <Button className="button button-next" onClick={onClickNext}>NEXT <FontAwesomeIcon icon="angle-double-right" /></Button>
     }
   </div>
 
@@ -2367,7 +2716,7 @@ const Checkbox = ({ name, defaultChecked, onChange, className }) =>
 // OLD ----------------------------------------------------------------------------
 
 
-const Button = ({ onClick = null, onSubmit = null, className = '', children, type = 'button' }) =>
+const Button = ({ onClick = null, onSubmit = null, className = 'btn', children, type = 'button' }) =>
   <button
     onClick={onClick}
     onSubmit={onSubmit}

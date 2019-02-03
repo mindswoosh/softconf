@@ -61,6 +61,10 @@ p {
   margin-left: 40px;
 }
 
+.v-indent {
+  margin-top: 1.25em;
+}
+
 .select-height {
   line-height: 40px;
   height: 40px;
@@ -72,6 +76,21 @@ p {
 
 .tall {
   height: 35px;
+}
+
+.bold {
+  color: #2e3a97;
+  font-weight: bold;
+}
+
+.btn {
+  border-width: 1px;
+  color: blue;
+  text-align: inherit;
+  -webkit-font-smoothing: inherit;
+  padding: 5px 5px 5px 5px;
+  font-size: 12px;
+  cursor: pointer;
 }
 
 /*.remb-row {
@@ -100,7 +119,7 @@ p {
 
 .pagebar-unselected {
   display: inline-block;
-  padding: 12px;
+  padding: 12px 15px;
   background-color: #6a76cf;
   color: #afb7f6;
   border: 1px solid white;
@@ -108,7 +127,7 @@ p {
 
 .pagebar-selected {
   display: inline-block;
-  padding: 12px;
+  padding: 12px 15px;
   background-color: #efd31c;
   border: 1px solid white;
 }
@@ -134,13 +153,6 @@ p {
   text-align: right;
 }
 
-@media screen and (max-width: 500px) {
-  .row-num {
-    display: block;
-    margin-top: 25px;
-    text-align: left;
-  }
-}
 
 .welcome>h2 {
   text-align: center;
@@ -158,6 +170,13 @@ p {
   margin: 30px auto 30px auto;
 }
 
+.inline {
+  display: inline-block;
+}
+
+.radio-yes {
+  margin: 0 20px 0 15px;
+}
 
 /*.edit-age {
   display: inline-block;
@@ -175,9 +194,20 @@ p {
 .attendee-row {
   margin-top: 20px;
 }
+
 .edit-people, .edit-diagnosis {
   display: inline-block;
   margin: 0 25px 0 0;
+}
+
+.soft-angel-date {
+  display: inline-block;
+  margin-top: 10px;
+}
+
+
+.add-person-btn {
+  padding: 40px 0 0 20px;
 }
 
 .edit-age {
@@ -246,6 +276,12 @@ p {
   width: 150px;
 }
 
+.other-diag {
+  margin: 3px 0 0 0;
+  display: inline-block;
+  width: 200px;
+}
+
 .remembrance {
   margin: 20px 0 40px 0;
 }
@@ -312,7 +348,7 @@ p {
   color: inherit;
   text-align: inherit;
   -webkit-font-smoothing: inherit;
-  padding: 5px 5px 5px 20px;
+  padding: 5px 10px 5px 10px;
   font-size: inherit;
   cursor: pointer;
 }
@@ -326,7 +362,7 @@ p {
   color: inherit;
   text-align: inherit;
   -webkit-font-smoothing: inherit;
-  padding: 5px 20px 5px 5px;
+  padding: 5px 10px 5px 10px;
   font-size: inherit;
   cursor: pointer;
 }
@@ -388,4 +424,22 @@ p {
 .clinic-choice {
   font-size: 80%;
   color: green;
+}
+
+
+
+@media screen and (max-width: 500px) {
+  .row-num {
+    display: block;
+    margin-top: 25px;
+    text-align: left;
+  }
+
+  .indent {
+    margin-left: 5px;
+  }
+
+  .indent-twice {
+    margin-left: 10px;
+  }
 }
