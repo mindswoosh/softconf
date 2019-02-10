@@ -39,7 +39,7 @@ library.add(faQuestionCircle);
 library.add(faBars);
 library.add(faRibbon);
 
-const DEBUG = false;  //  Set to false for production
+const DEBUG = true;  //  Set to false for production
 
 var nextID = 10000;
 
@@ -50,10 +50,10 @@ const pages = {
   WELCOME:      pageNum++,
   BASICS:       pageNum++,
   CONTACT:      pageNum++,
-  ATTENDEES:    pageNum++,
   SOFTANGELS:   pageNum++,
-  CLINICS:      pageNum++,
+  ATTENDEES:    pageNum++,
   DINNER:       pageNum++,
+  CLINICS:      pageNum++,
   WORKSHOPS:    pageNum++,
   YOUNGERSIB:   pageNum++,
   OLDERSIB:     pageNum++,
@@ -262,6 +262,19 @@ const eventInfoDefault = {
     },
   ],
 
+  welcomeDinnerBlurb: "Our annual welcome dinner will be held Thursday night from 6pm – 10pm.",
+  adultMenu: [
+      'Wild Mushroom Ravioli',
+      'Lemon Herb Chicken Breast',
+      'Red Wine Marinated Grilled Top Sirloin'
+    ],
+  kidsMenu: [
+      'Chicken Tenders',
+      'Mac \'n Cheese',
+      'Carrots',
+      'Celery',
+    ],
+
   remembranceBlurb: "There will be a Remembrance Outing for families who have lost a child. If you have lost a child and plan to attend, please put a checkmark next to each person who will be attending, and select the type of box lunch for each. Otherwise, simply click the Next button.",
   remembranceMenu: {
       V: 'Vegetarian',
@@ -307,200 +320,259 @@ const eventInfoDefault = {
           ]
       }
   ],
-
-  dinnerMenu: [
-      'Wild Mushroom Ravioli',
-      'Lemon Herb Chicken Breast',
-      'Red Wine Marinated Grilled Top Sirloin'
-    ],
-  kidsMenu: [
-      'Chicken Tenders',
-      'Mac \'n Cheese',
-      'Carrots',
-      'Celery',
-    ]
 };
 
 
 
-const customStyles = {
-  option: (base, state) => ({
-    ...base,
-    // borderBottom: '1px dotted pink',
-    // color: state.isFullscreen ? 'red' : 'green',
-    padding: 5,
-  }),
-  control: (base, state) => ({        /* Select line with drop-down arrow */
-    ...base,
-    width: 325,
-    padding: 0,
-    marginTop: 10,
-    borderRadius: 0,
-    minHeight: 0,
-    height: 30,
-    fontSize: 14,
-    backgroundColor: "white",
-  }),
-  singleValue: (base, state) => {
-    const opacity = state.isDisabled ? 0.5 : 1;
-    const transition = 'opacity 300ms';
+function selectStyle(width, height) {
+  return {
+    option: (base, state) => ({
+      ...base,
+      padding: 5,
+    }),
+    control: (base, state) => ({
+      ...base,
+      width: width,
+      padding: 0,
+      marginTop: 5,
+      borderRadius: 0,
+      minHeight: 0,
+      height: 30,
+      fontSize: 14,
+      backgroundColor: "white",
+    }),
+    singleValue: (base, state) => {
+      const opacity = state.isDisabled ? 0.5 : 1;
+      const transition = 'opacity 300ms';
 
-    return {
-       ...base, 
-       opacity, 
-       transition,
-    };
-  },
-  menuList: (base, state) => ({
-    ...base,
-    height: 135,
-    fontSize: 14,
-    color: "#2e3a97",
-  }),
-  placeholder: (base, state) => ({
-    ...base,
-    color: "#999",
-    fontSize: 12,
-  }),
-  container: (base, state) => ({
-    ...base,
-    width: 325,
-  }),
+      return {
+         ...base, 
+         opacity, 
+         transition,
+      };
+    },
+    menuList: (base, state) => ({
+      ...base,
+      height: height,                            // Intentionally create a half line so people know they can scroll
+      fontSize: 14,
+      color: "#2e3a97",
+    }),
+    placeholder: (base, state) => ({
+      ...base,
+      color: "#999",
+      fontSize: 12,
+    }),
+    container: (base, state) => ({
+      ...base,
+      width: width,
+    }),
+  };
 }
+
+
+const customStylesPeopleTypes = selectStyle(156, 110);
+
+const customStyles = selectStyle(325, 135);
+
+const customStylesNarrow = selectStyle(120, 110);
+
+const customStylesDiagnosis = selectStyle(180, 122);
+
+
+// const customStyles = {
+//   option: (base, state) => ({
+//     ...base,
+//     // borderBottom: '1px dotted pink',
+//     // color: state.isFullscreen ? 'red' : 'green',
+//     padding: 5,
+//   }),
+//   control: (base, state) => ({        /* Select line with drop-down arrow */
+//     ...base,
+//     width: 325,
+//     padding: 0,
+//     marginTop: 10,
+//     borderRadius: 0,
+//     minHeight: 0,
+//     height: 30,
+//     fontSize: 14,
+//     backgroundColor: "white",
+//   }),
+//   singleValue: (base, state) => {
+//     const opacity = state.isDisabled ? 0.5 : 1;
+//     const transition = 'opacity 300ms';
+
+//     return {
+//        ...base, 
+//        opacity, 
+//        transition,
+//     };
+//   },
+//   menuList: (base, state) => ({
+//     ...base,
+//     height: 135,
+//     fontSize: 14,
+//     color: "#2e3a97",
+//   }),
+//   placeholder: (base, state) => ({
+//     ...base,
+//     color: "#999",
+//     fontSize: 12,
+//   }),
+//   container: (base, state) => ({
+//     ...base,
+//     width: 325,
+//   }),
+// }
 
 
 
 //  I should deep clone this from the previous style and change what's appropriate
-const customStylesPeopleTypes = {
-  option: (base, state) => ({
-    ...base,
-    padding: 5,
-  }),
-  control: (base, state) => ({
-    ...base,
-    width: 156,
-    padding: 0,
-    marginTop: 5,
-    borderRadius: 0,
-    minHeight: 0,
-    height: 30,
-    fontSize: 14,
-    backgroundColor: "white",
-  }),
-  singleValue: (base, state) => {
-    const opacity = state.isDisabled ? 0.5 : 1;
-    const transition = 'opacity 300ms';
+// const customStylesPeopleTypes = {
+//   option: (base, state) => ({
+//     ...base,
+//     padding: 5,
+//   }),
+//   control: (base, state) => ({
+//     ...base,
+//     width: 156,
+//     padding: 0,
+//     marginTop: 5,
+//     borderRadius: 0,
+//     minHeight: 0,
+//     height: 30,
+//     fontSize: 14,
+//     backgroundColor: "white",
+//   }),
+//   singleValue: (base, state) => {
+//     const opacity = state.isDisabled ? 0.5 : 1;
+//     const transition = 'opacity 300ms';
 
-    return {
-       ...base, 
-       opacity, 
-       transition,
-    };
-  },
-  menuList: (base, state) => ({
-    ...base,
-    height: 110,
-    fontSize: 14,
-    color: "#2e3a97",
-  }),
-  placeholder: (base, state) => ({
-    ...base,
-    color: "#999",
-    fontSize: 12,
-  }),
-  container: (base, state) => ({
-    ...base,
-    width: 156,
-  }),
-}
-
-
-
-const customStylesNarrow = {
-  option: (base, state) => ({
-    ...base,
-    padding: 5,
-  }),
-  control: (base, state) => ({
-    ...base,
-    width: 120,
-    padding: 0,
-    marginTop: 5,
-    borderRadius: 0,
-    minHeight: 0,
-    height: 30,
-    fontSize: 14,
-    backgroundColor: "white",
-  }),
-  singleValue: (base, state) => {
-    const opacity = state.isDisabled ? 0.5 : 1;
-    const transition = 'opacity 300ms';
-
-    return {
-       ...base, 
-       opacity, 
-       transition,
-    };
-  },
-  menuList: (base, state) => ({
-    ...base,
-    height: 110,
-    fontSize: 14,
-    color: "#2e3a97",
-  }),
-  placeholder: (base, state) => ({
-    ...base,
-    color: "#999",
-    fontSize: 12,
-  }),
-  container: (base, state) => ({
-    ...base,
-    width: 120,
-  }),
-}
+//     return {
+//        ...base, 
+//        opacity, 
+//        transition,
+//     };
+//   },
+//   menuList: (base, state) => ({
+//     ...base,
+//     height: 110,
+//     fontSize: 14,
+//     color: "#2e3a97",
+//   }),
+//   placeholder: (base, state) => ({
+//     ...base,
+//     color: "#999",
+//     fontSize: 12,
+//   }),
+//   container: (base, state) => ({
+//     ...base,
+//     width: 156,
+//   }),
+// }
 
 
-const customStylesWide = {
-  option: (base, state) => ({
-    ...base,
-    padding: 5,
-  }),
-  control: (base, state) => ({
-    ...base,
-    width: 180,
-    padding: 0,
-    marginTop: 5,
-    borderRadius: 0,
-    minHeight: 0,
-    height: 30,
-    fontSize: 14,
-    backgroundColor: "white",
-  }),
-  singleValue: (base, state) => {
-    const opacity = state.isDisabled ? 0.5 : 1;
-    const transition = 'opacity 300ms';
 
-    return {
-       ...base, 
-       opacity, 
-       transition,
-    };
-  },
-  menuList: (base, state) => ({
-    ...base,
-    height: 110,
-    fontSize: 14,
-    color: "#2e3a97",
-  }),
-  placeholder: (base, state) => ({
-    ...base,
-    color: "#999",
-    fontSize: 12,
-  }),
-  container: (base, state) => ({
-    ...base,
-    width: 180,
-  }),
+// const customStylesNarrow = {
+//   option: (base, state) => ({
+//     ...base,
+//     padding: 5,
+//   }),
+//   control: (base, state) => ({
+//     ...base,
+//     width: 120,
+//     padding: 0,
+//     marginTop: 5,
+//     borderRadius: 0,
+//     minHeight: 0,
+//     height: 30,
+//     fontSize: 14,
+//     backgroundColor: "white",
+//   }),
+//   singleValue: (base, state) => {
+//     const opacity = state.isDisabled ? 0.5 : 1;
+//     const transition = 'opacity 300ms';
+
+//     return {
+//        ...base, 
+//        opacity, 
+//        transition,
+//     };
+//   },
+//   menuList: (base, state) => ({
+//     ...base,
+//     height: 110,
+//     fontSize: 14,
+//     color: "#2e3a97",
+//   }),
+//   placeholder: (base, state) => ({
+//     ...base,
+//     color: "#999",
+//     fontSize: 12,
+//   }),
+//   container: (base, state) => ({
+//     ...base,
+//     width: 120,
+//   }),
+// }
+
+
+// const customStylesDiagnosis = {
+//   option: (base, state) => ({
+//     ...base,
+//     padding: 5,
+//   }),
+//   control: (base, state) => ({
+//     ...base,
+//     width: 180,
+//     padding: 0,
+//     marginTop: 5,
+//     borderRadius: 0,
+//     minHeight: 0,
+//     height: 30,
+//     fontSize: 14,
+//     backgroundColor: "white",
+//   }),
+//   singleValue: (base, state) => {
+//     const opacity = state.isDisabled ? 0.5 : 1;
+//     const transition = 'opacity 300ms';
+
+//     return {
+//        ...base, 
+//        opacity, 
+//        transition,
+//     };
+//   },
+//   menuList: (base, state) => ({
+//     ...base,
+//     height: 122,                            // Intentionally create a half line so people know they can scroll
+//     fontSize: 14,
+//     color: "#2e3a97",
+//   }),
+//   placeholder: (base, state) => ({
+//     ...base,
+//     color: "#999",
+//     fontSize: 12,
+//   }),
+//   container: (base, state) => ({
+//     ...base,
+//     width: 180,
+//   }),
+// }
+
+
+
+
+
+function arrayToOptions(a) {
+  let options = [];
+
+  a.forEach( (item) => {
+    options.push(
+      { label: item, value: item }
+    );
+  });
+
+  return options;
 }
 
 
@@ -547,28 +619,21 @@ const optionsAges = [
 ];
 
 
-const optionsDiagnoses = [
-  { label: "Trisomy 18",  value: "Trisomy 18" },
-  { label: "Trisomy 13",  value: "Trisomy 13" },
-  { label: "Trisomy 9 Mosaic",  value: "Trisomy 9 Mosaic" },
-  { label: "Trisomy 13 Mosaic",  value: "Trisomy 13 Mosaic" },
-  { label: "Trisomy 18 Mosaic",  value: "Trisomy 18 Mosaic" },
-  { label: "Partial Trisomy 13",  value: "Partial Trisomy 13" },
-  { label: "Partial Trisomy 18",  value: "Partial Trisomy 18" },
-  { label: "Other", value: "Other"},
+const Diagnoses = [
+  "Full Trisomy 18",
+  "Full Trisomy 13",
+  "Trisomy 9 Mosaic",
+  "Trisomy 13 Mosaic",
+  "Trisomy 18 Mosaic",
+  "Partial Trisomy 13",
+  "Partial Trisomy 18",
+  "Other",
+  "Mother",
 ];
 
-const optionsShirtQuantity = [
-  { label: 1,  value: 1 },
-  { label: 2,  value: 2 },
-  { label: 3,  value: 3 },
-  { label: 4,  value: 4 },
-  { label: 5,  value: 5 },
-  { label: 6,  value: 6 },
-  { label: 7,  value: 7 },
-  { label: 8,  value: 8 },
-  { label: 9,  value: 9 },
-];
+const optionsDiagnoses = arrayToOptions(Diagnoses);
+
+const optionsShirtQuantity = arrayToOptions([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
 const optionsShirtSizes = [
   { label: "Youth - S",    value: "ys"   },
@@ -597,6 +662,8 @@ const shirtDisplay = {
 }
 
 
+
+
 function attendee(firstName, lastName, peopleType, age, eventInfo) {
 
   let attendee = {
@@ -604,6 +671,8 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     firstName,
     lastName,
     peopleType,
+
+    welcomeDinner: '',
 
     // Adults
     rembOuting: 0,
@@ -789,10 +858,6 @@ class App extends Component {
         attendee("Cliff", "Mountjoy",  peopleTypes.CHILD,        17, eventInfoDefault),
         attendee("Baby",  "Mountjoy",  peopleTypes.CHILD,         3, eventInfoDefault),
       ];
-
-      // softAngels = [
-      //   attendee("Johnny",  "Crutcher",  peopleTypes.SOFTCHILD,   3, eventInfoDefault),
-      // ];
     }
 
     // let shirtDropdowns = eventInfo.shirtTypes.map( (shirt) => {
@@ -917,7 +982,13 @@ class App extends Component {
                   />,
 
               [pages.DINNER]:
-                  <Dinner />,
+                  <Dinner
+                    attendees={attendees}
+                    blurb={eventInfo.welcomeDinnerBlurb}
+                    adultMenu={eventInfo.adultMenu}
+                    kidsMenu={eventInfo.kidsMenu}
+                    onChangeDinner={this.onChangeSelection}
+                  />,
 
               [pages.WORKSHOPS]:
                   <Workshops 
@@ -1081,6 +1152,7 @@ class App extends Component {
   }
 
 
+
   // See if we should skip "curPage" and move on to the page after that, and
   // then check THAT page too...
 
@@ -1088,8 +1160,25 @@ class App extends Component {
 
     let checkNext = true;
 
+    let i = 0;
+
     do {
+
+      if (i++ > 20) {       // Should never get into an endless loop, but just in case...
+        break;
+      }
+
       switch (curPage) {
+
+        case pages.CLINICS:
+          checkNext = !this.state.attendees.find( a => { 
+            return (a.peopleType === peopleTypes.SOFTCHILD);
+          });
+
+          if (checkNext) {
+            curPage = pages.WORKSHOPS;
+          }
+          break;
 
         case pages.WORKSHOPS:
           checkNext = (this.nextAdultPro(-1) === -1);     // Skip workshops if no adults
@@ -1120,7 +1209,7 @@ class App extends Component {
           break;
 
         case pages.REMEMBRANCE:
-          checkNext = (this.state.softAngels.length === 0);          // Skip Remembrance
+          checkNext = (this.state.softAngels.length === 0);          // Skip Remembrance if no SOFT Angels
           if (checkNext) {
             curPage = pages.PICNIC;
           }
@@ -1137,7 +1226,7 @@ class App extends Component {
 
 
   onNextPage(event) {
-    let { attendees, currentPage, pageHistory} = this.state;
+    let { attendees, contactInfo, currentPage, pageHistory} = this.state;
 
     //  Don't let visitor go to next page unless there are no errors on
     //  the current page.
@@ -1145,16 +1234,29 @@ class App extends Component {
     switch (currentPage) {
 
       case pages.WELCOME:
-          // let attendees = this.state.attendees;
+
+          if (DEBUG  &&  contactInfo.firstName === '') {
+            contactInfo.firstName   = "Steve";
+            contactInfo.lastName    = "Maguire";
+            contactInfo.address1    = "123 E. Main St.";
+            contactInfo.city        = "Phoenix";
+            contactInfo.stateProv   = "AZ";
+            contactInfo.postalCode  = "98354";
+            contactInfo.country     = "United States";
+            contactInfo.phoneMobile = "(206) 528-1962";
+            contactInfo.email       = "steve@bestcoolproducts.com";
+          }
 
           pageHistory.push(currentPage);
 
           this.setState({
             pageHistory,
+            contactInfo,
             currentPage: pages.BASICS,
           });
 
           break;
+
 
       case pages.BASICS:
           // let attendees = this.state.attendees;
@@ -1168,8 +1270,8 @@ class App extends Component {
 
           break;
 
+
       case pages.CONTACT:
-          const contactInfo = this.state.contactInfo;
 
           const contact = {
               ...contactInfo,
@@ -1187,11 +1289,30 @@ class App extends Component {
               email:       smartFixEmail(contactInfo.email),
             }
 
-          //  Error check
-          //  alert() if errors
+          //  If they filled in Address2 but not Address1, swap.
+          if (contact.address1 === '') {
+            contact.address1 = contact.address2;
+            contact.address2 = '';
+          }
 
-          if (!DEBUG  &&  (contact.firstName === ''  ||  contact.lastName === '')) {
+          //  Error check
+          if (contact.firstName === ''  ||  contact.lastName === '') {
             alert("Oops! Please enter the name of the Contact Person.");
+          }
+          else if (contact.address1 === '') {
+            alert("Oops! Please enter your street address.");
+          }
+          else if (contact.city === ''  ||  contact.stateProv === ''  ||  contact.postalCode === '') {
+            alert("Oops! The City, Region, or Postal Code is missing.");
+          }
+          else if (contact.country === '') {
+            alert("Oops! Please select a country.");
+          }
+          else if (contact.phoneMobile === ''  &&  contact.phoneWork === ''  &&  contact.phoneHome === '') {
+            alert("Oops! Please enter at least one valid phone number.");
+          }
+          else if (contact.email === ''  ||  !validateEmail(contact.email)) {
+            alert("Oops! Please enter a valid email address.");
           }
           else {
             if (attendees.length === 0) {
@@ -1221,6 +1342,7 @@ class App extends Component {
 
           break;
 
+
       case pages.ATTENDEES:
           // let attendees = this.state.attendees;
 
@@ -1248,14 +1370,10 @@ class App extends Component {
           else {
             pageHistory.push(currentPage);
 
-            let anySoftChildren = attendees.find( a => { 
-              return (a.peopleType === peopleTypes.SOFTCHILD);
-            });
-
             let newPage = pages.SOFTWEAR;     //  Assume no attendees case
 
             if (attendees.length > 0) {
-              newPage = anySoftChildren ? pages.CLINICS : pages.WORKSHOPS;
+              newPage = pages.DINNER;
             }
 
             this.setState({
@@ -1268,28 +1386,26 @@ class App extends Component {
 
 
       case pages.DINNER:
-          // let attendees = this.state.attendees;
-
           pageHistory.push(currentPage);
 
           this.setState({
             pageHistory,
-            currentPage: pages.WORKSHOPS,       //  This assumes that there will always be one adult
+            currentPage: this.nextPage(pages.CLINICS),       //  This assumes that there will always be one adult
           });
 
           break;
+
 
       case pages.CLINICS:
-          // let attendees = this.state.attendees;
-
           pageHistory.push(currentPage);
 
           this.setState({
             pageHistory,
-            currentPage: pages.WORKSHOPS,
+            currentPage: this.nextPage(pages.WORKSHOPS),
           });
 
           break;
+
 
       case pages.WORKSHOPS:
 
@@ -1337,6 +1453,7 @@ class App extends Component {
           }
           break;
 
+
       case pages.OLDERSIB:
           {
             attendees = attendees.map(a => {
@@ -1362,6 +1479,7 @@ class App extends Component {
           }
           break;
 
+
       case pages.CHILDCARE:
           pageHistory.push(currentPage);
 
@@ -1372,6 +1490,7 @@ class App extends Component {
 
           break;
 
+
       case pages.CHAPTERCHAIR:
           pageHistory.push(currentPage);
 
@@ -1381,6 +1500,7 @@ class App extends Component {
           });
 
           break;
+
 
       case pages.REMEMBRANCE:
 
@@ -1409,6 +1529,7 @@ class App extends Component {
 
           break;
 
+
       case pages.PICNIC:
           pageHistory.push(currentPage);
 
@@ -1418,7 +1539,6 @@ class App extends Component {
           });
 
           break;
-
 
 
       // case pages.PHOTOS:
@@ -1432,6 +1552,7 @@ class App extends Component {
       //     });
 
       //     break;
+
 
       case pages.DIRECTORY:
           // let attendees = this.state.attendees;
@@ -1644,6 +1765,22 @@ class App extends Component {
     let i = attendees.findIndex(a => a.id === id);
     console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
     attendees[i].rembLunch = opt.value;
+    this.setState ({
+      attendees
+    });
+  }
+
+  
+
+  //-------------------------------------------------------------------------------------------
+  //  Welcome dinner
+
+
+  onChangeDinner(opt, id) {
+    let { attendees } = this.state;
+    let i = attendees.findIndex(a => a.id === id);
+    console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
+    attendees[i].welcomeDinner = opt.value;
     this.setState ({
       attendees
     });
@@ -2370,17 +2507,49 @@ const ChapterChair = ({ attendees, menuInfo, onChange, onChangeLunch }) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const Dinner = ({contact}) =>
+const Dinner = ({attendees, adultMenu, kidsMenu, blurb, onChangeDinner}) =>
   <div>
     <h2>Welcome Dinner</h2>
-    <p>Our annual welcome dinner will be held Thursday night from 6pm – 10pm.
-    </p>
-    <b>
-      <p></p>
-    </b>
+    <p>{blurb}</p>
+    <div className="remembrance">
+      {attendees.map( (a,i) =>
+        {return <div key={a.id} className="indent">
+            <span className="remb-name">{a.firstName} {a.lastName}</span>
+            <div className="inline">
+              {a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL ?
+                  <Select
+                    defaultValue={ a.welcomeDinner !== '' ? { label: a.welcomeDinner, value: a.welcomeDinner } : null }
+                    options={arrayToOptions(adultMenu)}
+                    placeholder={"Select dinner..."}
+                    onChange={(opt) => onChangeDinner(opt, a.id, "welcomeDinner")}
+                    styles={selectStyle(300, 110)}
+                  />
+                : 
+                  <div className={(a.peopleType !== peopleTypes.SOFTCHILD || a.eatsMeals) ? "inline" : "inline invisible"}>
+                    <Select
+                      defaultValue={ a.welcomeDinner !== '' ? { label: a.welcomeDinner, value: a.welcomeDinner } : null }
+                      options={arrayToOptions(kidsMenu)}
+                      placeholder={"Select dinner..."}
+                      onChange={(opt) => onChangeDinner(opt, a.id, "welcomeDinner")}
+                      styles={selectStyle(300, 110)}
+                    />
+                  </div>
+              }
+            </div>
+          </div>
+        }
+      )}
+    </div>
   </div>
 
-
+      // {attendees.map( (a,i) => 
+      //   {return (a.peopleType === peopleTypes.ADULT)  && 
+      //     <div key={a.id} className="indent">
+      //       <span className="remb-name">{a.firstName} {a.lastName}</span>
+      //       Choose Dinner:
+      //     </div>
+      //   })
+      // }
 
 //----------------------------------------------------------------------------------------------------
 
@@ -2576,50 +2745,50 @@ const Input = ( {label, value, id, field="", onChange, className="edit-input-1co
 
 const PeopleType = ({value, onChange, className="edit-people"}) => {
       const defaultOpt = optionsPeopleTypes.find(opt => (opt.value === value));
-        return (
-          <div className={className}>
-            <Select
-              options={optionsPeopleTypes}
-              defaultValue={defaultOpt}
-              placeholder={"Select..."}
-              onChange={onChange}
-              styles={customStylesPeopleTypes}
-            />
-          </div>
-        );
+      return (
+        <div className={className}>
+          <Select
+            options={optionsPeopleTypes}
+            defaultValue={defaultOpt}
+            placeholder={"Select..."}
+            onChange={onChange}
+            styles={customStylesPeopleTypes}
+          />
+        </div>
+      );
     }
 
 
 
 const Age = ({value, onChange, className="edit-age"}) => {
       const defaultOpt = optionsAges.find(opt => (opt.value === value));
-        return (
-          <div className={className}>
-            <Select
-              options={optionsAges}
-              defaultValue={defaultOpt}
-              placeholder={"Age"}
-              onChange={onChange}
-              styles={customStylesPeopleTypes}
-            />
-          </div>
-        );
+      return (
+        <div className={className}>
+          <Select
+            options={optionsAges}
+            defaultValue={defaultOpt}
+            placeholder={"Age"}
+            onChange={onChange}
+            styles={customStylesPeopleTypes}
+          />
+        </div>
+      );
     }
 
 
 const Diagnosis = ({value, onChange, className="edit-diagnosis"}) => {
       const defaultOpt = optionsDiagnoses.find(opt => (opt.value === value));
-        return (
-          <div className={className}>
-            <Select
-              options={optionsDiagnoses}
-              defaultValue={defaultOpt}
-              placeholder={"Diagnosis"}
-              onChange={onChange}
-              styles={customStylesWide}
-            />
-          </div>
-        );
+      return (
+        <div className={className}>
+          <Select
+            options={optionsDiagnoses}
+            defaultValue={defaultOpt}
+            placeholder={"Diagnosis"}
+            onChange={onChange}
+            styles={customStylesDiagnosis}
+          />
+        </div>
+      );
     }
 
 
@@ -2858,6 +3027,11 @@ function smartFixEmail(email) {
     email = email.trim().replace(/\s+/g, "");
     //  Correct misspellings of gmail.com, etc
     return email.toLowerCase();
+}
+
+function validateEmail(email) {
+    var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
 }
 
 
