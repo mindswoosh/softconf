@@ -2596,7 +2596,7 @@ const ChapterChair = ({ attendees, menuInfo, onChange, onChangeLunch }) =>
     <p>Is anyone in your party a registered or prospective Chapter Chair? If so, please check everyone
        who will be attending the Chapter Chair Lunch; otherwise, simply click the Next buttton.
     </p>
-    <p><i>(If you don't know what a Chapter Chair is, this doesn't apply to you. Pleas click NEXT.)</i></p>
+    <p><i>(If you don't know what a Chapter Chair is, this doesn't apply to you. Please click NEXT.)</i></p>
     <div className="chapter-chair">
       {attendees.map( (a,i) =>
         {return a.peopleType === peopleTypes.ADULT ? 
