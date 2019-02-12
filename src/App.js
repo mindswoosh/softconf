@@ -39,7 +39,7 @@ library.add(faQuestionCircle);
 library.add(faBars);
 library.add(faRibbon);
 
-const DEBUG = true;  //  Set to false for production
+const DEBUG = false;  //  Set to false for production
 
 var nextID = 10000;
 
@@ -320,6 +320,8 @@ const eventInfoDefault = {
           ]
       }
   ],
+
+  directoryBlurb: "Each year we create a Conference Family directory. By including your contact information in the directory, families will be able keep in touch with each other after the conference. By default, we include your phone number, email address, and the city that you live in (the street address is NOT included).",
 };
 
 
@@ -628,7 +630,6 @@ const Diagnoses = [
   "Partial Trisomy 13",
   "Partial Trisomy 18",
   "Other",
-  "Mother",
 ];
 
 const optionsDiagnoses = arrayToOptions(Diagnoses);
@@ -745,6 +746,7 @@ class App extends Component {
         email:       '',
       },
 
+      photoWaiver:        false, 
       attendance:         "full",     //  "full", "picnic" (only), "balloon" release - not attending 
       reception:          false,
       sundayBreakfast:    false,
@@ -754,16 +756,12 @@ class App extends Component {
       softAngels: [],
 
       directory: {
-        name:             false,
-        age:              false,
-        diagnosis:        false,
-        photos:           false,
-        contactInfo:      false,
-        phone:            false,
-        email:            false,
-        fullAddress:      false,
-        partialAddress:   false,
+        phone:  true,
+        email:  true,
+        city:   true,
       },
+
+      clinicTieDowns: '',
 
       shirtsOrdered: [],
 
@@ -771,6 +769,7 @@ class App extends Component {
       shirtDropdowns: {},
     };
 
+    this.onChangeStateCheckbox = this.onChangeStateCheckbox.bind(this);
     this.setEventInfo         = this.setEventInfo.bind(this);
     this.onChangeContactInfo  = this.onChangeContactInfo.bind(this);
     this.onChangeCountry      = this.onChangeCountry.bind(this);
@@ -920,11 +919,13 @@ class App extends Component {
 
               [pages.BASICS]:
                   <Basics 
+                    photoWaiver={this.state.photoWaiver}
                     attendance={this.state.attendance}
                     reception={this.state.reception}
                     sundayBreakfast={this.state.sundayBreakfast}
                     boardMember={this.state.boardMember}
                     handleRadioGroup={this.onChangeFieldValue}
+                    handleCheckbox={this.onChangeStateCheckbox}
                   />,
 
               [pages.CONTACT]:
@@ -958,9 +959,12 @@ class App extends Component {
 
               [pages.CLINICS]:
                   <Clinics
+                    attendees={attendees}
                     clinics={eventInfo.clinics}
                     onSortEnd={this.onClinicSortEnd}
                     blurb={eventInfo.clinicsBlurb}
+                    numTieDowns={this.state.clinicTieDowns}
+                    onChangeSelection={this.onChangeFieldValue}
                   />,
 
               [pages.REMEMBRANCE]:
@@ -1023,6 +1027,7 @@ class App extends Component {
 
               [pages.DIRECTORY]:
                   <Directory
+                    blurb={eventInfo.directoryBlurb}
                     directory={this.state.directory}
                     onChange={this.onChangeDirectory}
                   />,
@@ -1170,6 +1175,13 @@ class App extends Component {
 
       switch (curPage) {
 
+        case pages.ATTENDEES:
+          if (this.state.attendance === 'balloon') {
+            curPage = pages.SUMMARY;
+            checkNext = false;
+          }
+          break;
+
         case pages.CLINICS:
           checkNext = !this.state.attendees.find( a => { 
             return (a.peopleType === peopleTypes.SOFTCHILD);
@@ -1259,14 +1271,17 @@ class App extends Component {
 
 
       case pages.BASICS:
-          // let attendees = this.state.attendees;
+          if (this.state.attendance !== 'balloon'  &&  !this.state.photoWaiver) {
+            alert('To register for the conference, you must agree to the photo and video waiver. Please check the box to agree.');
+          }
+          else {
+            pageHistory.push(currentPage);
 
-          pageHistory.push(currentPage);
-
-          this.setState({
-            pageHistory,
-            currentPage: pages.CONTACT,
-          });
+            this.setState({
+              pageHistory,
+              currentPage: pages.CONTACT,
+            });
+          }
 
           break;
 
@@ -1331,14 +1346,41 @@ class App extends Component {
           break;
 
       case pages.SOFTANGELS:
-          // let attendees = this.state.attendees;
+          let softAngels = this.state.softAngels;
 
-          pageHistory.push(currentPage);
-
-          this.setState({
-            pageHistory,
-            currentPage: pages.ATTENDEES,
+          softAngels = softAngels.map(a => { 
+            a.firstName = smartFixName(a.firstName.trim());
+            a.lastName  = smartFixName(a.lastName.trim());
+            a.otherDiagnosis = a.otherDiagnosis.trim();
+            return a;
           });
+
+          softAngels = softAngels.filter(a => { return (a.firstName !== ''  ||  a.lastName !== '') });
+
+
+          let bad_softAngel = softAngels.find( a => { 
+            return (  a.firstName === ''  ||  a.lastName === ''  ||  a.peopleType === '' ||
+                      a.dateOfBirth === null  ||  a.dateOfDeath === null  ||  a.diagnosis === null  ||  
+                      (a.diagnosis === 'Other'  &&  a.otherDiagnosis === '')
+                   )
+          });
+
+
+          if (this.state.attendance === 'balloon'  &&  softAngels.length === 0) {
+            alert('Please enter a SOFT Angel to continue.');
+          }
+          else if (bad_softAngel) {
+            alert('Oops! Some information is missing. Please double-check your entry.')
+          }
+          else {
+            pageHistory.push(currentPage);
+
+            this.setState({
+              softAngels,
+              pageHistory,
+              currentPage: this.nextPage(pages.ATTENDEES),
+            });
+          }
 
           break;
 
@@ -1363,6 +1405,14 @@ class App extends Component {
                    ) 
           });
 
+          let softchildren = attendees.filter(a => { return (a.peopleType === peopleTypes.SOFTCHILD) });
+
+          let clinicTieDowns = this.state.clinicTieDowns;
+
+          if (clinicTieDowns !== ''  &&  clinicTieDowns > softchildren.length) {
+            clinicTieDowns = softchildren.length;
+          }
+
 
           if (bad_attendee !== undefined) {
             alert("Oops! Something is missing in the information for one or more of the people listed. Please fill in the missing information.");
@@ -1378,6 +1428,7 @@ class App extends Component {
 
             this.setState({
               attendees,
+              clinicTieDowns,
               pageHistory,
               currentPage: newPage,     //  Can't call newPage(pages.CLINICS) because attendees isn't in state yet
             });
@@ -1397,12 +1448,19 @@ class App extends Component {
 
 
       case pages.CLINICS:
-          pageHistory.push(currentPage);
 
-          this.setState({
-            pageHistory,
-            currentPage: this.nextPage(pages.WORKSHOPS),
-          });
+          if (this.state.clinicTieDowns === '') {
+            alert("Please select the number of tie-downs you'll need.");
+          }
+          else {
+
+            pageHistory.push(currentPage);
+
+            this.setState({
+              pageHistory,
+              currentPage: this.nextPage(pages.WORKSHOPS),
+            });
+          }
 
           break;
 
@@ -1609,6 +1667,24 @@ class App extends Component {
   }
 
 
+
+  //-------------------------------------------------------------------------------------------
+  //  Generic handlers
+
+  onChangeStateCheckbox(event, field) {
+    this.setState ({
+      [field]: event.target.checked,
+    });
+  }
+
+  onChangeFieldValue(field, value) {
+    this.setState({
+      [field]: value
+    });
+  }
+
+
+
   //-------------------------------------------------------------------------------------------
   //  Process Attendees page
   
@@ -1677,11 +1753,6 @@ class App extends Component {
     });
   }
 
-  onChangeFieldValue(field, value) {
-    this.setState({
-      [field]: value
-    });
-  }
 
 
 
@@ -1731,7 +1802,6 @@ class App extends Component {
   onChangeSoftAngelDate(date, id, field) {
     let { softAngels } = this.state;
     let i = softAngels.findIndex(a => a.id === id);
-    console.log("id = " + i, "Field = " + field);
     console.assert(i !== -1, "Warning -- didn't find SOFT Angel in softAngels list: id = " + id);
     softAngels[i][field] = date;
     this.setState({
@@ -1814,11 +1884,7 @@ class App extends Component {
     let i = attendees.findIndex(a => a.id === id);
     console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
 
-    //  Flip state of attendance and lunch option
     attendees[i].sibOuting = !attendees[i].sibOuting;
-    if (!attendees[i].sibOuting) {
-      attendees[i].shirtSize = '';
-    }
     this.setState ({
       attendees
     });
@@ -1899,25 +1965,9 @@ class App extends Component {
   //-------------------------------------------------------------------------------------------
   //  Directory page
 
-  onChangeDirectory(opt, field) {
+  onChangeDirectory(value, field) {
     let { directory } = this.state;
-    directory[field] = !directory[field];
-
-    if (field === "contactInfo") {
-      directory.phone = false;
-      directory.email = false;
-      directory.fullAddress = false;
-      directory.partialAddress = false;
-    }
-
-    //  fullAddress and partialAddress can't both be checked simultaneously
-    if (field === "fullAddress"  &&  directory.fullAddress) {
-      directory.partialAddress = false;
-    }
-
-    if (field === "partialAddress"  &&  directory.partialAddress) {
-      directory.fullAddress = false;
-    }
+    directory[field] = value;
 
     this.setState ({
       directory
@@ -2120,7 +2170,7 @@ const Welcome = () =>
 
 
 
-const Basics = ({attendance, reception, sundayBreakfast, boardMember, handleRadioGroup}) =>
+const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMember, handleRadioGroup, handleCheckbox}) =>
   <div>
     <h2>Getting Started</h2>
     <p>Welcome to the Soft Conference Registration form!</p>
@@ -2139,33 +2189,56 @@ const Basics = ({attendance, reception, sundayBreakfast, boardMember, handleRadi
           <Radio value="balloon" /> Requesting a Balloon (not attending the conference)
         </RadioGroup>
       </div>
-      <div className="v-indent">
-        <span className="bold">Are you planning to attend the welcome reception on Wednesday evening?</span>
-        <div className="inline">
-          <RadioGroup name="reception" selectedValue={reception} onChange={(val) => handleRadioGroup("reception", val)}>
-            <span className="radio-yes"><Radio value={true} /> Yes</span>
-            <Radio value={false} /> No
-          </RadioGroup>
+      {attendance !== 'balloon' &&
+        <div>
+          <div className="v-indent">
+            <table>
+              <tbody>
+                <tr>
+                  <td valign="top"><Checkbox defaultChecked={photoWaiver} onChange={event => handleCheckbox(event, "photoWaiver")} /> </td>
+                  <td>
+                    <span className="bold">I hereby give permission for images of my child, captured during the SOFT Conference through video, photo and digital camera, to be used solely for the purposes of SOFT promotional material and publications, and waive any rights of compensation or ownership thereto.</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {photoWaiver  && 
+            <div>
+              <div className="v-indent">
+                <span className="bold"> Are you planning to attend the welcome reception on Wednesday evening?</span>
+                <div className="inline">
+                  <RadioGroup name="reception" selectedValue={reception} onChange={(val) => handleRadioGroup("reception", val)}>
+                    <span className="radio-yes"><Radio value={true} /> Yes</span>
+                    <Radio value={false} /> No
+                  </RadioGroup>
+                </div>
+              </div>
+
+              <div className="v-indent">
+                <span className="bold"> Are you planning to attend the final breakfast on Sunday morning?</span>
+                <div className="inline">
+                  <RadioGroup name="sundayBreakfast" selectedValue={sundayBreakfast} onChange={(val) => handleRadioGroup("sundayBreakfast", val)}>
+                    <span className="radio-yes"><Radio value={true} /> Yes</span>
+                    <Radio value={false} /> No
+                  </RadioGroup>
+                </div>
+              </div>
+
+              <div className="v-indent">
+                <span className="bold"> Is anybody in your group a board member?</span>
+                <div className="inline">
+                  <RadioGroup name="boardMember" selectedValue={boardMember} onChange={(val) => handleRadioGroup("boardMember", val)}>
+                    <span className="radio-yes"><Radio value={true} /> Yes</span>
+                    <Radio value={false} /> No
+                  </RadioGroup>
+                </div>
+              </div>
+            </div>
+          }
         </div>
-      </div>
-      <div className="v-indent">
-        <span className="bold">Are you planning to attend the final breakfast on Sunday morning?</span>
-        <div className="inline">
-          <RadioGroup name="sundayBreakfast" selectedValue={sundayBreakfast} onChange={(val) => handleRadioGroup("sundayBreakfast", val)}>
-            <span className="radio-yes"><Radio value={true} /> Yes</span>
-            <Radio value={false} /> No
-          </RadioGroup>
-        </div>
-      <div className="v-indent">
-        <span className="bold">Is anybody in your group a board member?</span>
-        <div className="inline">
-          <RadioGroup name="boardMember" selectedValue={boardMember} onChange={(val) => handleRadioGroup("boardMember", val)}>
-            <span className="radio-yes"><Radio value={true} /> Yes</span>
-            <Radio value={false} /> No
-          </RadioGroup>
-        </div>
-      </div>
-      </div>
+      }
     </div>
   </div>
 
@@ -2222,21 +2295,21 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangeSelection, onC
       <div>
         {attendees.map( (a, i) =>
           <div className="attendee-row" key={a.id}>
-            <p className="row-num">{i+1}.</p>
-            <Input label="FIRST Name" value={a.firstName} id={"contact-firstname-" + a.id} onChange={event => onChange(event, a.id, "firstName")} />
-            <Input label="LAST Name"  value={a.lastName}  id={"contact-lsstname-" + a.id}  onChange={event => onChange(event, a.id, "lastName")} />
+            <p className="row-num"><span className="bold">{i+1}.</span></p>
+            <Input label="FIRST Name" value={a.firstName} id={"attendee-firstname-" + a.id} onChange={event => onChange(event, a.id, "firstName")} />
+            <Input label="LAST Name"  value={a.lastName}  id={"attendee-lastname-" + a.id}  onChange={event => onChange(event, a.id, "lastName")} />
             <PeopleType value={a.peopleType} onChange={(opt) => onChangeSelection(opt, a.id, "peopleType")}/>
             {a.peopleType !== peopleTypes.CHILD  &&
               <div className="edit-age"></div>
             }
             {a.peopleType === peopleTypes.CHILD  &&
-              <Age label="Age" value={a.age}  id={"contact-age-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "age")} />
+              <Age label="Age" value={a.age}  id={"attendee-age-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "age")} />
             }
             <Button onClick={() => onRemove(a.id)}>Remove</Button>
             {a.peopleType === peopleTypes.SOFTCHILD  &&
               <div>
                 <p className="row-num"></p>
-                Diagnosis: <Diagnosis label="Diagnosis" value={a.diagnosis} id={"contact-diagnosis-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "diagnosis")} /><span className="small-gap"></span>
+                Diagnosis: <Diagnosis label="Diagnosis" value={a.diagnosis} id={"attendee-diagnosis-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "diagnosis")} /><span className="small-gap"></span>
                 Birthdate: <DatePicker
                   selected={a.dateOfBirth}
                   onChange={date => onChangeDate(date, a.id)}
@@ -2245,7 +2318,7 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangeSelection, onC
                 {a.diagnosis === "Other" &&
                   <div>
                     <p className="row-num"></p>
-                    Enter other Diagnosis: <Input value={a.otherDiagnosis} id={"contact-diag-" + a.id} className="other-diag" onChange={event => onChange(event, a.id, "otherDiagnosis")} />
+                    Enter other Diagnosis: <Input value={a.otherDiagnosis} id={"attendee-diag-" + a.id} className="other-diag" onChange={event => onChange(event, a.id, "otherDiagnosis")} />
                   </div>
                 }
               </div>
@@ -2268,7 +2341,7 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangeSelection, onC
 
 
 
-const SoftAngels = ({softAngels, onRemove, onAdd, onChange, onChangeDiagnosis, onChangeDate}) =>
+const SoftAngels = ({softAngels, onRemove, onAdd, onChange, onChangeDiagnosis, onChangeOther, onChangeDate}) =>
   <div>
     <h2>SOFT Angels</h2>
     <p>Every year at the convention, we have a balloon release for SOFT children who have passed away.
@@ -2280,10 +2353,16 @@ const SoftAngels = ({softAngels, onRemove, onAdd, onChange, onChangeDiagnosis, o
         {softAngels.map( (a, i) =>
           <div className="attendee-row" key={a.id}>
             <p className="row-num">{i+1}.</p>
-            <Input label="FIRST Name" value={a.firstName} id={"contact-firstname-" + a.id} onChange={event => onChange(event, a.id, "firstName")} />
-            <Input label="LAST Name"  value={a.lastName}  id={"contact-lsstname-" + a.id}  onChange={event => onChange(event, a.id, "lastName")} />
-            <Diagnosis label="Diagnosis" value={a.diagnosis} id={"contact-diagnosis-" + a.id}  onChange={opt => onChangeDiagnosis(opt, a.id, "diagnosis")} />
+            <Input label="FIRST Name" value={a.firstName} id={"softangel-firstname-" + a.id} onChange={event => onChange(event, a.id, "firstName")} />
+            <Input label="LAST Name"  value={a.lastName}  id={"softangel-lastname-" + a.id}  onChange={event => onChange(event, a.id, "lastName")} />
+            <Diagnosis label="Diagnosis" value={a.diagnosis} id={"softangel-diagnosis-" + a.id}  onChange={opt => onChangeDiagnosis(opt, a.id, "diagnosis")} />
             <br />
+            {a.diagnosis === "Other" &&
+              <div>
+                <p className="row-num"></p>
+                Enter Diagnosis: <Input value={a.otherDiagnosis} id={"softangel-diag-" + a.id} className="other-diag" onChange={event => onChange(event, a.id, "otherDiagnosis")} />
+              </div>
+            }
             <p className="row-num"></p>
             <div className="soft-angel-date">
               Date of Birth: <DatePicker
@@ -2355,7 +2434,9 @@ const YoungerSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
           <div key={a.id} className="indent">
             <Checkbox defaultChecked={a.sibOuting} onChange={event => onChange(event, a.id)} />
             <span className="remb-name">{a.firstName} {a.lastName}{a.sibOuting ? " - $" + cost : ""}</span>
-            <ShirtSize value={a.shirtSize} isDisabled={!a.sibOuting} onChange={(opt) => onChangeShirtSize(opt, a.id)} />
+            <div className={a.sibOuting? "inline" : "inline invisible"}>
+              <ShirtSize value={a.shirtSize} onChange={(opt) => onChangeShirtSize(opt, a.id)} />
+            </div>
           </div>
         })
       }
@@ -2375,7 +2456,9 @@ const OlderSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
           <div key={a.id} className="indent">
             <Checkbox defaultChecked={a.sibOuting} onChange={event => onChange(event, a.id)} />
             <span className="remb-name">{a.firstName} {a.lastName}{a.sibOuting ? " - $" + cost : ""}</span>
-            <ShirtSize value={a.shirtSize} isDisabled={!a.sibOuting} onChange={(opt) => onChangeShirtSize(opt, a.id)} />
+            <div className={a.sibOuting? "inline" : "inline invisible"}>
+              <ShirtSize value={a.shirtSize} onChange={(opt) => onChangeShirtSize(opt, a.id)} />
+            </div>
           </div>
         })
       }
@@ -2387,17 +2470,40 @@ const OlderSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const Clinics = ({clinics, onSortEnd, blurb}) => 
-  <div>
-    <h2>Clinics</h2>
-    <p>{blurb}</p>
-    <p>Rearrange the names of the clinics below from Most Interested to Least Interested by simultaneously clicking and dragging on the <span className="thumb-color"><FontAwesomeIcon icon="bars" /></span> character and moving
-    the name of the clinic up or down.</p>
-    <p>Move <strong>MOST Interested</strong> Clinic to the top:</p>
-    <SortableList items={clinics} onSortEnd={onSortEnd} />
-    <p>Move the <strong>LEAST Interested</strong> Clinic to the bottom.</p>
-    <p>Again, you must click and drag <i>simultaneously</i> on the <span className="thumb-color"><FontAwesomeIcon icon="bars" /></span> character to move the clinic name up or down.</p>
-  </div>
+const Clinics = ({attendees, clinics, numTieDowns, onSortEnd, blurb, onChangeSelection}) => {
+
+  attendees = attendees.filter(a => { return (a.peopleType === peopleTypes.SOFTCHILD) });
+
+  let optionsTieDowns = [];
+  for (let i = 0; i <= attendees.length; i++) {
+    optionsTieDowns.push( { label: i, value: i } );
+  }
+
+  if (numTieDowns !== '') {
+    numTieDowns = { label: numTieDowns, value: numTieDowns };
+  }
+
+  return (
+    <div>
+      <h2>Clinics</h2>
+      <p className="v-indent-below">{blurb}</p>
+      <span><FontAwesomeIcon icon="hand-point-right" /> &nbsp;How many (if any) tie-downs will you need for transportation?</span>&nbsp;&nbsp;
+      <div className="inline">
+        <Select
+          defaultValue={ numTieDowns }
+          options={optionsTieDowns}
+          placeholder={"Number of tie-downs?..."}
+          onChange={(opt) => onChangeSelection("clinicTieDowns", opt.value)}
+          styles={selectStyle(200, 110)}
+        /> 
+      </div>
+      <p className="v-indent">Rearrange the names of the clinics below from Most Interested to Least Interested by simultaneously clicking and dragging on the <span className="thumb-color"><FontAwesomeIcon icon="bars" /></span> character and moving
+      the name of the clinic up or down.</p>
+      <p>Move <strong>MOST Interested</strong> Clinic to the top, and the <strong>LEAST Interested</strong> Clinic to the bottom:</p>
+      <SortableList items={clinics} onSortEnd={onSortEnd} />
+    </div>
+  );
+}
 
 
 //----------------------------------------------------------------------------------------------------
@@ -2414,7 +2520,9 @@ const Remembrance = ({ attendees, blurb, menuInfo, onChange, onChangeLunch }) =>
           <div key={a.id} className="indent">
             <Checkbox defaultChecked={a.rembOuting} onChange={event => onChange(event, a.id)} />
             <span className="remb-name">{a.firstName} {a.lastName}</span>
-            <RembLunch value={a.rembLunch} menuInfo={menuInfo} isDisabled={!a.rembOuting} onChange={(opt) => onChangeLunch(opt, a.id)} />
+            <div className={a.rembOuting ? "inline" : "inline invisible"}>
+              <RembLunch value={a.rembLunch} menuInfo={menuInfo} isDisabled={!a.rembOuting} onChange={(opt) => onChangeLunch(opt, a.id)} />
+            </div>
           </div>
         })
       }
@@ -2466,13 +2574,12 @@ const Picnic = ({attendees, onChange, onChangeTiedown, blurb}) =>
     </p>
     <div className="remembrance">
       {attendees.map( (a,i) => 
-        <div key={a.id} className="indent select-height">
+        <div key={a.id} className="indent">
           <Checkbox defaultChecked={a.picnic} onChange={event => onChange(event, a.id)} />
           <span className="remb-name">{a.firstName} {a.lastName}</span>
-          {a.picnic  &&  a.peopleType === peopleTypes.SOFTCHILD  ?
+          <div className={(a.picnic && a.peopleType === peopleTypes.SOFTCHILD) ? "inline" : "inline invisible"}>
             <span>Needs tie-downs? <SelectYesNo value={a.picnicTiedown} isDisabled={!a.picnic} onChange={(opt) => onChangeTiedown(opt, a.id)} /></span>
-            : null
-          }
+          </div>
         </div>
       )}
     </div>
@@ -2514,7 +2621,7 @@ const Dinner = ({attendees, adultMenu, kidsMenu, blurb, onChangeDinner}) =>
     <div className="remembrance">
       {attendees.map( (a,i) =>
         {return <div key={a.id} className="indent">
-            <span className="remb-name">{a.firstName} {a.lastName}</span>
+            <span className="bold">{i+1}.</span> <span className="remb-name"> {a.firstName} {a.lastName}</span>
             <div className="inline">
               {a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL ?
                   <Select
@@ -2542,14 +2649,7 @@ const Dinner = ({attendees, adultMenu, kidsMenu, blurb, onChangeDinner}) =>
     </div>
   </div>
 
-      // {attendees.map( (a,i) => 
-      //   {return (a.peopleType === peopleTypes.ADULT)  && 
-      //     <div key={a.id} className="indent">
-      //       <span className="remb-name">{a.firstName} {a.lastName}</span>
-      //       Choose Dinner:
-      //     </div>
-      //   })
-      // }
+
 
 //----------------------------------------------------------------------------------------------------
 
@@ -2586,27 +2686,16 @@ const Photos = ({contact}) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const Directory = ({directory, onChange}) =>
+const Directory = ({blurb, directory, onChange}) =>
   <div>
     <h2>Directory</h2>
-    <p>Each year we create a conference directory of all the SOFT children. If you would like your child to be
-       included in the directory, please place a checkmark next to the information you would like to share
-       with other families:
+    <p>{blurb}
     </p>
+    <p>Please uncheck any contact information that you don't want included in the directory:</p>
     <div className="indent">
-      <p><Checkbox defaultChecked={directory.name}           onChange={event => onChange(event, "name")} /> Child's Name</p>
-      <p><Checkbox defaultChecked={directory.age}            onChange={event => onChange(event, "age")} /> Age</p>
-      <p><Checkbox defaultChecked={directory.diagnosis}      onChange={event => onChange(event, "diagnosis")} /> Diagnosis</p>
-      <p><Checkbox defaultChecked={directory.photos}         onChange={event => onChange(event, "photos")} /> Allow photos</p>
-      <p><Checkbox defaultChecked={directory.contactInfo}    onChange={event => onChange(event, "contactInfo")} /> Include Parent's contact information</p>
-      {directory.contactInfo &&
-        <div className="indent-twice">
-          <p><Checkbox defaultChecked={directory.phone}          onChange={event => onChange(event, "phone")} /> Include phone number</p>
-          <p><Checkbox defaultChecked={directory.email}          onChange={event => onChange(event, "email")} /> Include email address</p>
-          <p><Checkbox defaultChecked={directory.fullAddress}    onChange={event => onChange(event, "fullAddress")} /> Include full mailing address</p>
-          <p><Checkbox defaultChecked={directory.partialAddress} onChange={event => onChange(event, "partialAddress")} /> Include only City and Country</p>
-        </div>
-      }
+      <p><Checkbox defaultChecked={directory.phone} onChange={event => onChange(event.target.checked, "phone")} /> Include phone number</p>
+      <p><Checkbox defaultChecked={directory.email} onChange={event => onChange(event.target.checked, "email")} /> Include email address</p>
+      <p><Checkbox defaultChecked={directory.city}  onChange={event => onChange(event.target.checked, "city")}  /> Include the City and Country</p>
     </div>
   </div>
 
@@ -2820,7 +2909,7 @@ const SelectYesNo = ({value, isDisabled, onChange, className="edit-remb-lunch"})
             placeholder={"Select..."}
             isDisabled={isDisabled}
             onChange={onChange}
-            styles={customStylesPeopleTypes}
+            styles={selectStyle(90, 60)}
           />
         </div>
       );
@@ -2844,13 +2933,13 @@ const Country = ({value, onChange, className="edit-country"}) => {
 
 
 const ShirtSize = ({value, isDisabled, onChange, className="edit-shirt-size"}) => {
-      const defaultOpt = optionsShirtSizes.find(opt => (opt.value === value));
+      let defaultOpt = optionsShirtSizes.find(opt => (opt.value === value));
       return (
         <div className={className}>
           <Select
             options={optionsShirtSizes}
             defaultValue={defaultOpt}
-            placeholder={"Select..."}
+            placeholder={"Select shirt..."}
             isDisabled={isDisabled}
             onChange={onChange}
             styles={customStylesPeopleTypes}
