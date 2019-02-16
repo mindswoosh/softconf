@@ -10,6 +10,12 @@
 //  $ heroku open 
 
 
+//  Update Notes:
+//  For event handlers, if we always pass the value and not the event|opt|whatever, then
+//  a lot of the existing handlers could be cut to a much smaller number since they
+//  would all simply take values and ids, and sometimes property names.
+
+
 import React, { Component } from 'react';
 import Select from 'react-select';
 import {RadioGroup, Radio} from 'react-radio-group';
@@ -94,35 +100,35 @@ const eventInfoDefault = {
         name:   "Session 1",
         workshops: [
           {
-            id:           "1a",
+            id:           "1n",
             title:        "None",
             moderator:    "",
             description:  ""
           },
           {
+            id:           "1a",
+            title:        "Cardiac Surgery in T18, T13, and related disorders",
+            moderator:    "Dr. James Hammel",
+            description:  ""
+          },
+          {
             id:           "1b",
-            title:        "Guardianship & Trust",
-            moderator:    "Attorney Nancy Lee, WA State Bar",
-            description:  "When your child turns 18 - An attorney will discuss how to apply for Guardianship and understand why it's necessary. She will also discuss how a Trust can be helpful."
+            title:        "Tapping to clear emotions",
+            moderator:    "Rev. Robin Whitaker",
+            description:  ""
           },
-          {
-            id:           "1c",
-            title:        "TRIS Project",
-            moderator:    "Deborah A. Bruns, Ph.D",
-            description:  "This session will provide an overview of activities of the Tracking Rare Incidence Syndromes (TRIS) project during the past 12 months highlighting areas of data analyses and results and recently published articles."
-          },
-          {
-            id:           "1d",
-            title:        "Digital Scrapbooking",
-            moderator:    "Chelsea Dye, MAcc, JD",
-            description:  "Learn how to create amazing professionally-bound photo books of your treasured family photos using your computer rather than boxes full of scissors, paper and glue."
-          },
-          {
-            id:           "1e",
-            title:        "Occupational Therapy/Floor Time - Part 1",
-            moderator:    "Joyce Vipond OT",
-            description:  "ntroduction to the floor time model of playful engagement for developing social & emotional development. Exploring its impact on cognition and the ability to be engaged in the world."
-          }
+          // {
+          //   id:           "1c",
+          //   title:        "Digital Scrapbooking",
+          //   moderator:    "Chelsea Dye, MAcc, JD",
+          //   description:  "Learn how to create amazing professionally-bound photo books of your treasured family photos using your computer rather than boxes full of scissors, paper and glue."
+          // },
+          // {
+          //   id:           "1d",
+          //   title:        "Occupational Therapy/Floor Time - Part 1",
+          //   moderator:    "Joyce Vipond OT",
+          //   description:  "ntroduction to the floor time model of playful engagement for developing social & emotional development. Exploring its impact on cognition and the ability to be engaged in the world."
+          // }
         ]
       },
       {
@@ -130,35 +136,35 @@ const eventInfoDefault = {
         name:   "Session 2",
         workshops: [
           {
-            id:           "2a",
+            id:           "2n",
             title:        "None",
             moderator:    "",
             description:  ""
           },
           {
+            id:           "2a",
+            title:        "",
+            moderator:    "Dr. Steve Cantrell",
+            description:  ""
+          },
+          {
             id:           "2b",
-            title:        "Occupational Therapy/Floor Time - Part 2",
-            moderator:    "Joyce Vipond OT",
-            description:  "Continuation from Part 1...Live treatment demonstrations, videos and practical ideas for engaging your children."
+            title:        "Canvas Painting Party OR CARDMAKING Cost TBD",
+            moderator:    "",
+            description:  ""
           },
           {
             id:           "2c",
-            title:        "Genetics",
-            moderator:    "John Carey, M.D., MPH",
-            description:  "The goals of the workshop are to describe the syndrome patterns of Trisomy 13 & 18 and address the questions of the attendees."
+            title:        "Wheelchair and seating",
+            moderator:    "Julie Hawkins, Mike Barner",
+            description:  ""
           },
-          {
-            id:           "2d",
-            title:        "'Tell Your Story'",
-            moderator:    "Sheryl Crosier, MA, MBA (Simon's Law)",
-            description:  "Create a Remembrance Sash and photo button for the Remembrance Outing and Picnic. For our Angel parents."
-          },
-          {
-            id:           "2e",
-            title:        "Transitioning Services ",
-            moderator:    "Tami McGrath, Pierce Co, WA Coalition for Developmental Disabilities",
-            description:  "When your child turns 18. Discuss how parents can find services and understand how to go through the transition process."
-          }
+          // {
+          //   id:           "2d",
+          //   title:        "Transitioning Services ",
+          //   moderator:    "Tami McGrath, Pierce Co, WA Coalition for Developmental Disabilities",
+          //   description:  "When your child turns 18. Discuss how parents can find services and understand how to go through the transition process."
+          // }
         ]
       },
       {
@@ -166,29 +172,29 @@ const eventInfoDefault = {
         name:   "Session 3",
         workshops: [
           {
-            id:           "3a",
+            id:           "3n",
             title:        "None",
             moderator:    "",
             description:  ""
           },
           {
+            id:           "3a",
+            title:        "Genetics",
+            moderator:    "Dr. John Carey",
+            description:  ""
+          },
+          {
             id:           "3b",
-            title:        "Bridging - Experiencing Loss & Going Forward",
-            moderator:    "Heather J. Neal, LICSW, CT",
-            description:  "Professional Counselor from Mary Bridge Children's Hospital who works with families and their loss."
+            title:        "TRIS",
+            moderator:    "Debbie Bruns",
+            description:  ""
           },
-          {
-            id:           "3c",
-            title:        "I.E.P - Individualized Education Program",
-            moderator:    "Candice Webster - Exec. Dir. for Special Services & Intervention, Orting SD, WA",
-            description:  "When your child needs an I.E.P for school. Understanding how it works and communicating and advocating for your child's needs while in school."
-          },
-          {
-            id:           "3d",
-            title:        "Vision, light sensitivity & seizures",
-            moderator:    "Dr. Steve Cantrell, OD",
-            description:  "New information on how indoor and outdoor light affects your child and seizures. Detailed handouts with information on how to correct this newly discovered photosensitive issue. Benefits for mom and dad too!"
-          },
+          // {
+          //   id:           "3c",
+          //   title:        "Vision, light sensitivity & seizures",
+          //   moderator:    "Dr. Steve Cantrell, OD",
+          //   description:  "New information on how indoor and outdoor light affects your child and seizures. Detailed handouts with information on how to correct this newly discovered photosensitive issue. Benefits for mom and dad too!"
+          // },
         ]
       },
       {
@@ -196,28 +202,52 @@ const eventInfoDefault = {
         name:   "Session 4",
         workshops: [
           {
-            id:           "4a",
+            id:           "4n",
             title:        "None",
             moderator:    "",
             description:  ""
           },
           {
-            id:           "4b",
-            title:        "Dad's Only - Sharing Workshop",
-            moderator:    "Moderated by Eric Marohn, SOFT Board of Directors",
+            id:           "4a",
+            title:        "",
+            moderator:    "Dr. Glenn Green, ENT?",
             description:  ""
           },
           {
-            id:           "4c",
-            title:        "Mom's Only - Sharing Workshop",
-            moderator:    "Moderated by Cindy Cook, LCSW, SOFT Board of Directors",
+            id:           "4b",
+            title:        "CPR and First Aid",
+            moderator:    "Allison Westman-Grigg RN-BSN",
+            description:  ""
+          },
+        ]
+      },
+      {
+        id: 5,
+        name:   "Session 5",
+        workshops: [
+          {
+            id:           "5n",
+            title:        "None",
+            moderator:    "",
+            description:  ""
+          },
+          {
+            id:           "5a",
+            title:        "Moms Only - Sharing Workshop",
+            moderator:    "",
+            description:  ""
+          },
+          {
+            id:           "5b",
+            title:        "Dads Only - Sharing Workshop",
+            moderator:    "",
             description:  ""
           },
         ]
       },
     ],
 
-  clinicsBlurb: "This year’s Soft Clinics will be held at Sonny's Children’s Hospital on Thursday July 35th. Please number your clinic preferences (up to 5). We will attempt to schedule each child into 3 of the 5 preferences.",
+  clinicsBlurb: "This year’s Soft Clinics will be held at C.S. Mott Children’s Hospital on Friday July 19, 2019 from 1pm – 5pm. Please number your clinic preferences (up to 5). We will attempt to schedule each child into 3 of the 5 preferences.",
   clinics: [
       'Cardiology',
       'Neurology',
@@ -228,10 +258,10 @@ const eventInfoDefault = {
       'Genetics',
     ],
 
-  youngerSibOutingBlurb: "The Younger Sibling outing is for children ages 5 to 11 and will be at the Wild Waves water park where there are number of rides and attractions especially for younger kids, from the Enchanted Railway to the Kiddie Boats. Everyone will have plenty of fun! Lunch is included and so is a SOFT T-shirt!",
-  youngerSibCost: 25,
+  youngerSibOutingBlurb: "The Younger Sibling outing is for children ages 5 to 11 and will be at the Ann Arbor Children’s museum on _______.  Lunch is included as well as a goody bag and a SOFT Sibs T-shirt! Price for the outing is $35.",
+  youngerSibCost: 35,
 
-  olderSibOutingBlurb: "The Older Sibling outing is for children 12 and up and will be at the Woodland Park Zoo where they can explore exhibits and get close to more than 1,100 animals and 300 species—including some of the world's most critically endangered. Lunch is included in the outing and every child will get a SOFT T-shirt.",
+  olderSibOutingBlurb: "The Older Sibling outing is for children 12 and up and will be to the Detroit Zoo on July 18th. Lunch is included in the outing and every child will get a SOFT Sibs T-shirt. Price for the outing is $35.",
   olderSibCost: 35,
 
   childCareBlurb: "Childcare will be available during the Workshops and Clinics and is available for children up to age 11 and for SOFT children of any age. Please refer to the brochure for the times of the Workshops and Clinics you plan to attend in which you might need childcare.",
@@ -264,9 +294,9 @@ const eventInfoDefault = {
 
   welcomeDinnerBlurb: "Our annual welcome dinner will be held Thursday night from 6pm – 10pm.",
   adultMenu: [
-      'Wild Mushroom Ravioli',
-      'Lemon Herb Chicken Breast',
-      'Red Wine Marinated Grilled Top Sirloin'
+      'Portabella Napolean',
+      'Sliced Sirloin Medallions',
+      'Chicken Cordon Bleu'
     ],
   kidsMenu: [
       'Chicken Tenders',
@@ -275,15 +305,15 @@ const eventInfoDefault = {
       'Celery',
     ],
 
-  remembranceBlurb: "There will be a Remembrance Outing for families who have lost a child. If you have lost a child and plan to attend, please put a checkmark next to each person who will be attending, and select the type of box lunch for each. Otherwise, simply click the Next button.",
+  remembranceBlurb: "This year’s Remembrance Outing will be to Matthaei Botanical Gardens. This event is only for those who have lost a child. If you plan to attend, please put a checkmark next to each person who will be attending, and select the type of lunch for each. Otherwise, simply click the Next button.",
   remembranceMenu: {
       V: 'Vegetarian',
       N: 'Non-vegetarian',
     },
 
-  picnicBlurb: "The Annual Ryan Cantrell Memorial Picnic and Balloon release will be Saturday July 36th from 1–4pm at the East Fork Lake picnic area. Please let us know who is attending, number of bus seats/tie downs if needed. If you will are requesting a balloon release for your child we will gather that information on the next page.",
+  picnicBlurb: "The Annual Ryan Cantrell Memorial Picnic and Balloon release will be at Dawn Farms on Saturday July 20th from 11:30–3pm.",
 
-  shirtsBlurb: "Order your SOFT shirts ahead of time so they'll be ready and waiting for you when you sign in at the conference. Note that the shirts given to the children at the Sibling Outings are different than these shirts.",
+  shirtsBlurb: "Order your SOFT conference shirts ahead of time so they'll be ready and waiting for you when you check in at the conference. Note that the Sib shirts given to the kids at the Sibling Outings are different than these shirts.",
 
   shirtTypes: [
       {
@@ -379,190 +409,6 @@ const customStyles = selectStyle(325, 135);
 const customStylesNarrow = selectStyle(120, 110);
 
 const customStylesDiagnosis = selectStyle(180, 122);
-
-
-// const customStyles = {
-//   option: (base, state) => ({
-//     ...base,
-//     // borderBottom: '1px dotted pink',
-//     // color: state.isFullscreen ? 'red' : 'green',
-//     padding: 5,
-//   }),
-//   control: (base, state) => ({        /* Select line with drop-down arrow */
-//     ...base,
-//     width: 325,
-//     padding: 0,
-//     marginTop: 10,
-//     borderRadius: 0,
-//     minHeight: 0,
-//     height: 30,
-//     fontSize: 14,
-//     backgroundColor: "white",
-//   }),
-//   singleValue: (base, state) => {
-//     const opacity = state.isDisabled ? 0.5 : 1;
-//     const transition = 'opacity 300ms';
-
-//     return {
-//        ...base, 
-//        opacity, 
-//        transition,
-//     };
-//   },
-//   menuList: (base, state) => ({
-//     ...base,
-//     height: 135,
-//     fontSize: 14,
-//     color: "#2e3a97",
-//   }),
-//   placeholder: (base, state) => ({
-//     ...base,
-//     color: "#999",
-//     fontSize: 12,
-//   }),
-//   container: (base, state) => ({
-//     ...base,
-//     width: 325,
-//   }),
-// }
-
-
-
-//  I should deep clone this from the previous style and change what's appropriate
-// const customStylesPeopleTypes = {
-//   option: (base, state) => ({
-//     ...base,
-//     padding: 5,
-//   }),
-//   control: (base, state) => ({
-//     ...base,
-//     width: 156,
-//     padding: 0,
-//     marginTop: 5,
-//     borderRadius: 0,
-//     minHeight: 0,
-//     height: 30,
-//     fontSize: 14,
-//     backgroundColor: "white",
-//   }),
-//   singleValue: (base, state) => {
-//     const opacity = state.isDisabled ? 0.5 : 1;
-//     const transition = 'opacity 300ms';
-
-//     return {
-//        ...base, 
-//        opacity, 
-//        transition,
-//     };
-//   },
-//   menuList: (base, state) => ({
-//     ...base,
-//     height: 110,
-//     fontSize: 14,
-//     color: "#2e3a97",
-//   }),
-//   placeholder: (base, state) => ({
-//     ...base,
-//     color: "#999",
-//     fontSize: 12,
-//   }),
-//   container: (base, state) => ({
-//     ...base,
-//     width: 156,
-//   }),
-// }
-
-
-
-// const customStylesNarrow = {
-//   option: (base, state) => ({
-//     ...base,
-//     padding: 5,
-//   }),
-//   control: (base, state) => ({
-//     ...base,
-//     width: 120,
-//     padding: 0,
-//     marginTop: 5,
-//     borderRadius: 0,
-//     minHeight: 0,
-//     height: 30,
-//     fontSize: 14,
-//     backgroundColor: "white",
-//   }),
-//   singleValue: (base, state) => {
-//     const opacity = state.isDisabled ? 0.5 : 1;
-//     const transition = 'opacity 300ms';
-
-//     return {
-//        ...base, 
-//        opacity, 
-//        transition,
-//     };
-//   },
-//   menuList: (base, state) => ({
-//     ...base,
-//     height: 110,
-//     fontSize: 14,
-//     color: "#2e3a97",
-//   }),
-//   placeholder: (base, state) => ({
-//     ...base,
-//     color: "#999",
-//     fontSize: 12,
-//   }),
-//   container: (base, state) => ({
-//     ...base,
-//     width: 120,
-//   }),
-// }
-
-
-// const customStylesDiagnosis = {
-//   option: (base, state) => ({
-//     ...base,
-//     padding: 5,
-//   }),
-//   control: (base, state) => ({
-//     ...base,
-//     width: 180,
-//     padding: 0,
-//     marginTop: 5,
-//     borderRadius: 0,
-//     minHeight: 0,
-//     height: 30,
-//     fontSize: 14,
-//     backgroundColor: "white",
-//   }),
-//   singleValue: (base, state) => {
-//     const opacity = state.isDisabled ? 0.5 : 1;
-//     const transition = 'opacity 300ms';
-
-//     return {
-//        ...base, 
-//        opacity, 
-//        transition,
-//     };
-//   },
-//   menuList: (base, state) => ({
-//     ...base,
-//     height: 122,                            // Intentionally create a half line so people know they can scroll
-//     fontSize: 14,
-//     color: "#2e3a97",
-//   }),
-//   placeholder: (base, state) => ({
-//     ...base,
-//     color: "#999",
-//     fontSize: 12,
-//   }),
-//   container: (base, state) => ({
-//     ...base,
-//     width: 180,
-//   }),
-// }
-
-
-
 
 
 function arrayToOptions(a) {
@@ -750,7 +596,8 @@ class App extends Component {
       attendance:         "full",     //  "full", "picnic" (only), "balloon" release - not attending 
       reception:          false,
       sundayBreakfast:    false,
-      boardMember:        false, 
+      boardMember:        false,
+      chapterChair:       false,
 
       attendees: [],
       softAngels: [],
@@ -855,7 +702,7 @@ class App extends Component {
         attendee("Jane",  "Mountjoy",  peopleTypes.CHILD,        11, eventInfoDefault),
         attendee("Helen", "Mountjoy",  peopleTypes.CHILD,        12, eventInfoDefault),
         attendee("Cliff", "Mountjoy",  peopleTypes.CHILD,        17, eventInfoDefault),
-        attendee("Baby",  "Mountjoy",  peopleTypes.CHILD,         3, eventInfoDefault),
+        attendee("Jamie", "Jones",     peopleTypes.SOFTCHILD,     3, eventInfoDefault),
       ];
     }
 
@@ -924,6 +771,7 @@ class App extends Component {
                     reception={this.state.reception}
                     sundayBreakfast={this.state.sundayBreakfast}
                     boardMember={this.state.boardMember}
+                    chapterChair={this.state.chapterChair}
                     handleRadioGroup={this.onChangeFieldValue}
                     handleCheckbox={this.onChangeStateCheckbox}
                   />,
@@ -1220,6 +1068,13 @@ class App extends Component {
           }
           break;
 
+        case pages.CHAPTERCHAIR:
+          checkNext = !this.state.chapterChair;           // No one is a Chapter Chair?
+          if (checkNext) {
+            curPage = pages.REMEMBRANCE;
+          }
+          break;
+
         case pages.REMEMBRANCE:
           checkNext = (this.state.softAngels.length === 0);          // Skip Remembrance if no SOFT Angels
           if (checkNext) {
@@ -1437,12 +1292,30 @@ class App extends Component {
 
 
       case pages.DINNER:
-          pageHistory.push(currentPage);
 
-          this.setState({
-            pageHistory,
-            currentPage: this.nextPage(pages.CLINICS),       //  This assumes that there will always be one adult
+          attendees = attendees.map(a => { 
+            if (a.peopleType === peopleTypes.SOFTCHILD  &&  !a.eatsMeals) {
+              a.welcomeDinner = '';
+            }
+            return a;
           });
+
+          let missing_meals = attendees.find( a => { 
+            return (a.welcomeDinner === ''  &&  (a.peopleType !== peopleTypes.SOFTCHILD  ||  a.eatsMeals));
+          });
+
+          if (missing_meals !== undefined) {
+            alert("Oops! Please choose a meal for each person.");
+          }
+          else {
+            pageHistory.push(currentPage);
+
+            this.setState({
+              attendees,
+              pageHistory,
+              currentPage: this.nextPage(pages.CLINICS),       //  This assumes that there will always be one adult
+            });
+          }
 
           break;
 
@@ -1543,7 +1416,7 @@ class App extends Component {
 
           this.setState({
             pageHistory,
-            currentPage: pages.CHAPTERCHAIR,
+            currentPage: this.nextPage(pages.CHAPTERCHAIR),
           });
 
           break;
@@ -1714,6 +1587,7 @@ class App extends Component {
     let i = attendees.findIndex(a => a.id === id);
     console.assert(i !== -1, "Warning -- didn't find attendee in attendee list: id = " + id);
     attendees[i][field] = event.target.value;
+
     this.setState ({
       attendees
     });
@@ -1727,6 +1601,9 @@ class App extends Component {
     attendees[i][field] = opt.value;
     if (field === "diagnosis"  &&  opt.value !== "Other") {
       attendees[i].otherDiagnosis = "";
+    }
+    if (field === "age") {
+      attendees[i].childCareSessions = {};
     }
     this.setState ({
       attendees
@@ -2038,6 +1915,12 @@ const SortableItem = SortableElement(({value, index, i}) => {     //  TO-DO: Why
     case 2:
       choice = '3rd Choice';
       break;
+    case 3:
+      choice = '4th Choice';
+      break;
+    case 4:
+      choice = '5th Choice';
+      break;
     default:
       choice = '';
   }
@@ -2150,8 +2033,7 @@ const Welcome = () =>
   <div className="welcome">
     <h2>Welcome!</h2>
     <p>Welcome to the Soft Conference Registration form!</p>
-    <p>The 2019 Soft Conference is going to be held from Thursday March 3rd to Saturday March 5th at the
-       Volcano Hotel in Kiwaluea Hawaii.
+    <p>The 2019 Soft Conference is going to be held at the _____ Hotel in Ann Arbor, MI, July 17-21, 2019.
     </p>
     <p>If you haven't read the 2019 Conference brochure yet, you'll want to do that first before going
        through this form so you know exactly what's going on. Having the brochure available as you fill
@@ -2170,7 +2052,7 @@ const Welcome = () =>
 
 
 
-const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMember, handleRadioGroup, handleCheckbox}) =>
+const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMember, chapterChair, handleRadioGroup, handleCheckbox}) =>
   <div>
     <h2>Getting Started</h2>
     <p>Welcome to the Soft Conference Registration form!</p>
@@ -2235,6 +2117,17 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
                   </RadioGroup>
                 </div>
               </div>
+
+              <div className="v-indent">
+                <span className="bold"> Is anybody in your group a Chapter Chair?</span>
+                <div className="inline">
+                  <RadioGroup name="chapterChair" selectedValue={chapterChair} onChange={(val) => handleRadioGroup("chapterChair", val)}>
+                    <span className="radio-yes"><Radio value={true} /> Yes</span>
+                    <Radio value={false} /> No
+                  </RadioGroup>
+                </div>
+              </div>
+
             </div>
           }
         </div>
@@ -2410,7 +2303,7 @@ const Workshops = ({attendee, sessions, onChange}) =>
             <RadioGroup selectedValue={attendee.workshops[sess.id]} onChange={(val) => onChange(val, attendee.id, sess.id)}>
             {
               sess.workshops.map( (ws,i) =>
-                <div key={ws.id} className="indent"><Radio value={ws.id} /> {ws.title}</div>
+                <div key={ws.id} className="indent"><Radio value={ws.id} /> {ws.title}{ws.moderator === '' ? '' : " — " + ws.moderator}</div>
               )
             }
             </RadioGroup><br />
@@ -2430,7 +2323,7 @@ const YoungerSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
     <p>Check each child who will be attending the outing and choose a shirt size.</p>
     <div className="remembrance">
       {attendees.map( (a,i) => 
-        {return a.peopleType === peopleTypes.CHILD  &&  a.age >= 5  &&  a.age < 12  &&
+        {return a.peopleType === peopleTypes.CHILD  &&  a.age >= 5  &&  a.age <= 11  &&
           <div key={a.id} className="indent">
             <Checkbox defaultChecked={a.sibOuting} onChange={event => onChange(event, a.id)} />
             <span className="remb-name">{a.firstName} {a.lastName}{a.sibOuting ? " - $" + cost : ""}</span>
