@@ -19,6 +19,7 @@
 import React, { Component } from 'react';
 import Select from 'react-select';
 import {RadioGroup, Radio} from 'react-radio-group';
+import ReactHtmlParser from 'react-html-parser';
 import './App.css';
 
 // import FloatingLabelInput from 'react-floating-label-input';
@@ -45,7 +46,7 @@ library.add(faQuestionCircle);
 library.add(faBars);
 library.add(faRibbon);
 
-const DEBUG = false;  //  Set to false for production
+const DEBUG = true;  //  Set to false for production
 
 var nextID = 10000;
 
@@ -360,6 +361,8 @@ function selectStyle(width, height) {
   return {
     option: (base, state) => ({
       ...base,
+    // borderBottom: '1px dotted pink',
+    // color: state.isFullscreen ? 'red' : 'green',
       padding: 5,
     }),
     control: (base, state) => ({
@@ -370,6 +373,7 @@ function selectStyle(width, height) {
       borderRadius: 0,
       minHeight: 0,
       height: 30,
+      top: 4,                                     //  Space above actual edit box
       fontSize: 14,
       backgroundColor: "white",
     }),
@@ -379,20 +383,22 @@ function selectStyle(width, height) {
 
       return {
          ...base, 
-         opacity, 
+         opacity,
          transition,
+         top: 15,                                 //  Space above text in edit box
       };
     },
     menuList: (base, state) => ({
       ...base,
-      height: height,                            // Intentionally create a half line so people know they can scroll
+      height: height,                             // Intentionally create a half line so people know they can scroll
       fontSize: 14,
       color: "#2e3a97",
     }),
     placeholder: (base, state) => ({
       ...base,
       color: "#999",
-      fontSize: 12,
+      fontSize: 14,
+      top: 15,                                    //  Space above text in edit box
     }),
     container: (base, state) => ({
       ...base,
@@ -430,11 +436,11 @@ const optionsYesNo = [
 ];
 
 const peopleTypes = {
-  SOFTCHILD:    "S",
-  CHILD:        "C",
-  ADULT:        "A",
-  PROFESSIONAL: "P",
-  SOFTANGEL:    "D",
+  SOFTCHILD:    "SOFT Child",
+  CHILD:        "Child",
+  ADULT:        "Adult",
+  PROFESSIONAL: "Professional",
+  SOFTANGEL:    "SOFT Angel",
 };
 
 const optionsPeopleTypes = [
@@ -568,6 +574,8 @@ class App extends Component {
     this.state = {
       currentPage: pages.WELCOME,
       pageHistory: [],                //  Keep a history of the pages visited for use by the Back button
+      workshopAttendee: 0,
+      shirtDropdowns: {},
 
       eventInfo: {
         eventTitle: '',
@@ -576,6 +584,10 @@ class App extends Component {
         dinnerMenu: [],
         kidsMenu: []
       },
+
+
+      //  Attendance information
+      //  If you change anything below here, be sure to update the setJSON() function
 
       contactInfo: {
         firstName:   '',
@@ -598,6 +610,7 @@ class App extends Component {
       sundayBreakfast:    false,
       boardMember:        false,
       chapterChair:       false,
+      joeyWatson:         false,
 
       attendees: [],
       softAngels: [],
@@ -608,13 +621,12 @@ class App extends Component {
         city:   true,
       },
 
+      //  Clinic list?
       clinicTieDowns: '',
 
       shirtsOrdered: [],
-
-      workshopAttendee: 0,
-      shirtDropdowns: {},
     };
+
 
     this.onChangeStateCheckbox = this.onChangeStateCheckbox.bind(this);
     this.setEventInfo         = this.setEventInfo.bind(this);
@@ -894,7 +906,7 @@ class App extends Component {
                   />,
 
               [pages.SUMMARY]:
-                  <Summary contact={contactInfo} />,
+                  <Summary thisState={this.state} />,
 
               [pages.CHECKOUT]:
                   <Checkout thisState={this.state} />,
@@ -1269,15 +1281,18 @@ class App extends Component {
           }
 
 
-          if (bad_attendee !== undefined) {
+          if (attendees.length === 0) {
+            alert("Oops! You must list at least one person. Will the Contact Person be attending?");
+          }
+          else if (bad_attendee !== undefined) {
             alert("Oops! Something is missing in the information for one or more of the people listed. Please fill in the missing information.");
           }
           else {
             pageHistory.push(currentPage);
 
-            let newPage = pages.SOFTWEAR;     //  Assume no attendees case
+            let newPage = pages.DIRECTORY;     //  "Picnic-only" case -- go straight to wrap up
 
-            if (attendees.length > 0) {
+            if (this.state.attendance !== 'picnic') {
               newPage = pages.DINNER;
             }
 
@@ -1304,7 +1319,7 @@ class App extends Component {
             return (a.welcomeDinner === ''  &&  (a.peopleType !== peopleTypes.SOFTCHILD  ||  a.eatsMeals));
           });
 
-          if (missing_meals !== undefined) {
+          if (!DEBUG  &&  missing_meals !== undefined) {
             alert("Oops! Please choose a meal for each person.");
           }
           else {
@@ -1505,7 +1520,7 @@ class App extends Component {
 
           this.setState({
             pageHistory,
-            currentPage: pages.CHECKOUT,
+            currentPage: pages.SUMMARY,
           });
 
           break;
@@ -2062,9 +2077,9 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
        answer the following questions:
     </p>
     <div className="indent">
-      <p><b>How much, if any, of the conference are you planning to attend?</b></p>
+      How much, if any, of the conference are you planning to attend?
 
-      <div className="indent-twice">
+      <div className="v-indent indent">
         <RadioGroup name="attendance" selectedValue={attendance} onChange={(val) => handleRadioGroup("attendance", val)}>
           <Radio value="full" /> Full Conference<br />
           <Radio value="picnic" /> Only attending the picnic<br />
@@ -2079,17 +2094,17 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
                 <tr>
                   <td valign="top"><Checkbox defaultChecked={photoWaiver} onChange={event => handleCheckbox(event, "photoWaiver")} /> </td>
                   <td>
-                    <span className="bold">I hereby give permission for images of my child, captured during the SOFT Conference through video, photo and digital camera, to be used solely for the purposes of SOFT promotional material and publications, and waive any rights of compensation or ownership thereto.</span>
+                    <span>I hereby give permission for images of my child, captured during the SOFT Conference through video, photo and digital camera, to be used solely for the purposes of SOFT promotional material and publications, and waive any rights of compensation or ownership thereto.</span>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          {photoWaiver  && 
+          {photoWaiver  &&  attendance === 'full'  && 
             <div>
               <div className="v-indent">
-                <span className="bold"> Are you planning to attend the welcome reception on Wednesday evening?</span>
+                Are you planning to attend the welcome reception on Wednesday evening?
                 <div className="inline">
                   <RadioGroup name="reception" selectedValue={reception} onChange={(val) => handleRadioGroup("reception", val)}>
                     <span className="radio-yes"><Radio value={true} /> Yes</span>
@@ -2099,7 +2114,7 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
               </div>
 
               <div className="v-indent">
-                <span className="bold"> Are you planning to attend the final breakfast on Sunday morning?</span>
+                Are you planning to attend the final breakfast on Sunday morning?
                 <div className="inline">
                   <RadioGroup name="sundayBreakfast" selectedValue={sundayBreakfast} onChange={(val) => handleRadioGroup("sundayBreakfast", val)}>
                     <span className="radio-yes"><Radio value={true} /> Yes</span>
@@ -2109,7 +2124,7 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
               </div>
 
               <div className="v-indent">
-                <span className="bold"> Is anybody in your group a board member?</span>
+                Is anybody in your group a board member?
                 <div className="inline">
                   <RadioGroup name="boardMember" selectedValue={boardMember} onChange={(val) => handleRadioGroup("boardMember", val)}>
                     <span className="radio-yes"><Radio value={true} /> Yes</span>
@@ -2119,7 +2134,7 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
               </div>
 
               <div className="v-indent">
-                <span className="bold"> Is anybody in your group a Chapter Chair?</span>
+                Is anybody in your group a Chapter Chair?
                 <div className="inline">
                   <RadioGroup name="chapterChair" selectedValue={chapterChair} onChange={(val) => handleRadioGroup("chapterChair", val)}>
                     <span className="radio-yes"><Radio value={true} /> Yes</span>
@@ -2181,8 +2196,8 @@ const ContactInfo = ({contact, onChangeContactInfo, onChangeCountry}) =>
 const Attendees = ({attendees, onRemove, onAdd, onChange, onChangeSelection, onChangeMeals, onChangeDate}) =>
   <div>
     <h2>Conference Attendees</h2>
-    <p>Please list everybody in your party who will be attending any part of the Conference. If no one
-       will be attending, simply click on the Next button.
+    <p>Please list everybody in your party who will be attending any part of the Conference. Be sure to include
+       the Contact Person here if he or she will be attending.
     </p>
     {attendees.length > 0  &&
       <div>
@@ -2645,28 +2660,143 @@ const SoftWear = ({blurb, shirtTypes, shirtsOrdered, onChange, onRemove, onDropd
 //----------------------------------------------------------------------------------------------------
 
 
+var userData = {};
+var userDataJSON = '';
 
-const Summary = ({contact}) =>
-  <div>
-    <h2>Summary</h2>
-    <br /><br />
-  </div>
+function add_line(indent, str) {
+  return ' '.repeat(indent*3) + str + '\n';
+}
+
+const Summary = ({thisState}) => {
+
+  let t = new Date().getTime();
+
+  let contactID = thisState.contactInfo.firstName.toLowerCase().replace(/[^A-Za-z]/g, '')+t;
+
+  userData = {
+    contactID:        contactID,
+    contactInfo:      thisState.contactInfo,
+    attendees:        thisState.attendees,
+    softAngels:       thisState.softAngels,
+    directory:        thisState.directory,
+    shirtsOrdered:    thisState.shirtsOrdered,
+    photoWaiver:      thisState.photoWaiver, 
+    attendance:       thisState.attendance,
+    reception:        thisState.reception,
+    sundayBreakfast:  thisState.sundayBreakfast,
+    boardMember:      thisState.boardMember,
+    chapterChair:     thisState.chapterChair,
+    clinicTieDowns:   thisState.clinicTieDowns,
+    joeyWatson:       thisState.joeWatson,
+  }
+
+  userDataJSON = JSON.stringify(userData);
+
+  let output = '';
+
+  let reg = '';
+  switch (userData.attendance) {
+    case 'full':    reg = 'Attending the full conference'; break;
+    case 'picnic':  reg = 'Only attending the picnic'; break;
+    case 'balloon': reg = 'Requesting a balloon (not attending)'; break;
+    default: console.log('Problem with the type of attendance');
+  }
+  output += add_line(0, '\nRegistration: ' + reg);
+  output += '\n';
+
+  output += add_line(0, '\nContact Information:');
+  output += '\n';
+  
+  output += add_line(1, userData.contactInfo.firstName + ' ' + userData.contactInfo.lastName);
+  output += add_line(1, userData.contactInfo.address1);
+  if (userData.contactInfo.address2 !== '') {
+    output += add_line(1, userData.contactInfo.address2);
+  }
+  output += add_line(1, userData.contactInfo.city + ' ' + userData.contactInfo.stateProv + ' ' + userData.contactInfo.postalCode);
+  output += add_line(1, userData.contactInfo.country);
+  output += '\n';
+
+  output += add_line(1, 'Mobile phone: ' + userData.contactInfo.phoneMobile);
+  output += add_line(1, 'Home phone:   ' + userData.contactInfo.phoneHome);
+  output += add_line(1, 'Work phone:   ' + userData.contactInfo.phoneWork);
+  output += '\n';
+
+  output += add_line(1, 'Email: ' + userData.contactInfo.email);
+  output += '\n';
+
+  //----
+
+  output += add_line(0, '\nSOFT Angel' +  (userData.softAngels.length === 1 ? '' : 's')  + ':');
+  output += '\n';
+  if (userData.softAngels.length === 0) {
+    output += add_line(1, 'There are no SOFT angels.');
+  }
+  else {
+    for (var softAngel of userData.softAngels) {
+      output += add_line(1, softAngel.firstName + ' ' + softAngel.lastName);
+      output += add_line(1, 'Date of birth: ' + softAngel.dateOfBirth.toDateString());
+      output += add_line(1, 'Date of death: ' + softAngel.dateOfDeath.toDateString());
+      output += add_line(1, 'Diagnosis: ' + (softAngel.diagnosis === "Other" ? softAngel.otherDiagnosis : softAngel.diagnosis));
+      output += '\n';
+    }
+  }
+
+  //  If 'baloon'-only, then we're done summarizing
+  if (userData.attendance !== 'balloon') {
+
+    output += add_line(0, '\nAttendees:');
+    output += '\n';
+    if (userData.attendees.length === 0) {
+      output += add_line(1, 'There are no Attendees listed.');
+    }
+    else {
+      for (var attendee of userData.attendees) {
+        output += add_line(1, attendee.firstName + ' ' + attendee.lastName);
+
+        if (attendee.peopleType === peopleTypes.CHILD) {
+          output += add_line(1, 'Child, age: ' + attendee.age);
+          if (!attendee.sibOuting) {
+            output += add_line(1, 'Sibling outing: Not attending');
+          }
+          else {
+            if (attendee.age < 5) console.log('Attendee too young for a sibling outing');
+            output += add_line(1, 'Sibling outing: ' + (attendee.age >= 12 ? "Attending older-sibling outing" : 'Attending younger-sibling outing'));
+            output += add_line(1, 'Shirt size: ' + shirtDisplay[attendee.shirtSize]);
+          }
+        }
+        else if (attendee.peopleType === peopleTypes.SOFTCHILD) {
+          output += add_line(1, attendee.peopleType);
+          output += add_line(1, 'Date of birth: ' + attendee.dateOfBirth.toDateString());
+          output += add_line(1, 'Diagnosis: ' + (attendee.diagnosis === "Other" ? attendee.otherDiagnosis : attendee.diagnosis));
+          output += add_line(1, 'Eats meals: ' + (attendee.eatsMeals ? 'Yes' : 'No'));
+        }
+        else {
+          output += add_line(1, attendee.peopleType);
+        }
+        output += '\n';
+      }
+    }
+
+  }
+
+  let html = output.replace(/\n/g, "<br />");
+  html = html.replace(/\s{3}/g,'<span class="indent"></span>')
+
+  return (
+    <div>
+      <h2>Summary</h2>
+      <p>That's it! You have completely filled out the registration. Next, please double-check the information
+         below and confirm that everything looks correct.
+      </p>
+      <p>If you find something that needs correcting, click on the BACK button below, otherwise click NEXT</p>
+      <div>{ ReactHtmlParser(html) }</div>
+    </div>
+  );
+}
 
 
 
 //----------------------------------------------------------------------------------------------------
-
-function setJSON(thisState) {
-
-  var userData = {
-    contactInfo:   thisState.contactInfo,
-    attendees:     thisState.attendees,
-    directory:     thisState.directory,
-    shirtsOrdered: thisState.shirtsOrdered,
-  }
-
-  return JSON.stringify(userData);
-}
 
 
 // Using fetch() to send data
@@ -2700,11 +2830,10 @@ const Checkout = ({thisState}) =>
     Enter some more data:
     </p>
     <form method="post" action="http://softconf.org/index.pl">
-      <input id="json-data" type="hidden" name="data" value={setJSON(thisState)}/>
+      <input id="json-data" type="hidden" name="data" value={userDataJSON}/>
       <button type="submit">Send Data</button>
     </form>
   </div>
-
 
 
 //----------------------------------------------------------------------------------------------------
@@ -2887,6 +3016,7 @@ function ucFirst(string)
 function smartFixName(text) {
 
     text = text.trim();
+    text = text.replace(/\s+/g, ' ');
 
     // Don't do anything if the text has BOTH upper and lowercase letters
     if (text.match(/[A-Z]/)  &&  text.match(/[a-z]/)) {
@@ -2931,7 +3061,7 @@ function smartFixAddress(address) {
     address = smartFixName(address);
 
     //  No need for double spaces in addresses
-    address = address.replace(/\s+/ig, ' ');
+    address = address.replace(/\s+/g, ' ');
 
     //  The substitions, below, are made even if the
     //  address is entered in mixed case.
@@ -3006,7 +3136,7 @@ function smartFixPhone(phone) {
 
 
 function smartFixEmail(email) {
-    email = email.trim().replace(/\s+/g, "");
+    email = email.trim().replace(/\s+/g, '');
     //  Correct misspellings of gmail.com, etc
     return email.toLowerCase();
 }
