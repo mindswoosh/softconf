@@ -46,7 +46,7 @@ library.add(faQuestionCircle);
 library.add(faBars);
 library.add(faRibbon);
 
-const DEBUG = true;  //  Set to false for production
+const DEBUG = false;  //  Set to false for production
 
 var nextID = 10000;
 
@@ -2779,6 +2779,8 @@ const Summary = ({thisState}) => {
 
   }
 
+  output += '\n';
+  output += '==> SUMMARY page incomplete. Still being worked on...\n';
   let html = output.replace(/\n/g, "<br />");
   html = html.replace(/\s{3}/g,'<span class="indent"></span>')
 
