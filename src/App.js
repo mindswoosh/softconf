@@ -2088,12 +2088,14 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
       {attendance !== 'balloon' &&
         <div>
           <div className="v-indent">
+            <b>Photography Waiver</b><br />
+            <div className="inline photo-waiver-blurb">Photos and videos will be taken throughout the conference. Click the waiver acceptance box to indicate that you agree to this:</div>
             <table>
               <tbody>
                 <tr>
                   <td valign="top"><Checkbox defaultChecked={photoWaiver} onChange={event => handleCheckbox(event, "photoWaiver")} /> </td>
                   <td>
-                    <span>I hereby give permission for images of my child, captured during the SOFT Conference through video, photo and digital camera, to be used solely for the purposes of SOFT promotional material and publications, and waive any rights of compensation or ownership thereto.</span>
+                    <span>I agree that my registration means I accept that random photos and videos will be taken at conference which may appear on social media or the Soft website.</span>
                   </td>
                 </tr>
               </tbody>

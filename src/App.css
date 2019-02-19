@@ -69,6 +69,10 @@ p {
   margin-top: 1.25em;
 }
 
+.v-indent-below {
+  margin-bottom: 1.25em;
+}
+
 .select-height {
   line-height: 40px;
   height: 40px;
@@ -187,8 +191,13 @@ p {
   vertical-align: top;
   padding-right: 10px;
 }
+
 .photo-waiver {
   width: 75%;
+}
+
+.photo-waiver-blurb {
+  margin: 10px 0;
 }
 
 /*.edit-age {
