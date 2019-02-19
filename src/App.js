@@ -307,10 +307,10 @@ const eventInfoDefault = {
     ],
 
   remembranceBlurb: "This year’s Remembrance Outing will be to Matthaei Botanical Gardens. This event is only for those who have lost a child. If you plan to attend, please put a checkmark next to each person who will be attending, and select the type of lunch for each. Otherwise, simply click the Next button.",
-  remembranceMenu: {
-      V: 'Vegetarian',
-      N: 'Non-vegetarian',
-    },
+  remembranceMenu: [
+      'Vegetarian',
+      'Non-vegetarian',
+    ],
 
   picnicBlurb: "The Annual Ryan Cantrell Memorial Picnic and Balloon release will be at Dawn Farms on Saturday July 20th from 11:30–3pm.",
 
@@ -882,7 +882,6 @@ class App extends Component {
                   <ChapterChair
                     attendees={attendees}
                     onChange={this.onChangeChapterChair}
-                    menuInfo={eventInfo.remembranceMenu}
                   />,
 
               [pages.DIRECTORY]:
@@ -2498,7 +2497,7 @@ const Picnic = ({attendees, onChange, onChangeTiedown, blurb}) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const ChapterChair = ({ attendees, menuInfo, onChange, onChangeLunch }) =>
+const ChapterChair = ({ attendees, onChange, onChangeLunch }) =>
   <div>
     <h2>Chapter Chair Luncheon</h2>
     <p>Is anyone in your party a registered or prospective Chapter Chair? If so, please check everyone
@@ -2704,6 +2703,18 @@ const Summary = ({thisState}) => {
   output += add_line(0, '\nRegistration: ' + reg);
   output += '\n';
 
+
+  //  General questions
+
+  if (userData.attendance === 'full') {
+    output += add_line(0, 'Attending Wednesday reception: ' + (userData.reception ? 'Yes' : 'No')); 
+    output += add_line(0, 'Attending Sunday brunch: ' + (userData.sundayBreakfast ? 'Yes' : 'No')); 
+    output += add_line(0, 'Board member: ' + (userData.boardMember ? 'Yes' : 'No'));
+    output += add_line(0, 'Chapter Chair: ' + (userData.chapterChair ? 'Yes' : 'No'));
+    output += '\n';
+  }
+
+
   output += add_line(0, '\nContact Information:');
   output += '\n';
   
@@ -2730,6 +2741,7 @@ const Summary = ({thisState}) => {
   output += '\n';
   if (userData.softAngels.length === 0) {
     output += add_line(1, 'There are no SOFT angels.');
+    output += '\n';
   }
   else {
     for (var softAngel of userData.softAngels) {
@@ -2741,7 +2753,7 @@ const Summary = ({thisState}) => {
     }
   }
 
-  //  If 'baloon'-only, then we're done summarizing
+  //  If 'balloon'-only, then we're done summarizing
   if (userData.attendance !== 'balloon') {
 
     output += add_line(0, '\nAttendees:');
@@ -2756,11 +2768,11 @@ const Summary = ({thisState}) => {
         if (attendee.peopleType === peopleTypes.CHILD) {
           output += add_line(1, 'Child, age: ' + attendee.age);
           if (!attendee.sibOuting) {
-            output += add_line(1, 'Sibling outing: Not attending');
+            output += add_line(1, 'Attending Sibling outing: No');
           }
           else {
             if (attendee.age < 5) console.log('Attendee too young for a sibling outing');
-            output += add_line(1, 'Sibling outing: ' + (attendee.age >= 12 ? "Attending older-sibling outing" : 'Attending younger-sibling outing'));
+            output += add_line(1, (attendee.age >= 12 ? "Attending older-sibling outing" : 'Attending younger-sibling outing'));
             output += add_line(1, 'Shirt size: ' + shirtDisplay[attendee.shirtSize]);
           }
         }
@@ -2770,14 +2782,33 @@ const Summary = ({thisState}) => {
           output += add_line(1, 'Diagnosis: ' + (attendee.diagnosis === "Other" ? attendee.otherDiagnosis : attendee.diagnosis));
           output += add_line(1, 'Eats meals: ' + (attendee.eatsMeals ? 'Yes' : 'No'));
         }
+        else if (attendee.peopleType === peopleTypes.ADULT) {
+          output += add_line(1, attendee.peopleType);         //  Adult and Professional
+        }
         else {
-          output += add_line(1, attendee.peopleType);
+                  output += add_line(1, attendee.peopleType);         //  Professional
+        }
+        output += add_line(1, 'Welcome dinner meal: ' + (attendee.welcomeDinner !== '' ? attendee.welcomeDinner : 'N/A'));
+        if (attendee.peopleType === peopleTypes.ADULT  &&  userData.softAngels.length !== 0) {
+          output += add_line(1, 'Attending Remembrance Lunch: ' + (attendee.rembOuting ? 'Yes' : 'No'));
+          if (attendee.rembOuting) {
+            output += add_line(1, 'Remembrance meal: ' + attendee.rembLunch);
+          }
         }
         output += '\n';
       }
     }
 
   }
+
+
+  output += add_line(0, '\nFamily Directory:');
+  output += '\n';
+  output += add_line(1, 'Include phone: ' + (userData.directory.phone ? 'Yes' : 'No'));
+  output += add_line(1, 'Include email: ' + (userData.directory.email ? 'Yes' : 'No'));
+  output += add_line(1, 'Include city: ' + (userData.directory.city ? 'Yes' : 'No'));
+  output += '\n';
+
 
   output += '\n';
   output += '==> SUMMARY page incomplete. Still being worked on...\n';
@@ -2906,7 +2937,7 @@ const Diagnosis = ({value, onChange, className="edit-diagnosis"}) => {
 
 
 const RembLunch = ({value, menuInfo, isDisabled, onChange, className="edit-remb-lunch"}) => {
-      const optionsRembLunch = Object.keys(menuInfo).map(k => { return { label: menuInfo[k], value: k } });
+      const optionsRembLunch = arrayToOptions(menuInfo)
       const defaultOpt = optionsRembLunch.find(opt => (opt.value === value));
       return (
         <div className={className}>
