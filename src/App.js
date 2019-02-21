@@ -525,12 +525,12 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     lastName,
     peopleType,
 
-    welcomeDinner: '',
+    welcomeDinner: '',            //  Meal choice
 
     // Adults
-    rembOuting: 0,
-    rembLunch:  '',
-    chapterChair: '',
+    rembOuting: false,            //  Attending the remembrance outing?
+    rembLunch:  '',               //  Meal choice
+    chapterChairLunch: false,     //  Attending the luncheon?
     workshops: {},
     childCareSessions: {},
 
@@ -540,15 +540,14 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     shirtSize:   '',
 
     // SOFT Child / Angel
-    softAngel:   false,
     dateOfBirth: null,
-    dateOfDeath: null,
+    dateOfDeath: null,            //  SOFT angels only 
     diagnosis:   null,
     otherDiagnosis: "",
     eatsMeals:   false,
 
     // Picnic
-    picnic: 0,
+    picnic: false,                //  Needs transportation to the picnic?
     picnicTiedown: 0,
 
     // Professional
@@ -674,7 +673,7 @@ class App extends Component {
     this.onShirtDropdown      = this.onShirtDropdown.bind(this);
     this.onAddShirt           = this.onAddShirt.bind(this);
 
-    this.onChangeChapterChair = this.onChangeChapterChair.bind(this);
+    this.onChangechapterChairLunch = this.onChangechapterChairLunch.bind(this);
 
     this.onPrevPage           = this.onPrevPage.bind(this);
     this.onNextPage           = this.onNextPage.bind(this);
@@ -881,7 +880,7 @@ class App extends Component {
               [pages.CHAPTERCHAIR]:
                   <ChapterChair
                     attendees={attendees}
-                    onChange={this.onChangeChapterChair}
+                    onChange={this.onChangechapterChairLunch}
                   />,
 
               [pages.DIRECTORY]:
@@ -1842,11 +1841,11 @@ class App extends Component {
   //  Chapter Chair page
   
 
-  onChangeChapterChair(event, id) {
+  onChangechapterChairLunch(event, id) {
     let { attendees } = this.state;
     let i = attendees.findIndex(a => a.id === id);
     console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
-    attendees[i].chapterChair = !attendees[i].chapterChair;
+    attendees[i].chapterChairLunch = !attendees[i].chapterChairLunch;
     this.setState ({
       attendees
     });
@@ -2510,7 +2509,7 @@ const ChapterChair = ({ attendees, onChange, onChangeLunch }) =>
       {attendees.map( (a,i) =>
         {return a.peopleType === peopleTypes.ADULT ? 
           <div key={a.id} className="chair-row">
-            <Checkbox defaultChecked={a.chapterChair} onChange={event => onChange(event, a.id)} />
+            <Checkbox defaultChecked={a.chapterChairLunch} onChange={event => onChange(event, a.id)} />
             <span className="remb-name">{a.firstName} {a.lastName}</span>
           </div>
           : null
@@ -2661,6 +2660,12 @@ const SoftWear = ({blurb, shirtTypes, shirtsOrdered, onChange, onRemove, onDropd
 //----------------------------------------------------------------------------------------------------
 
 
+function boolToYN(f) {
+  if (f) return "Yes";
+  return "No";
+}
+
+
 var userData = {};
 var userDataJSON = '';
 
@@ -2687,6 +2692,7 @@ const Summary = ({thisState}) => {
     sundayBreakfast:  thisState.sundayBreakfast,
     boardMember:      thisState.boardMember,
     chapterChair:     thisState.chapterChair,
+    clinics:          thisState.eventInfo.clinics,
     clinicTieDowns:   thisState.clinicTieDowns,
     joeyWatson:       thisState.joeWatson,
   }
@@ -2746,7 +2752,7 @@ const Summary = ({thisState}) => {
     output += '\n';
   }
   else {
-    for (var softAngel of userData.softAngels) {
+    for (let softAngel of userData.softAngels) {
       output += add_line(1, softAngel.firstName + ' ' + softAngel.lastName);
       output += add_line(1, 'Date of birth: ' + softAngel.dateOfBirth.toDateString());
       output += add_line(1, 'Date of death: ' + softAngel.dateOfDeath.toDateString());
@@ -2758,50 +2764,106 @@ const Summary = ({thisState}) => {
   //  If 'balloon'-only, then we're done summarizing
   if (userData.attendance !== 'balloon') {
 
-    output += add_line(0, '\nAttendees:');
-    output += '\n';
-    if (userData.attendees.length === 0) {
-      output += add_line(1, 'There are no Attendees listed.');
-    }
-    else {
-      for (var attendee of userData.attendees) {
-        output += add_line(1, attendee.firstName + ' ' + attendee.lastName);
-
-        if (attendee.peopleType === peopleTypes.CHILD) {
-          output += add_line(1, 'Child, age: ' + attendee.age);
-          if (!attendee.sibOuting) {
-            output += add_line(1, 'Attending Sibling outing: No');
-          }
-          else {
-            if (attendee.age < 5) console.log('Attendee too young for a sibling outing');
-            output += add_line(1, (attendee.age >= 12 ? "Attending older-sibling outing" : 'Attending younger-sibling outing'));
-            output += add_line(1, 'Shirt size: ' + shirtDisplay[attendee.shirtSize]);
-          }
-        }
-        else if (attendee.peopleType === peopleTypes.SOFTCHILD) {
-          output += add_line(1, attendee.peopleType);
-          output += add_line(1, 'Date of birth: ' + attendee.dateOfBirth.toDateString());
-          output += add_line(1, 'Diagnosis: ' + (attendee.diagnosis === "Other" ? attendee.otherDiagnosis : attendee.diagnosis));
-          output += add_line(1, 'Eats meals: ' + (attendee.eatsMeals ? 'Yes' : 'No'));
-        }
-        else if (attendee.peopleType === peopleTypes.ADULT) {
-          output += add_line(1, attendee.peopleType);         //  Adult and Professional
+        output += add_line(0, '\nAttendees:');
+        output += '\n';
+        if (userData.attendees.length === 0) {
+          output += add_line(1, 'There are no Attendees listed.');
         }
         else {
-                  output += add_line(1, attendee.peopleType);         //  Professional
+          for (var attendee of userData.attendees) {
+            output += add_line(1, attendee.firstName + ' ' + attendee.lastName);
+
+            if (attendee.peopleType === peopleTypes.CHILD) {
+              output += add_line(1, 'Child, age: ' + attendee.age);
+              if (!attendee.sibOuting) {
+                output += add_line(1, 'Attending Sibling outing: No');
+              }
+              else {
+                if (attendee.age < 5) console.log('Attendee too young for a sibling outing');
+                output += add_line(1, (attendee.age >= 12 ? "Attending older-sibling outing" : 'Attending younger-sibling outing'));
+                output += add_line(1, 'Shirt size: ' + shirtDisplay[attendee.shirtSize]);
+              }
+            }
+            else if (attendee.peopleType === peopleTypes.SOFTCHILD) {
+              output += add_line(1, attendee.peopleType);
+              output += add_line(1, 'Date of birth: ' + attendee.dateOfBirth.toDateString());
+              output += add_line(1, 'Diagnosis: ' + (attendee.diagnosis === "Other" ? attendee.otherDiagnosis : attendee.diagnosis));
+              output += add_line(1, 'Eats meals: ' + (attendee.eatsMeals ? 'Yes' : 'No'));
+            }
+            else if (attendee.peopleType === peopleTypes.ADULT) {
+              output += add_line(1, attendee.peopleType);         //  Adult and Professional
+            }
+            else {
+                      output += add_line(1, attendee.peopleType);         //  Professional
+            }
+            output += add_line(1, 'Welcome dinner meal: ' + (attendee.welcomeDinner !== '' ? attendee.welcomeDinner : 'N/A'));
+            if (attendee.peopleType === peopleTypes.ADULT  &&  userData.softAngels.length !== 0) {
+              output += add_line(1, 'Attending Remembrance Lunch: ' + (attendee.rembOuting ? 'Yes' : 'No'));
+              if (attendee.rembOuting) {
+                output += add_line(1, 'Remembrance meal: ' + attendee.rembLunch);
+              }
+            }
+            output += '\n';
+          }
         }
-        output += add_line(1, 'Welcome dinner meal: ' + (attendee.welcomeDinner !== '' ? attendee.welcomeDinner : 'N/A'));
-        if (attendee.peopleType === peopleTypes.ADULT  &&  userData.softAngels.length !== 0) {
-          output += add_line(1, 'Attending Remembrance Lunch: ' + (attendee.rembOuting ? 'Yes' : 'No'));
-          if (attendee.rembOuting) {
-            output += add_line(1, 'Remembrance meal: ' + attendee.rembLunch);
+
+        //----
+
+
+        output += add_line(0, '\nClinics:');
+        output += '\n';
+        output += add_line(1, 'Transportation tie-downs needed: ' + userData.clinicTieDowns);
+        output += '\n';
+
+        let clinicOrder = 1;
+        for (let clinic of userData.clinics) {
+          let suffix = 'th';
+          if (clinicOrder === 1)  suffix = 'st';
+          if (clinicOrder === 2)  suffix = 'nd';
+          if (clinicOrder === 3)  suffix = 'rd';
+          output += add_line(1, clinicOrder + suffix + ' Choice: ' + clinic);
+          clinicOrder++;
+        }
+        output += '\n';
+
+
+        //----
+
+
+        if (userData.softAngels.length !== 0) {
+          output += add_line(0, '\nAttending Remembrance Outing:');
+          output += '\n';
+
+          for (let attendee of userData.attendees) {
+            if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL) {
+              output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.rembOuting) + (attendee.rembOuting ? ' -- meal: ' + attendee.rembLunch : ''));
+            }
+          }
+          output += '\n';
+        }
+
+        //----
+
+
+        output += add_line(0, '\nPicnic:');
+        output += '\n';
+        output += add_line(1, 'Needs transporation to the picnic:');
+        output += '\n';
+
+        for (let attendee of userData.attendees) {
+          if (attendee.peopleType === peopleTypes.SOFTCHILD) {
+            output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnic) + ' -- Needs tie-down: ' + boolToYN(attendee.picnicTiedown));
+          }
+          else {
+            output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnic));
           }
         }
         output += '\n';
-      }
-    }
 
   }
+
+
+  //----
 
 
   output += add_line(0, '\nFamily Directory:');
@@ -2810,6 +2872,9 @@ const Summary = ({thisState}) => {
   output += add_line(1, 'Include email: ' + (userData.directory.email ? 'Yes' : 'No'));
   output += add_line(1, 'Include city: ' + (userData.directory.city ? 'Yes' : 'No'));
   output += '\n';
+
+
+  //----
 
 
   output += '\n';
