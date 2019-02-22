@@ -2680,21 +2680,23 @@ const Summary = ({thisState}) => {
   let contactID = thisState.contactInfo.firstName.toLowerCase().replace(/[^A-Za-z]/g, '')+t;
 
   userData = {
-    contactID:        contactID,
-    contactInfo:      thisState.contactInfo,
-    attendees:        thisState.attendees,
-    softAngels:       thisState.softAngels,
-    directory:        thisState.directory,
-    shirtsOrdered:    thisState.shirtsOrdered,
-    photoWaiver:      thisState.photoWaiver, 
-    attendance:       thisState.attendance,
-    reception:        thisState.reception,
-    sundayBreakfast:  thisState.sundayBreakfast,
-    boardMember:      thisState.boardMember,
-    chapterChair:     thisState.chapterChair,
-    clinics:          thisState.eventInfo.clinics,
-    clinicTieDowns:   thisState.clinicTieDowns,
-    joeyWatson:       thisState.joeWatson,
+    contactID:          contactID,
+    contactInfo:        thisState.contactInfo,
+    attendees:          thisState.attendees,
+    softAngels:         thisState.softAngels,
+    directory:          thisState.directory,
+    shirtsOrdered:      thisState.shirtsOrdered,
+    photoWaiver:        thisState.photoWaiver, 
+    attendance:         thisState.attendance,
+    reception:          thisState.reception,
+    sundayBreakfast:    thisState.sundayBreakfast,
+    boardMember:        thisState.boardMember,
+    chapterChair:       thisState.chapterChair,
+    clinics:            thisState.eventInfo.clinics,
+    clinicTieDowns:     thisState.clinicTieDowns,
+    workshops:          thisState.workshops,
+    childCareSessions:  thisState.childCareSessions,
+    joeyWatson:         thisState.joeWatson,
   }
 
   userDataJSON = JSON.stringify(userData);
@@ -2810,21 +2812,52 @@ const Summary = ({thisState}) => {
         //----
 
 
-        output += add_line(0, '\nClinics:');
-        output += '\n';
-        output += add_line(1, 'Transportation tie-downs needed: ' + userData.clinicTieDowns);
-        output += '\n';
+        let anySoftChildren = userData.attendees.find( a => { 
+          return (a.peopleType === peopleTypes.SOFTCHILD);
+        });
 
-        let clinicOrder = 1;
-        for (let clinic of userData.clinics) {
-          let suffix = 'th';
-          if (clinicOrder === 1)  suffix = 'st';
-          if (clinicOrder === 2)  suffix = 'nd';
-          if (clinicOrder === 3)  suffix = 'rd';
-          output += add_line(1, clinicOrder + suffix + ' Choice: ' + clinic);
-          clinicOrder++;
+        if (anySoftChildren) {
+            output += add_line(0, '\nClinics:');
+            output += '\n';
+            output += add_line(1, 'Transportation tie-downs needed: ' + userData.clinicTieDowns);
+            output += '\n';
+
+            let clinicOrder = 1;
+            for (let clinic of userData.clinics) {
+              let suffix = 'th';
+              if (clinicOrder === 1)  suffix = 'st';
+              if (clinicOrder === 2)  suffix = 'nd';
+              if (clinicOrder === 3)  suffix = 'rd';
+              output += add_line(1, clinicOrder + suffix + ' Choice: ' + clinic);
+              clinicOrder++;
+            }
+            output += '\n';
         }
-        output += '\n';
+
+
+        //----
+
+
+        let adults = userData.attendees.filter( a => { 
+          return (a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL);
+        });
+
+        if (adults.length > 0) {
+
+            output += add_line(0, '\nWorkshops:');
+            output += '\n';
+
+            for (let adult of adults) {
+
+              output += add_line(1, adult.firstName + ' ' + adult.lastName + ':');
+
+              for (let sess of thisState.eventInfo.workshopSessions) {
+                let workshop = sess.workshops.find( ws => ws.id === adult.workshops[sess.id]);
+                output += add_line(1, sess.name + ': ' + workshop.title + (workshop.moderator !== '' ? ' - ' + workshop.moderator : ''));
+              }
+              output += '\n';
+            }
+        }
 
 
         //----
@@ -2841,6 +2874,7 @@ const Summary = ({thisState}) => {
           }
           output += '\n';
         }
+
 
         //----
 
