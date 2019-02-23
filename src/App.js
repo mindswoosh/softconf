@@ -265,7 +265,7 @@ const eventInfoDefault = {
   olderSibOutingBlurb: "The Older Sibling outing is for children 12 and up and will be to the Detroit Zoo on July 18th. Lunch is included in the outing and every child will get a SOFT Sibs T-shirt. Price for the outing is $35.",
   olderSibCost: 35,
 
-  childCareBlurb: "Childcare will be available during the Workshops and Clinics and is available for children up to age 11 and for SOFT children of any age. Please refer to the brochure for the times of the Workshops and Clinics you plan to attend in which you might need childcare.",
+  childCareBlurb: "Childcare will be available during the Workshops and Clinics and is available for children 11 and under and for SOFT children of any age. Please refer to the brochure for the times of the Workshops and Clinics you plan to attend in which you might need childcare.",
   childCareSessions: [
     {
       id: 'cc1',
@@ -312,7 +312,7 @@ const eventInfoDefault = {
       'Non-vegetarian',
     ],
 
-  picnicBlurb: "The Annual Ryan Cantrell Memorial Picnic and Balloon release will be at Dawn Farms on Saturday July 20th from 11:30–3pm.",
+  picnicBlurb: "The Annual Ryan Cantrell Memorial Picnic and Balloon Celebration will be at Dawn Farms on Saturday July 20th from 11:30–3pm.",
 
   shirtsBlurb: "Order your SOFT conference shirts ahead of time so they'll be ready and waiting for you when you check in at the conference. Note that the Sib shirts given to the kids at the Sibling Outings are different than these shirts.",
 
@@ -1140,9 +1140,18 @@ class App extends Component {
             alert('To register for the conference, you must agree to the photo and video waiver. Please check the box to agree.');
           }
           else {
+
+            if (!this.state.chapterChair) {           //  If they reset Chapter Chair from Y to N, reset lunch attendance to false
+              attendees = attendees.map(a => { 
+                a.chapterChairLunch = false;
+                return a;
+              });
+            }
+
             pageHistory.push(currentPage);
 
             this.setState({
+              attendees,
               pageHistory,
               currentPage: pages.CONTACT,
             });
@@ -1425,9 +1434,22 @@ class App extends Component {
 
 
       case pages.CHILDCARE:
+
+          attendees = attendees.map(a => {
+            if ((a.peopleType === peopleTypes.CHILD  &&  a.age <= 11)  ||  a.peopleType === peopleTypes.SOFTCHILD) {
+              for (let sess of this.state.eventInfo.childCareSessions) {
+                if (!qualifiesChildCare(a.age, sess, this.state.boardMember)) {
+                  a.childCareSessions[sess.id] = false;                               //  Make sure non-board members always have false for board-only settings
+                }
+              }
+            }
+            return a;
+          });
+
           pageHistory.push(currentPage);
 
           this.setState({
+            attendees,
             pageHistory,
             currentPage: this.nextPage(pages.CHAPTERCHAIR),
           });
@@ -2442,6 +2464,11 @@ const Remembrance = ({ attendees, blurb, menuInfo, onChange, onChangeLunch }) =>
 //----------------------------------------------------------------------------------------------------
 
 
+function qualifiesChildCare(age, session, isBoardMember) {
+  return (!session.pre5Only || age < 5) && (!session.boardOnly || isBoardMember);
+}
+
+
 const Childcare = ({attendees, childCareSessions, boardMember, onChange, blurb}) =>
   <div>
     <h2>Childcare</h2>
@@ -2449,11 +2476,11 @@ const Childcare = ({attendees, childCareSessions, boardMember, onChange, blurb})
     <p>Please put a checkmark next to each timeslot where you will need childcare.</p>
     <div className="remembrance">
       {attendees.map( (a,i) => 
-        {return (a.peopleType === peopleTypes.SOFTCHILD  ||  (a.peopleType === peopleTypes.CHILD  &&  a.age < 12))  &&
+        {return (a.peopleType === peopleTypes.SOFTCHILD  ||  (a.peopleType === peopleTypes.CHILD  &&  a.age <= 11))  &&
           <div key={a.id} className="indent">
             <span className="remb-name"><strong>{a.firstName} {a.lastName}</strong></span>
             {childCareSessions.map( (ccs,i) =>
-              { return ((!ccs.pre5Only || a.age < 5) && (!ccs.boardOnly || boardMember) ?
+              { return (qualifiesChildCare(a.age, ccs, boardMember) ?
                   <div key={a.id + "-" + ccs.id} className="indent" >
                     <Checkbox defaultChecked={a.childCareSessions[ccs.id]} onChange={event => onChange(event, a.id, ccs.id)} />
                     {ccs.title}
@@ -2717,10 +2744,10 @@ const Summary = ({thisState}) => {
   //  General questions
 
   if (userData.attendance === 'full') {
-    output += add_line(0, 'Attending Wednesday reception: ' + (userData.reception ? 'Yes' : 'No')); 
-    output += add_line(0, 'Attending Sunday brunch: ' + (userData.sundayBreakfast ? 'Yes' : 'No')); 
-    output += add_line(0, 'Board member: ' + (userData.boardMember ? 'Yes' : 'No'));
-    output += add_line(0, 'Chapter Chair: ' + (userData.chapterChair ? 'Yes' : 'No'));
+    output += add_line(0, 'Attending Wednesday reception: ' + boolToYN(userData.reception)); 
+    output += add_line(0, 'Attending Sunday brunch: ' + boolToYN(userData.sundayBreakfast)); 
+    output += add_line(0, 'Board member: ' + boolToYN(userData.boardMember));
+    output += add_line(0, 'Chapter Chair: ' + boolToYN(userData.chapterChair));
     output += '\n';
   }
 
@@ -2790,7 +2817,7 @@ const Summary = ({thisState}) => {
               output += add_line(1, attendee.peopleType);
               output += add_line(1, 'Date of birth: ' + attendee.dateOfBirth.toDateString());
               output += add_line(1, 'Diagnosis: ' + (attendee.diagnosis === "Other" ? attendee.otherDiagnosis : attendee.diagnosis));
-              output += add_line(1, 'Eats meals: ' + (attendee.eatsMeals ? 'Yes' : 'No'));
+              output += add_line(1, 'Eats meals: ' + boolToYN(attendee.eatsMeals));
             }
             else if (attendee.peopleType === peopleTypes.ADULT) {
               output += add_line(1, attendee.peopleType);         //  Adult and Professional
@@ -2800,7 +2827,7 @@ const Summary = ({thisState}) => {
             }
             output += add_line(1, 'Welcome dinner meal: ' + (attendee.welcomeDinner !== '' ? attendee.welcomeDinner : 'N/A'));
             if (attendee.peopleType === peopleTypes.ADULT  &&  userData.softAngels.length !== 0) {
-              output += add_line(1, 'Attending Remembrance Lunch: ' + (attendee.rembOuting ? 'Yes' : 'No'));
+              output += add_line(1, 'Attending Remembrance Lunch: ' + boolToYN(attendee.rembOuting));
               if (attendee.rembOuting) {
                 output += add_line(1, 'Remembrance meal: ' + attendee.rembLunch);
               }
@@ -2863,6 +2890,34 @@ const Summary = ({thisState}) => {
         //----
 
 
+        let children = userData.attendees.filter( a => { 
+          return ((a.peopleType === peopleTypes.CHILD  &&  a.age <= 11)  ||  a.peopleType === peopleTypes.SOFTCHILD);
+        });
+
+        if (children.length > 0) {
+
+            output += add_line(0, '\nChildcare:');
+            output += '\n';
+
+            for (let child of children) {
+
+              output += add_line(1, child.firstName + ' ' + child.lastName + ':');
+
+              for (let sess of thisState.eventInfo.childCareSessions) {
+
+                if (child.childCareSessions.hasOwnProperty(sess.id) && qualifiesChildCare(child.age, sess, thisState.boardMember)) {
+                  output += add_line(1, sess.title + ': ' + boolToYN(child.childCareSessions[sess.id]));
+                }
+              }
+
+              output += '\n';
+            }
+        }
+
+
+        //----
+
+
         if (userData.softAngels.length !== 0) {
           output += add_line(0, '\nAttending Remembrance Outing:');
           output += '\n';
@@ -2886,7 +2941,8 @@ const Summary = ({thisState}) => {
 
         for (let attendee of userData.attendees) {
           if (attendee.peopleType === peopleTypes.SOFTCHILD) {
-            output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnic) + ' -- Needs tie-down: ' + boolToYN(attendee.picnicTiedown));
+            output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnic) + 
+                      (attendee.picnic ? ' -- Needs tie-down: ' + boolToYN(attendee.picnicTiedown) : ''));
           }
           else {
             output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnic));
@@ -2894,6 +2950,25 @@ const Summary = ({thisState}) => {
         }
         output += '\n';
 
+
+        //----
+
+
+        if (userData.chapterChair) {
+          output += add_line(0, '\nAttending Chapter Chair Luncheon:');
+          output += '\n';
+
+          for (let attendee of userData.attendees) {
+            if (attendee.peopleType === peopleTypes.ADULT) {
+              output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.chapterChairLunch));
+            }
+            else {
+              attendee.chapterChairLunch = false;           //  Enforce proper state for non-adults
+            }
+          }
+
+          output += '\n';
+        }
   }
 
 
@@ -2960,9 +3035,11 @@ const Summary = ({thisState}) => {
 const Checkout = ({thisState}) =>
   <div>
     <h2>Checkout</h2>
-    <p>
-    Enter some more data:
-    </p>
+    <p>Enter some more data:</p>
+
+    <p>UNDER CONSTRUCTION</p>
+    You cannot submit the data yet.
+    <p>UNDER CONSTRUCTION</p>
     <form method="post" action="http://softconf.org/index.pl">
       <input id="json-data" type="hidden" name="data" value={userDataJSON}/>
       <button type="submit">Send Data</button>
