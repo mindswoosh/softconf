@@ -14,6 +14,8 @@
 //  For event handlers, if we always pass the value and not the event|opt|whatever, then
 //  a lot of the existing handlers could be cut to a much smaller number since they
 //  would all simply take values and ids, and sometimes property names.
+//
+//  Use optFromOptions() instead of "find"ing on the fly
 
 
 import React, { Component } from 'react';
@@ -429,6 +431,9 @@ function arrayToOptions(a) {
   return options;
 }
 
+function optFromOptions(options, value) {
+  return options.find(opt => (opt.value === value));
+}
 
 const optionsYesNo = [
   { label: "Yes", value: 1 },
@@ -486,9 +491,10 @@ const Diagnoses = [
 
 const optionsDiagnoses = arrayToOptions(Diagnoses);
 
-const optionsShirtQuantity = arrayToOptions([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+const optionsShirtQuantity = arrayToOptions([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
 const optionsShirtSizes = [
+  { label: "Select...",    value: ""     },
   { label: "Youth - S",    value: "ys"   },
   { label: "Youth - M",    value: "ym"   },  
   { label: "Youth - L",    value: "yl"   },
@@ -574,7 +580,7 @@ class App extends Component {
       currentPage: pages.WELCOME,
       pageHistory: [],                //  Keep a history of the pages visited for use by the Back button
       workshopAttendee: 0,
-      shirtDropdowns: {},
+      shirtDropdowns: {},             //  { id1: { size, quantity }, id2: {...} }
 
       eventInfo: {
         eventTitle: '',
@@ -623,7 +629,7 @@ class App extends Component {
       //  Clinic list?
       clinicTieDowns: '',
 
-      shirtsOrdered: [],
+      shirtsOrdered: [],              //  { shirtID, quantity, size }
     };
 
 
@@ -898,6 +904,7 @@ class App extends Component {
                     blurb={eventInfo.shirtsBlurb}
                     shirtTypes={eventInfo.shirtTypes}
                     shirtsOrdered={this.state.shirtsOrdered}
+                    shirtDropdowns={this.state.shirtDropdowns}
                     onRemove={this.onRemoveShirt}
                     onDropdown={this.onShirtDropdown}
                     onAdd={this.onAddShirt}
@@ -1416,8 +1423,8 @@ class App extends Component {
               return a;
             });
 
-            let $missing_shirt = attendees.find( a => { return (a.peopleType === peopleTypes.CHILD  &&  a.age >= 12  &&  a.sibOuting  &&  a.shirtSize === '') });
-            if ($missing_shirt) {
+            let missing_shirt = attendees.find( a => { return (a.peopleType === peopleTypes.CHILD  &&  a.age >= 12  &&  a.sibOuting  &&  a.shirtSize === '') });
+            if (missing_shirt) {
               alert("Oops! Please select a shirt for each person attending the outing.");
             }
             else {
@@ -1478,9 +1485,9 @@ class App extends Component {
             return a;
           });
 
-          let $missing_lunch = attendees.find( a => { return (a.rembOuting  &&  a.rembLunch === '' ) });
+          let missing_lunch = attendees.find( a => { return (a.rembOuting  &&  a.rembLunch === '' ) });
 
-          if ($missing_lunch) {
+          if (missing_lunch) {
             alert("Oops! Please select a lunch for each person attending.");
           }
           else {
@@ -1534,14 +1541,28 @@ class App extends Component {
 
 
       case pages.SOFTWEAR:
-          // let attendees = this.state.attendees;
+          let shirtDropdowns = this.state.shirtDropdowns;
 
-          pageHistory.push(currentPage);
+          let keys = Object.keys(shirtDropdowns);
 
-          this.setState({
-            pageHistory,
-            currentPage: pages.SUMMARY,
-          });
+          let badDropdown = false;
+          for (let key of keys) {
+            if (shirtDropdowns[key].quantity !== 0) {
+              badDropdown = true;
+            }
+          }
+
+          if (badDropdown) {
+            alert('Oops! You have selected a number of shirts but have not clicked the "Add Shirts to Order" button. Either click the button to add the order, or set all shirt quantities to "0" in the "Quantity" selections.');
+          }
+          else {
+            pageHistory.push(currentPage);
+
+            this.setState({
+              pageHistory,
+              currentPage: pages.SUMMARY,
+            });
+          }
 
           break;
 
@@ -1907,8 +1928,8 @@ class App extends Component {
   }
 
   onAddShirt(id) {
-    let { shirtsOrdered } = this.state;
-    let choices = this.state.shirtDropdowns[id];
+    let { shirtsOrdered, shirtDropdowns } = this.state;
+    let choices = shirtDropdowns[id];
 
     if (choices.size === ''  ||  choices.quantity === 0) {
       alert('Please select both a quantity and size');
@@ -1923,8 +1944,12 @@ class App extends Component {
 
       shirtsOrdered.push(newOrder);
 
+      choices.size = '';
+      choices.quantity = 0;
+
       this.setState({
-        shirtsOrdered
+        shirtsOrdered,
+        shirtDropdowns
       });
     }
   }
@@ -2240,11 +2265,11 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangeSelection, onC
               <div>
                 <p className="row-num"></p>
                 Diagnosis: <Diagnosis label="Diagnosis" value={a.diagnosis} id={"attendee-diagnosis-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "diagnosis")} /><span className="small-gap"></span>
-                Birthdate: <DatePicker
+                Birthdate (M/D/Y): <DatePicker
                   selected={a.dateOfBirth}
                   onChange={date => onChangeDate(date, a.id)}
                 /><span className="small-gap"></span>
-                <Checkbox defaultChecked={a.eatsMeals} onChange={opt => onChangeMeals(opt, a.id)} /> Eats conference meals?
+                <Checkbox defaultChecked={a.eatsMeals} onChange={opt => onChangeMeals(opt, a.id)} /> Eats meals?
                 {a.diagnosis === "Other" &&
                   <div>
                     <p className="row-num"></p>
@@ -2295,14 +2320,14 @@ const SoftAngels = ({softAngels, onRemove, onAdd, onChange, onChangeDiagnosis, o
             }
             <p className="row-num"></p>
             <div className="soft-angel-date">
-              Date of Birth: <DatePicker
+              Date of Birth (M/D/Y): <DatePicker
                 selected={a.dateOfBirth}
                 onChange={date => onChangeDate(date, a.id, "dateOfBirth")}
               />
             </div>
             <span className="small-gap"></span>
             <div className="soft-angel-date">
-              Date of Death: <DatePicker
+              Date of Death (M/D/Y): <DatePicker
                 selected={a.dateOfDeath}
                 onChange={date => onChangeDate(date, a.id, "dateOfDeath")}
               />
@@ -2638,10 +2663,11 @@ const Directory = ({blurb, directory, onChange}) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const SoftWear = ({blurb, shirtTypes, shirtsOrdered, onChange, onRemove, onDropdown, onAdd}) =>
+const SoftWear = ({blurb, shirtTypes, shirtsOrdered, shirtDropdowns, onChange, onRemove, onDropdown, onAdd}) =>
   <div>
     <h2>SOFT Wear</h2>
     <p>{blurb}</p>
+    <p>To order shirts, select the size and quantity and click the "Add Shirts to Order" button for each shirt size that you want.</p>
     {shirtTypes.map( (shirtType, i) =>
       <div key={shirtType.id}>
         <p className="indent"><b>{i+1}. {shirtType.description}</b></p>
@@ -2649,7 +2675,7 @@ const SoftWear = ({blurb, shirtTypes, shirtsOrdered, onChange, onRemove, onDropd
             if (shirt.shirtID === shirtType.id) {
               return <div key={shirt.id} className="indent-twice">
                   <div className="shirt-ordered">Ordered:</div>{shirt.quantity}<div className="shirt-size">{shirtDisplay[shirt.size]}</div><div className="shirt-total">${shirt.quantity*shirtType.cost}</div>
-                  <Button onClick={() => onRemove(shirt.id)}>Remove</Button>
+                  <Button onClick={() => onRemove(shirt.id)}>Remove from Order</Button>
                 </div>
             }
             return null;
@@ -2660,6 +2686,7 @@ const SoftWear = ({blurb, shirtTypes, shirtsOrdered, onChange, onRemove, onDropd
           <div className="shirt-select">
             <Select
               options={optionsShirtSizes}
+              value={ optFromOptions(optionsShirtSizes, shirtDropdowns[shirtType.id].size) }
               placeholder={"Select..."}
               onChange={(opt) => onDropdown(opt, shirtType.id, "size")}
               styles={customStylesNarrow}
@@ -2669,12 +2696,14 @@ const SoftWear = ({blurb, shirtTypes, shirtsOrdered, onChange, onRemove, onDropd
           <div className="shirt-select">
             <Select
               options={optionsShirtQuantity}
-              defaultValue={0}
+              value={ optFromOptions(optionsShirtQuantity, shirtDropdowns[shirtType.id].quantity) }
               onChange={(opt) => onDropdown(opt, shirtType.id, "quantity")}
               styles={customStylesNarrow}
             />
           </div>
-          <Button onClick={() => onAdd(shirtType.id)}>Add to Order</Button>
+          <div className="v-indent">
+            <Button onClick={() => onAdd(shirtType.id)}>Add Shirts to Order</Button>
+          </div>
         </div>
         <br />
       </div>
@@ -2793,182 +2822,201 @@ const Summary = ({thisState}) => {
   //  If 'balloon'-only, then we're done summarizing
   if (userData.attendance !== 'balloon') {
 
-        output += add_line(0, '\nAttendees:');
-        output += '\n';
-        if (userData.attendees.length === 0) {
-          output += add_line(1, 'There are no Attendees listed.');
-        }
-        else {
-          for (var attendee of userData.attendees) {
-            output += add_line(1, attendee.firstName + ' ' + attendee.lastName);
+    output += add_line(0, '\nAttendees:');
+    output += '\n';
+    if (userData.attendees.length === 0) {
+      output += add_line(1, 'There are no Attendees listed.');
+    }
+    else {
+      for (var attendee of userData.attendees) {
+        output += add_line(1, attendee.firstName + ' ' + attendee.lastName);
 
-            if (attendee.peopleType === peopleTypes.CHILD) {
-              output += add_line(1, 'Child, age: ' + attendee.age);
-              if (!attendee.sibOuting) {
-                output += add_line(1, 'Attending Sibling outing: No');
-              }
-              else {
-                if (attendee.age < 5) console.log('Attendee too young for a sibling outing');
-                output += add_line(1, (attendee.age >= 12 ? "Attending older-sibling outing" : 'Attending younger-sibling outing'));
-                output += add_line(1, 'Shirt size: ' + shirtDisplay[attendee.shirtSize]);
-              }
-            }
-            else if (attendee.peopleType === peopleTypes.SOFTCHILD) {
-              output += add_line(1, attendee.peopleType);
-              output += add_line(1, 'Date of birth: ' + attendee.dateOfBirth.toDateString());
-              output += add_line(1, 'Diagnosis: ' + (attendee.diagnosis === "Other" ? attendee.otherDiagnosis : attendee.diagnosis));
-              output += add_line(1, 'Eats meals: ' + boolToYN(attendee.eatsMeals));
-            }
-            else if (attendee.peopleType === peopleTypes.ADULT) {
-              output += add_line(1, attendee.peopleType);         //  Adult and Professional
-            }
-            else {
-                      output += add_line(1, attendee.peopleType);         //  Professional
-            }
-            output += add_line(1, 'Welcome dinner meal: ' + (attendee.welcomeDinner !== '' ? attendee.welcomeDinner : 'N/A'));
-            if (attendee.peopleType === peopleTypes.ADULT  &&  userData.softAngels.length !== 0) {
-              output += add_line(1, 'Attending Remembrance Lunch: ' + boolToYN(attendee.rembOuting));
-              if (attendee.rembOuting) {
-                output += add_line(1, 'Remembrance meal: ' + attendee.rembLunch);
-              }
-            }
-            output += '\n';
-          }
-        }
-
-        //----
-
-
-        let anySoftChildren = userData.attendees.find( a => { 
-          return (a.peopleType === peopleTypes.SOFTCHILD);
-        });
-
-        if (anySoftChildren) {
-            output += add_line(0, '\nClinics:');
-            output += '\n';
-            output += add_line(1, 'Transportation tie-downs needed: ' + userData.clinicTieDowns);
-            output += '\n';
-
-            let clinicOrder = 1;
-            for (let clinic of userData.clinics) {
-              let suffix = 'th';
-              if (clinicOrder === 1)  suffix = 'st';
-              if (clinicOrder === 2)  suffix = 'nd';
-              if (clinicOrder === 3)  suffix = 'rd';
-              output += add_line(1, clinicOrder + suffix + ' Choice: ' + clinic);
-              clinicOrder++;
-            }
-            output += '\n';
-        }
-
-
-        //----
-
-
-        let adults = userData.attendees.filter( a => { 
-          return (a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL);
-        });
-
-        if (adults.length > 0) {
-
-            output += add_line(0, '\nWorkshops:');
-            output += '\n';
-
-            for (let adult of adults) {
-
-              output += add_line(1, adult.firstName + ' ' + adult.lastName + ':');
-
-              for (let sess of thisState.eventInfo.workshopSessions) {
-                let workshop = sess.workshops.find( ws => ws.id === adult.workshops[sess.id]);
-                output += add_line(1, sess.name + ': ' + workshop.title + (workshop.moderator !== '' ? ' - ' + workshop.moderator : ''));
-              }
-              output += '\n';
-            }
-        }
-
-
-        //----
-
-
-        let children = userData.attendees.filter( a => { 
-          return ((a.peopleType === peopleTypes.CHILD  &&  a.age <= 11)  ||  a.peopleType === peopleTypes.SOFTCHILD);
-        });
-
-        if (children.length > 0) {
-
-            output += add_line(0, '\nChildcare:');
-            output += '\n';
-
-            for (let child of children) {
-
-              output += add_line(1, child.firstName + ' ' + child.lastName + ':');
-
-              for (let sess of thisState.eventInfo.childCareSessions) {
-
-                if (child.childCareSessions.hasOwnProperty(sess.id) && qualifiesChildCare(child.age, sess, thisState.boardMember)) {
-                  output += add_line(1, sess.title + ': ' + boolToYN(child.childCareSessions[sess.id]));
-                }
-              }
-
-              output += '\n';
-            }
-        }
-
-
-        //----
-
-
-        if (userData.softAngels.length !== 0) {
-          output += add_line(0, '\nAttending Remembrance Outing:');
-          output += '\n';
-
-          for (let attendee of userData.attendees) {
-            if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL) {
-              output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.rembOuting) + (attendee.rembOuting ? ' -- meal: ' + attendee.rembLunch : ''));
-            }
-          }
-          output += '\n';
-        }
-
-
-        //----
-
-
-        output += add_line(0, '\nPicnic:');
-        output += '\n';
-        output += add_line(1, 'Needs transporation to the picnic:');
-        output += '\n';
-
-        for (let attendee of userData.attendees) {
-          if (attendee.peopleType === peopleTypes.SOFTCHILD) {
-            output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnic) + 
-                      (attendee.picnic ? ' -- Needs tie-down: ' + boolToYN(attendee.picnicTiedown) : ''));
+        if (attendee.peopleType === peopleTypes.CHILD) {
+          output += add_line(2, 'Child, age: ' + attendee.age);
+          if (!attendee.sibOuting) {
+            output += add_line(2, 'Attending Sibling outing: No');
           }
           else {
-            output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnic));
+            if (attendee.age < 5) console.log('Attendee too young for a sibling outing');
+            output += add_line(2, (attendee.age >= 12 ? "Attending older-sibling outing" : 'Attending younger-sibling outing'));
+            output += add_line(2, 'Shirt size: ' + shirtDisplay[attendee.shirtSize]);
           }
         }
+        else if (attendee.peopleType === peopleTypes.SOFTCHILD) {
+          output += add_line(2, attendee.peopleType);
+          output += add_line(2, 'Date of birth: ' + attendee.dateOfBirth.toDateString());
+          output += add_line(2, 'Diagnosis: ' + (attendee.diagnosis === "Other" ? attendee.otherDiagnosis : attendee.diagnosis));
+          output += add_line(2, 'Eats meals: ' + boolToYN(attendee.eatsMeals));
+        }
+        else if (attendee.peopleType === peopleTypes.ADULT) {
+          output += add_line(2, attendee.peopleType);         //  Adult and Professional
+        }
+        else {
+                  output += add_line(2, attendee.peopleType);         //  Professional
+        }
+        output += add_line(2, 'Welcome dinner meal: ' + (attendee.welcomeDinner !== '' ? attendee.welcomeDinner : 'N/A'));
+        output += '\n';
+      }
+    }
+
+    //----
+
+
+    let anySoftChildren = userData.attendees.find( a => { 
+      return (a.peopleType === peopleTypes.SOFTCHILD);
+    });
+
+    if (anySoftChildren) {
+        output += add_line(0, '\nClinics:');
+        output += '\n';
+        output += add_line(1, 'Transportation tie-downs needed: ' + userData.clinicTieDowns);
         output += '\n';
 
+        let clinicOrder = 1;
+        for (let clinic of userData.clinics) {
+          let suffix = 'th';
+          if (clinicOrder === 1)  suffix = 'st';
+          if (clinicOrder === 2)  suffix = 'nd';
+          if (clinicOrder === 3)  suffix = 'rd';
+          output += add_line(1, clinicOrder + suffix + ' Choice: ' + clinic);
+          clinicOrder++;
+        }
+        output += '\n';
+    }
 
-        //----
+
+    //----
 
 
-        if (userData.chapterChair) {
-          output += add_line(0, '\nAttending Chapter Chair Luncheon:');
+    let adults = userData.attendees.filter( a => { 
+      return (a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL);
+    });
+
+    if (adults.length > 0) {
+
+        output += add_line(0, '\nWorkshops:');
+        output += '\n';
+
+        for (let adult of adults) {
+
+          output += add_line(1, adult.firstName + ' ' + adult.lastName + ':');
+
+          for (let sess of thisState.eventInfo.workshopSessions) {
+            let workshop = sess.workshops.find( ws => ws.id === adult.workshops[sess.id]);
+            output += add_line(2, sess.name + ': ' + workshop.title + (workshop.moderator !== '' ? ' - ' + workshop.moderator : ''));
+          }
           output += '\n';
+        }
+    }
 
-          for (let attendee of userData.attendees) {
-            if (attendee.peopleType === peopleTypes.ADULT) {
-              output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.chapterChairLunch));
-            }
-            else {
-              attendee.chapterChairLunch = false;           //  Enforce proper state for non-adults
+
+    //----
+
+
+    let children = userData.attendees.filter( a => { 
+      return ((a.peopleType === peopleTypes.CHILD  &&  a.age <= 11)  ||  a.peopleType === peopleTypes.SOFTCHILD);
+    });
+
+    if (children.length > 0) {
+
+        output += add_line(0, '\nChildcare:');
+        output += '\n';
+
+        for (let child of children) {
+
+          output += add_line(1, child.firstName + ' ' + child.lastName + ':');
+
+          for (let sess of thisState.eventInfo.childCareSessions) {
+
+            if (child.childCareSessions.hasOwnProperty(sess.id) && qualifiesChildCare(child.age, sess, thisState.boardMember)) {
+              output += add_line(2, sess.title + ': ' + boolToYN(child.childCareSessions[sess.id]));
             }
           }
 
           output += '\n';
         }
+    }
+
+
+    //----
+
+
+    if (userData.chapterChair) {
+      output += add_line(0, '\nAttending Chapter Chair Luncheon:');
+      output += '\n';
+
+      for (let attendee of userData.attendees) {
+        if (attendee.peopleType === peopleTypes.ADULT) {
+          output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.chapterChairLunch));
+        }
+        else {
+          attendee.chapterChairLunch = false;           //  Enforce proper state for non-adults
+        }
+      }
+
+      output += '\n';
+    }
+
+
+    //----
+
+
+    if (userData.softAngels.length !== 0) {
+      output += add_line(0, '\nAttending Remembrance Outing:');
+      output += '\n';
+
+      for (let attendee of userData.attendees) {
+        if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL) {
+          output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.rembOuting) + (attendee.rembOuting ? ' -- meal: ' + attendee.rembLunch : ''));
+        }
+      }
+      output += '\n';
+    }
+
+
+    //----
+
+
+    output += add_line(0, '\nNeeds transportation to the picnic:');
+    output += '\n';
+
+    for (let attendee of userData.attendees) {
+      if (attendee.peopleType === peopleTypes.SOFTCHILD) {
+        output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnic) + 
+                  (attendee.picnic ? ' -- Needs tie-down: ' + boolToYN(attendee.picnicTiedown) : ''));
+      }
+      else {
+        output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnic));
+      }
+    }
+    output += '\n';
+
+
+    //----
+
+
+    output += add_line(0, '\nSOFT Wear Shirts:');
+    output += '\n';
+
+    for (let shirtType of thisState.eventInfo.shirtTypes) {
+
+      output += add_line(1, shirtType.description);
+
+      let totalShirts = 0;
+      for (let shirt of userData.shirtsOrdered) {
+        if (shirt.shirtID === shirtType.id) {
+          output += add_line(2, 'Ordered: ' + shirt.quantity + ', ' + shirtDisplay[shirt.size] + ', $' + shirt.quantity*shirtType.cost);
+          totalShirts++;
+        }
+      }
+
+      if (totalShirts === 0) {
+        output += add_line(2, 'None ordered');
+      }
+
+      output += '\n';
+    }
+
   }
 
 
@@ -2986,8 +3034,6 @@ const Summary = ({thisState}) => {
   //----
 
 
-  output += '\n';
-  output += '==> SUMMARY page incomplete. Still being worked on...\n';
   let html = output.replace(/\n/g, "<br />");
   html = html.replace(/\s{3}/g,'<span class="indent"></span>')
 
