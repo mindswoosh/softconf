@@ -803,9 +803,11 @@ class App extends Component {
                   <Clinics
                     attendees={attendees}
                     clinics={eventInfo.clinics}
+                    attendingClinics={this.state.attendingClinics}
                     onSortEnd={this.onClinicSortEnd}
                     blurb={eventInfo.clinicsBlurb}
                     numTieDowns={this.state.clinicTieDowns}
+                    onChangeField={this.onChangeFieldValue}
                     onChangeSelection={this.onChangeFieldValue}
                   />,
 
@@ -1145,10 +1147,18 @@ class App extends Component {
               });
             }
 
+            let defaultDirSettings = (this.state.attendance === 'full'  ||  this.state.attendance === 'picnic');
+            let directory = {
+              phone: defaultDirSettings,
+              email: defaultDirSettings,
+              city:  defaultDirSettings,  
+            }
+
             pageHistory.push(currentPage);
 
             this.setState({
               attendees,
+              directory,
               pageHistory,
               currentPage: pages.CONTACT,
             });
@@ -1344,11 +1354,10 @@ class App extends Component {
 
       case pages.CLINICS:
 
-          if (this.state.clinicTieDowns === '') {
+          if (this.state.attendingClinics  &&  this.state.clinicTieDowns === '') {
             alert("Please select the number of tie-downs you'll need.");
           }
           else {
-
             pageHistory.push(currentPage);
 
             this.setState({
@@ -2455,7 +2464,7 @@ const OlderSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const Clinics = ({attendees, clinics, attendingClinics, numTieDowns, onSortEnd, blurb, onChangeSelection}) => {
+const Clinics = ({attendees, clinics, attendingClinics, numTieDowns, onSortEnd, blurb, onChangeField, onChangeSelection}) => {
 
   attendees = attendees.filter(a => { return (a.peopleType === peopleTypes.SOFTCHILD) });
 
@@ -2472,20 +2481,35 @@ const Clinics = ({attendees, clinics, attendingClinics, numTieDowns, onSortEnd, 
     <div>
       <h2>Clinics</h2>
       <p className="v-indent-below">{blurb}</p>
-      <span><FontAwesomeIcon icon="hand-point-right" /> &nbsp;How many (if any) tie-downs will you need for transportation?</span>&nbsp;&nbsp;
-      <div className="inline">
-        <Select
-          defaultValue={ numTieDowns }
-          options={optionsTieDowns}
-          placeholder={"Number of tie-downs?..."}
-          onChange={(opt) => onChangeSelection("clinicTieDowns", opt.value)}
-          styles={selectStyle(200, 110)}
-        /> 
+
+      <div className="v-indent">
+        Do you want to attend the clinics?
+        <div className="inline">
+          <RadioGroup name="attendingClinics" selectedValue={attendingClinics} onChange={(val) => onChangeField("attendingClinics", val)}>
+            <span className="radio-yes"><Radio value={true} /> Yes</span>
+            <Radio value={false} /> No
+          </RadioGroup>
+        </div>
       </div>
-      <p className="v-indent">Rearrange the names of the clinics below from Most Interested to Least Interested by simultaneously clicking and dragging on the <span className="thumb-color"><FontAwesomeIcon icon="bars" /></span> character and moving
-      the name of the clinic up or down.</p>
-      <p>Move <strong>MOST Interested</strong> Clinic to the top, and the <strong>LEAST Interested</strong> Clinic to the bottom:</p>
-      <SortableList items={clinics} onSortEnd={onSortEnd} />
+
+      {attendingClinics  && 
+        <div>
+          <span><FontAwesomeIcon icon="hand-point-right" /> &nbsp;How many (if any) tie-downs will you need for transportation?</span>&nbsp;&nbsp;
+          <div className="inline">
+            <Select
+              defaultValue={ numTieDowns }
+              options={optionsTieDowns}
+              placeholder={"Number of tie-downs?..."}
+              onChange={(opt) => onChangeSelection("clinicTieDowns", opt.value)}
+              styles={selectStyle(200, 110)}
+            /> 
+          </div>
+          <p className="v-indent">Rearrange the names of the clinics below from Most Interested to Least Interested by simultaneously clicking and dragging on the <span className="thumb-color"><FontAwesomeIcon icon="bars" /></span> character and moving
+          the name of the clinic up or down.</p>
+          <p>Move <strong>MOST Interested</strong> Clinic to the top, and the <strong>LEAST Interested</strong> Clinic to the bottom:</p>
+          <SortableList items={clinics} onSortEnd={onSortEnd} />
+        </div>
+      }
     </div>
   );
 }
@@ -2780,6 +2804,7 @@ const Summary = ({thisState}) => {
     boardMember:        thisState.boardMember,
     chapterChair:       thisState.chapterChair,
     joeyWatson:         thisState.joeyWatson,
+    attendingClinics:   thisState.attendingClinics,
     clinics:            thisState.eventInfo.clinics,
     clinicTieDowns:     thisState.clinicTieDowns,
     workshops:          thisState.workshops,
@@ -2907,20 +2932,27 @@ const Summary = ({thisState}) => {
           });
 
           if (anySoftChildren) {
-              output += add_line(0, '\nClinics:');
-              output += '\n';
-              output += add_line(1, 'Transportation tie-downs needed: ' + userData.clinicTieDowns);
-              output += '\n';
 
-              let clinicOrder = 1;
-              for (let clinic of userData.clinics) {
-                let suffix = 'th';
-                if (clinicOrder === 1)  suffix = 'st';
-                if (clinicOrder === 2)  suffix = 'nd';
-                if (clinicOrder === 3)  suffix = 'rd';
-                output += add_line(1, clinicOrder + suffix + ' Choice: ' + clinic);
-                clinicOrder++;
+              if (userData.attendingClinics) {
+                output += add_line(0, '\nClinics:');
+                output += '\n';
+                output += add_line(1, 'Transportation tie-downs needed: ' + userData.clinicTieDowns);
+                output += '\n';
+
+                let clinicOrder = 1;
+                for (let clinic of userData.clinics) {
+                  let suffix = 'th';
+                  if (clinicOrder === 1)  suffix = 'st';
+                  if (clinicOrder === 2)  suffix = 'nd';
+                  if (clinicOrder === 3)  suffix = 'rd';
+                  output += add_line(1, clinicOrder + suffix + ' Choice: ' + clinic);
+                  clinicOrder++;
+                }
               }
+              else {
+                output += add_line(0, '\nAttending clinics: No');
+              }
+
               output += '\n';
           }
 
