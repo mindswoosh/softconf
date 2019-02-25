@@ -415,10 +415,10 @@ function optFromOptions(options, value) {
   return options.find(opt => (opt.value === value));
 }
 
-const optionsYesNo = [
-  { label: "Yes", value: 1 },
-  { label: "No",  value: 0 },  
-];
+// const optionsYesNo = [
+//   { label: "Yes", value: 1 },
+//   { label: "No",  value: 0 },  
+// ];
 
 const peopleTypes = {
   SOFTCHILD:    "SOFT Child",
@@ -533,8 +533,8 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     eatsMeals:   false,
 
     // Picnic
-    picnic: false,                //  Needs transportation to the picnic?
-    picnicTiedown: 0,
+    picnic:         false,                //  Needs transportation to the picnic?
+    picnicTiedown:  false,
 
     // Professional
   };
@@ -623,6 +623,7 @@ class App extends Component {
     this.onChangeContactInfo  = this.onChangeContactInfo.bind(this);
     this.onChangeCountry      = this.onChangeCountry.bind(this);
     
+    this.onChangeAttendee     = this.onChangeAttendee.bind(this);
     this.onAddAttendee        = this.onAddAttendee.bind(this);
     this.onRemoveAttendee     = this.onRemoveAttendee.bind(this);
     this.onChangeAttendeeList = this.onChangeAttendeeList.bind(this);
@@ -855,8 +856,7 @@ class App extends Component {
                   <Picnic
                     blurb={eventInfo.picnicBlurb}
                     attendees={attendees}
-                    onChange={this.onChangePicnic}
-                    onChangeTiedown={this.onChangePicnicTiedown}
+                    onChangeAttendee={this.onChangeAttendee}
                   />,
 
               [pages.BALLOONS]:
@@ -1606,7 +1606,7 @@ class App extends Component {
   //
   //  A lot of the additional handlers could be changed to use these
 
-  onChangeStateCheckbox(event, field) {
+  onChangeStateCheckbox(event, field) {       //  User's of this func should use onChangeFieldValue()
     this.setState ({
       [field]: event.target.checked,
     });
@@ -1618,6 +1618,15 @@ class App extends Component {
     });
   }
   
+  onChangeAttendee(id, field, value) {
+    let { attendees } = this.state;
+    let i = attendees.findIndex(a => a.id === id);
+    console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
+    attendees[i][field] = value;
+    this.setState ({
+      attendees
+    });
+  }
 
   //-------------------------------------------------------------------------------------------
   //  Process Contact Info page
@@ -1894,11 +1903,20 @@ class App extends Component {
     });
   }
 
-  onChangePicnicTiedown(opt, id) {
+  // onChangePicnicTiedown(opt, id) {
+  //   let { attendees } = this.state;
+  //   let i = attendees.findIndex(a => a.id === id);
+  //   console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
+  //   attendees[i].picnicTiedown = opt.value;
+  //   this.setState ({
+  //     attendees
+  //   });
+  // }
+  onChangePicnicTiedown(value, id) {
     let { attendees } = this.state;
     let i = attendees.findIndex(a => a.id === id);
     console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
-    attendees[i].picnicTiedown = opt.value;
+    attendees[i].picnicTiedown = value;
     this.setState ({
       attendees
     });
@@ -2578,8 +2596,7 @@ const Childcare = ({attendees, childCareSessions, boardMember, onChange, blurb})
 
 //----------------------------------------------------------------------------------------------------
 
-
-const Picnic = ({attendees, onChange, onChangeTiedown, blurb}) =>
+const Picnic = ({attendees, onChangeAttendee, blurb}) =>
   <div>
     <h2>Picnic</h2>
     <p>{blurb}</p>
@@ -2589,10 +2606,16 @@ const Picnic = ({attendees, onChange, onChangeTiedown, blurb}) =>
     <div className="remembrance">
       {attendees.map( (a,i) => 
         <div key={a.id} className="indent">
-          <Checkbox defaultChecked={a.picnic} onChange={event => onChange(event, a.id)} />
+          <Checkbox defaultChecked={a.picnic} onChange={event => onChangeAttendee(a.id, "picnic", event.target.checked)} />
           <span className="remb-name">{a.firstName} {a.lastName}</span>
           <div className={(a.picnic && a.peopleType === peopleTypes.SOFTCHILD) ? "inline" : "inline invisible"}>
-            <span>Needs tie-downs? <SelectYesNo value={a.picnicTiedown} isDisabled={!a.picnic} onChange={(opt) => onChangeTiedown(opt, a.id)} /></span>
+            Needs tie-downs?
+            <div className="inline">
+              <RadioGroup name={"picnicTiedown" + a.id} selectedValue={a.picnicTiedown} onChange={(val) => onChangeAttendee(a.id, "picnicTiedown", val)}>
+                <span className="radio-yes"><Radio value={true} /> Yes</span>
+                <Radio value={false} /> No
+              </RadioGroup>
+            </div>
           </div>
         </div>
       )}
@@ -3263,21 +3286,21 @@ const RembLunch = ({value, menuInfo, isDisabled, onChange, className="edit-remb-
     }
 
 
-const SelectYesNo = ({value, isDisabled, onChange, className="edit-remb-lunch"}) => {
-      const defaultOpt = optionsYesNo.find(opt => (opt.value === value));
-      return (
-        <div className={className}>
-          <Select
-            options={optionsYesNo}
-            defaultValue={defaultOpt}
-            placeholder={"Select..."}
-            isDisabled={isDisabled}
-            onChange={onChange}
-            styles={selectStyle(90, 60)}
-          />
-        </div>
-      );
-    }
+// const SelectYesNo = ({value, isDisabled, onChange, className="edit-remb-lunch"}) => {
+//       const defaultOpt = optionsYesNo.find(opt => (opt.value === value));
+//       return (
+//         <div className={className}>
+//           <Select
+//             options={optionsYesNo}
+//             defaultValue={defaultOpt}
+//             placeholder={"Select..."}
+//             isDisabled={isDisabled}
+//             onChange={onChange}
+//             styles={selectStyle(90, 60)}
+//           />
+//         </div>
+//       );
+//     }
 
 
 const Country = ({value, onChange, className="edit-country"}) => {
