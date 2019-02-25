@@ -1,5 +1,5 @@
 //
-//  Soft Convention Registration
+//  SOFT Convention Registration
 //
 //  9/18/18 v0.1 Steve Maguire steve@stormdev.com
 //
@@ -50,6 +50,8 @@ library.add(faRibbon);
 
 const DEBUG = false;  //  Set to false for production
 
+const JSONversion = '1.0';
+
 var nextID = 10000;
 
 var pageNum = 0;
@@ -94,8 +96,10 @@ const eventInfoDefault = {
   costChild:             90,         // Children under 5? are free
   costSoftChild:          0,
   costProfessional:     135,
+  costWorkshopsOnly:     65,
   costYoungerSibOuting:  35,
   costOlderSibOuting:    35,
+  joeyWatsonSecretCode:  'JW2019MI',
 
   workshopSessions: [
       {
@@ -120,18 +124,6 @@ const eventInfoDefault = {
             moderator:    "Rev. Robin Whitaker",
             description:  ""
           },
-          // {
-          //   id:           "1c",
-          //   title:        "Digital Scrapbooking",
-          //   moderator:    "Chelsea Dye, MAcc, JD",
-          //   description:  "Learn how to create amazing professionally-bound photo books of your treasured family photos using your computer rather than boxes full of scissors, paper and glue."
-          // },
-          // {
-          //   id:           "1d",
-          //   title:        "Occupational Therapy/Floor Time - Part 1",
-          //   moderator:    "Joyce Vipond OT",
-          //   description:  "ntroduction to the floor time model of playful engagement for developing social & emotional development. Exploring its impact on cognition and the ability to be engaged in the world."
-          // }
         ]
       },
       {
@@ -162,12 +154,6 @@ const eventInfoDefault = {
             moderator:    "Julie Hawkins, Mike Barner",
             description:  ""
           },
-          // {
-          //   id:           "2d",
-          //   title:        "Transitioning Services ",
-          //   moderator:    "Tami McGrath, Pierce Co, WA Coalition for Developmental Disabilities",
-          //   description:  "When your child turns 18. Discuss how parents can find services and understand how to go through the transition process."
-          // }
         ]
       },
       {
@@ -192,12 +178,6 @@ const eventInfoDefault = {
             moderator:    "Debbie Bruns",
             description:  ""
           },
-          // {
-          //   id:           "3c",
-          //   title:        "Vision, light sensitivity & seizures",
-          //   moderator:    "Dr. Steve Cantrell, OD",
-          //   description:  "New information on how indoor and outdoor light affects your child and seizures. Detailed handouts with information on how to correct this newly discovered photosensitive issue. Benefits for mom and dad too!"
-          // },
         ]
       },
       {
@@ -250,7 +230,7 @@ const eventInfoDefault = {
       },
     ],
 
-  clinicsBlurb: "This year’s Soft Clinics will be held at C.S. Mott Children’s Hospital on Friday July 19, 2019 from 1pm – 5pm. Please number your clinic preferences (up to 5). We will attempt to schedule each child into 3 of the 5 preferences.",
+  clinicsBlurb: "This year’s SOFT Clinics will be held at C.S. Mott Children’s Hospital on Friday July 19, 2019 from 1pm – 5pm. Please number your clinic preferences (up to 5). We will attempt to schedule each child into 3 of the 5 preferences.",
   clinics: [
       'Cardiology',
       'Neurology',
@@ -610,12 +590,13 @@ class App extends Component {
       },
 
       photoWaiver:        false, 
-      attendance:         "full",     //  "full", "picnic" (only), "balloon" release - not attending 
+      attendance:         'full',     //  "full", "workshops" (only), picnic" (only), "balloon" release - not attending 
       reception:          false,
       sundayBreakfast:    false,
       boardMember:        false,
       chapterChair:       false,
       joeyWatson:         false,
+      joeyWatsonCode:     '',
 
       attendees: [],
       softAngels: [],
@@ -627,11 +608,15 @@ class App extends Component {
       },
 
       //  Clinic list?
-      clinicTieDowns: '',
+      attendingClinics:   true,
+      clinicTieDowns:     '',
 
       shirtsOrdered: [],              //  { shirtID, quantity, size }
     };
 
+
+    //  This set of change handlers could probably be drastically reduced by using
+    //  generic handlers that take values, not events or opts as arguments
 
     this.onChangeStateCheckbox = this.onChangeStateCheckbox.bind(this);
     this.setEventInfo         = this.setEventInfo.bind(this);
@@ -688,20 +673,6 @@ class App extends Component {
   }
 
 
-  onChangeCountry(opt) {
-    if (opt.value === "-----")
-        opt.value = "";
-
-    this.setState ({
-      contactInfo: { ...this.state.contactInfo, country: opt.value }
-    });
-  }
-
-  onChangeContactInfo(event, field) {
-    this.setState ({
-      contactInfo: { ...this.state.contactInfo, [field]: event.target.value }
-    });
-  }
 
 
   setEventInfo(result) {
@@ -721,6 +692,10 @@ class App extends Component {
         attendee("Cliff", "Mountjoy",  peopleTypes.CHILD,        17, eventInfoDefault),
         attendee("Jamie", "Jones",     peopleTypes.SOFTCHILD,     3, eventInfoDefault),
       ];
+
+      let softchild = attendees.find( a => { return (a.lastName === 'Jones' ) });
+      softchild.dateOfBirth = new Date();
+      softchild.diagnosis = 'Full Trisomy 18';
     }
 
     // let shirtDropdowns = eventInfo.shirtTypes.map( (shirt) => {
@@ -789,7 +764,9 @@ class App extends Component {
                     sundayBreakfast={this.state.sundayBreakfast}
                     boardMember={this.state.boardMember}
                     chapterChair={this.state.chapterChair}
-                    handleRadioGroup={this.onChangeFieldValue}
+                    joeyWatson={this.state.joeyWatson}
+                    joeyWatsonCode={this.state.joeyWatsonCode}
+                    onChangeField={this.onChangeFieldValue}
                     handleCheckbox={this.onChangeStateCheckbox}
                   />,
 
@@ -1040,6 +1017,13 @@ class App extends Component {
 
       switch (curPage) {
 
+        case pages.SOFTANGELS:
+          checkNext = (this.state.attendance === 'workshops');
+          if (checkNext) {
+            curPage = pages.ATTENDEES;
+          }
+          break;
+
         case pages.ATTENDEES:
           if (this.state.attendance === 'balloon') {
             curPage = pages.SUMMARY;
@@ -1143,8 +1127,14 @@ class App extends Component {
 
 
       case pages.BASICS:
+
+          let jwcode = this.state.joeyWatsonCode.trim().replace(/\s+/g, '').toUpperCase();
+
           if (this.state.attendance !== 'balloon'  &&  !this.state.photoWaiver) {
             alert('To register for the conference, you must agree to the photo and video waiver. Please check the box to agree.');
+          }
+          else if (this.state.attendance === 'full'  &&  this.state.joeyWatson  &&  jwcode !== this.state.eventInfo.joeyWatsonSecretCode.toUpperCase() ) {
+            alert('Oops! the Joey Watson confirmation code is incorrect. Enter the correct code, or choose "No" for the Joey Watson fund.');
           }
           else {
 
@@ -1220,7 +1210,7 @@ class App extends Component {
             this.setState({
               contactInfo: contact,
               pageHistory,
-              currentPage: pages.SOFTANGELS,
+              currentPage: this.nextPage(pages.SOFTANGELS),
             });
           }
 
@@ -1304,17 +1294,20 @@ class App extends Component {
           else {
             pageHistory.push(currentPage);
 
-            let newPage = pages.DIRECTORY;     //  "Picnic-only" case -- go straight to wrap up
+            let newPage = pages.DINNER;
 
-            if (this.state.attendance !== 'picnic') {
-              newPage = pages.DINNER;
+            if (this.state.attendance === 'picnic') {
+              newPage = pages.DIRECTORY;
+            }
+            else if (this.state.attendance === 'workshops') {
+              newPage = pages.WORKSHOPS;
             }
 
             this.setState({
               attendees,
               clinicTieDowns,
               pageHistory,
-              currentPage: newPage,     //  Can't call newPage(pages.CLINICS) because attendees isn't in state yet
+              currentPage: newPage,     //  Can't call newPage(pages.DINNER) because attendees isn't in state yet
             });
           }
           break;
@@ -1379,9 +1372,11 @@ class App extends Component {
           else {                                //  Move on to next page...
             pageHistory.push(currentPage);
 
+            let nextPage = (this.state.attendance === 'workshops') ? pages.SUMMARY : this.nextPage(pages.YOUNGERSIB);
+
             this.setState({
               pageHistory,
-              currentPage: this.nextPage(pages.YOUNGERSIB),
+              currentPage: nextPage,
             });
           }
 
@@ -1599,6 +1594,8 @@ class App extends Component {
 
   //-------------------------------------------------------------------------------------------
   //  Generic handlers
+  //
+  //  A lot of the additional handlers could be changed to use these
 
   onChangeStateCheckbox(event, field) {
     this.setState ({
@@ -1611,7 +1608,26 @@ class App extends Component {
       [field]: value
     });
   }
+  
 
+  //-------------------------------------------------------------------------------------------
+  //  Process Contact Info page
+
+
+  onChangeCountry(opt) {
+    if (opt.value === "-----")
+        opt.value = "";
+
+    this.setState ({
+      contactInfo: { ...this.state.contactInfo, country: opt.value }
+    });
+  }
+
+  onChangeContactInfo(event, field) {
+    this.setState ({
+      contactInfo: { ...this.state.contactInfo, [field]: event.target.value }
+    });
+  }
 
 
   //-------------------------------------------------------------------------------------------
@@ -2092,8 +2108,8 @@ const PageBar = ({pageNum}) =>
 const Welcome = () =>
   <div className="welcome">
     <h2>Welcome!</h2>
-    <p>Welcome to the Soft Conference Registration form!</p>
-    <p>The 2019 Soft Conference is going to be held at the _____ Hotel in Ann Arbor, MI, July 17-21, 2019.
+    <p>Welcome to the SOFT Conference Registration form!</p>
+    <p>The 2019 SOFT Conference is going to be held at the _____ Hotel in Ann Arbor, MI, July 17-21, 2019.
     </p>
     <p>If you haven't read the 2019 Conference brochure yet, you'll want to do that first before going
        through this form so you know exactly what's going on. Having the brochure available as you fill
@@ -2112,10 +2128,9 @@ const Welcome = () =>
 
 
 
-const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMember, chapterChair, handleRadioGroup, handleCheckbox}) =>
+const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMember, chapterChair, joeyWatson, joeyWatsonCode, onChangeField, handleCheckbox}) =>
   <div>
     <h2>Getting Started</h2>
-    <p>Welcome to the Soft Conference Registration form!</p>
     <p>In the next few pages, you'll be asked a series of questions so that we can tailor this year's
        SOFT convention specifically for you and your family. If you're only requesting a balloon
        in memory of a SOFT Angel, you will only be asked about that. To get started, please 
@@ -2125,8 +2140,9 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
       How much, if any, of the conference are you planning to attend?
 
       <div className="v-indent indent">
-        <RadioGroup name="attendance" selectedValue={attendance} onChange={(val) => handleRadioGroup("attendance", val)}>
+        <RadioGroup name="attendance" selectedValue={attendance} onChange={(val) => onChangeField("attendance", val)}>
           <Radio value="full" /> Full Conference<br />
+          <Radio value="workshops" /> Only attending the workshops (for Professionals)<br />
           <Radio value="picnic" /> Only attending the picnic<br />
           <Radio value="balloon" /> Requesting a Balloon (not attending the conference)
         </RadioGroup>
@@ -2141,7 +2157,7 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
                 <tr>
                   <td valign="top"><Checkbox defaultChecked={photoWaiver} onChange={event => handleCheckbox(event, "photoWaiver")} /> </td>
                   <td>
-                    <span>I agree that my registration means I accept that random photos and videos will be taken at conference which may appear on social media or the Soft website.</span>
+                    <span>I agree that my registration means I accept that random photos and videos will be taken at conference which may appear on social media or the SOFT website.</span>
                   </td>
                 </tr>
               </tbody>
@@ -2153,7 +2169,7 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
               <div className="v-indent">
                 Are you planning to attend the welcome reception on Wednesday evening?
                 <div className="inline">
-                  <RadioGroup name="reception" selectedValue={reception} onChange={(val) => handleRadioGroup("reception", val)}>
+                  <RadioGroup name="reception" selectedValue={reception} onChange={(val) => onChangeField("reception", val)}>
                     <span className="radio-yes"><Radio value={true} /> Yes</span>
                     <Radio value={false} /> No
                   </RadioGroup>
@@ -2163,7 +2179,7 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
               <div className="v-indent">
                 Are you planning to attend the final breakfast on Sunday morning?
                 <div className="inline">
-                  <RadioGroup name="sundayBreakfast" selectedValue={sundayBreakfast} onChange={(val) => handleRadioGroup("sundayBreakfast", val)}>
+                  <RadioGroup name="sundayBreakfast" selectedValue={sundayBreakfast} onChange={(val) => onChangeField("sundayBreakfast", val)}>
                     <span className="radio-yes"><Radio value={true} /> Yes</span>
                     <Radio value={false} /> No
                   </RadioGroup>
@@ -2173,7 +2189,7 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
               <div className="v-indent">
                 Is anybody in your group a board member?
                 <div className="inline">
-                  <RadioGroup name="boardMember" selectedValue={boardMember} onChange={(val) => handleRadioGroup("boardMember", val)}>
+                  <RadioGroup name="boardMember" selectedValue={boardMember} onChange={(val) => onChangeField("boardMember", val)}>
                     <span className="radio-yes"><Radio value={true} /> Yes</span>
                     <Radio value={false} /> No
                   </RadioGroup>
@@ -2183,11 +2199,25 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
               <div className="v-indent">
                 Is anybody in your group a Chapter Chair?
                 <div className="inline">
-                  <RadioGroup name="chapterChair" selectedValue={chapterChair} onChange={(val) => handleRadioGroup("chapterChair", val)}>
+                  <RadioGroup name="chapterChair" selectedValue={chapterChair} onChange={(val) => onChangeField("chapterChair", val)}>
                     <span className="radio-yes"><Radio value={true} /> Yes</span>
                     <Radio value={false} /> No
                   </RadioGroup>
                 </div>
+              </div>
+              <div className="v-indent">
+                Has anyone in your group been approved for the Joey Watson fund?
+                <div className="inline">
+                  <RadioGroup name="joeyWatson" selectedValue={joeyWatson} onChange={(val) => onChangeField("joeyWatson", val)}>
+                    <span className="radio-yes"><Radio value={true} /> Yes</span>
+                    <Radio value={false} /> No
+                  </RadioGroup>
+                </div>
+                {joeyWatson &&
+                  <div>
+                  Please enter the Joe Watson confirmation code: <Input value={joeyWatsonCode} field="joeyWatsonCode" id="joeyWatsonCode" onChange={(evt) => onChangeField("joeyWatsonCode", evt.target.value)} />
+                  </div>
+                }
               </div>
 
             </div>
@@ -2425,7 +2455,7 @@ const OlderSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const Clinics = ({attendees, clinics, numTieDowns, onSortEnd, blurb, onChangeSelection}) => {
+const Clinics = ({attendees, clinics, attendingClinics, numTieDowns, onSortEnd, blurb, onChangeSelection}) => {
 
   attendees = attendees.filter(a => { return (a.peopleType === peopleTypes.SOFTCHILD) });
 
@@ -2617,7 +2647,7 @@ const Dinner = ({attendees, adultMenu, kidsMenu, blurb, onChangeDinner}) =>
 const Balloons = ({contact}) =>
   <div>
     <h2>Balloon Release</h2>
-    <p>You are invited to honor your Soft Angel during our Memorial Balloon Release. It is not necessary to attend
+    <p>You are invited to honor your SOFT Angel during our Memorial Balloon Release. It is not necessary to attend
        the conference to request a balloon for your child.
     </p>
     <b>
@@ -2633,8 +2663,8 @@ const Balloons = ({contact}) =>
 const Photos = ({contact}) =>
   <div>
     <h2>Photos</h2>
-    <p>We invite you to share a family photo and a photo of your Soft Child. Photos may be used for 
-       display during the conference and/or included in the Soft Family Directory.
+    <p>We invite you to share a family photo and a photo of your SOFT Child. Photos may be used for 
+       display during the conference and/or included in the SOFT Family Directory.
     </p>
     <b>
       <p></p>
@@ -2736,6 +2766,7 @@ const Summary = ({thisState}) => {
   let contactID = thisState.contactInfo.firstName.toLowerCase().replace(/[^A-Za-z]/g, '')+t;
 
   userData = {
+    version:            JSONversion,
     contactID:          contactID,
     contactInfo:        thisState.contactInfo,
     attendees:          thisState.attendees,
@@ -2748,11 +2779,11 @@ const Summary = ({thisState}) => {
     sundayBreakfast:    thisState.sundayBreakfast,
     boardMember:        thisState.boardMember,
     chapterChair:       thisState.chapterChair,
+    joeyWatson:         thisState.joeyWatson,
     clinics:            thisState.eventInfo.clinics,
     clinicTieDowns:     thisState.clinicTieDowns,
     workshops:          thisState.workshops,
     childCareSessions:  thisState.childCareSessions,
-    joeyWatson:         thisState.joeWatson,
   }
 
   userDataJSON = JSON.stringify(userData);
@@ -2761,9 +2792,10 @@ const Summary = ({thisState}) => {
 
   let reg = '';
   switch (userData.attendance) {
-    case 'full':    reg = 'Attending the full conference'; break;
-    case 'picnic':  reg = 'Only attending the picnic'; break;
-    case 'balloon': reg = 'Requesting a balloon (not attending)'; break;
+    case 'full':        reg = 'Attending the full conference'; break;
+    case 'workshops':   reg = 'Attending only the workshops (for Professionals only)'; break;
+    case 'picnic':      reg = 'Only attending the picnic'; break;
+    case 'balloon':     reg = 'Requesting a balloon (not attending)'; break;
     default: console.log('Problem with the type of attendance');
   }
   output += add_line(0, '\nRegistration: ' + reg);
@@ -2777,6 +2809,7 @@ const Summary = ({thisState}) => {
     output += add_line(0, 'Attending Sunday brunch: ' + boolToYN(userData.sundayBreakfast)); 
     output += add_line(0, 'Board member: ' + boolToYN(userData.boardMember));
     output += add_line(0, 'Chapter Chair: ' + boolToYN(userData.chapterChair));
+    output += add_line(0, 'Joey Watson Fund: ' + boolToYN(userData.joeyWatson));
     output += '\n';
   }
 
@@ -2803,23 +2836,27 @@ const Summary = ({thisState}) => {
 
   //----
 
-  output += add_line(0, '\nSOFT Angel' +  (userData.softAngels.length === 1 ? '' : 's')  + ':');
-  output += '\n';
-  if (userData.softAngels.length === 0) {
-    output += add_line(1, 'There are no SOFT angels.');
+  if (userData.attendance !== 'workshops') {
+
+    output += add_line(0, '\nSOFT Angel' +  (userData.softAngels.length === 1 ? '' : 's')  + ':');
     output += '\n';
-  }
-  else {
-    for (let softAngel of userData.softAngels) {
-      output += add_line(1, softAngel.firstName + ' ' + softAngel.lastName);
-      output += add_line(1, 'Date of birth: ' + softAngel.dateOfBirth.toDateString());
-      output += add_line(1, 'Date of death: ' + softAngel.dateOfDeath.toDateString());
-      output += add_line(1, 'Diagnosis: ' + (softAngel.diagnosis === "Other" ? softAngel.otherDiagnosis : softAngel.diagnosis));
+    if (userData.softAngels.length === 0) {
+      output += add_line(1, 'There are no SOFT angels.');
       output += '\n';
+    }
+    else {
+      for (let softAngel of userData.softAngels) {
+        output += add_line(1, softAngel.firstName + ' ' + softAngel.lastName);
+        output += add_line(1, 'Date of birth: ' + softAngel.dateOfBirth.toDateString());
+        output += add_line(1, 'Date of death: ' + softAngel.dateOfDeath.toDateString());
+        output += add_line(1, 'Diagnosis: ' + (softAngel.diagnosis === "Other" ? softAngel.otherDiagnosis : softAngel.diagnosis));
+        output += '\n';
+      }
     }
   }
 
   //  If 'balloon'-only, then we're done summarizing
+
   if (userData.attendance !== 'balloon') {
 
     output += add_line(0, '\nAttendees:');
@@ -2859,162 +2896,175 @@ const Summary = ({thisState}) => {
       }
     }
 
-    //----
-
-
-    let anySoftChildren = userData.attendees.find( a => { 
-      return (a.peopleType === peopleTypes.SOFTCHILD);
-    });
-
-    if (anySoftChildren) {
-        output += add_line(0, '\nClinics:');
-        output += '\n';
-        output += add_line(1, 'Transportation tie-downs needed: ' + userData.clinicTieDowns);
-        output += '\n';
-
-        let clinicOrder = 1;
-        for (let clinic of userData.clinics) {
-          let suffix = 'th';
-          if (clinicOrder === 1)  suffix = 'st';
-          if (clinicOrder === 2)  suffix = 'nd';
-          if (clinicOrder === 3)  suffix = 'rd';
-          output += add_line(1, clinicOrder + suffix + ' Choice: ' + clinic);
-          clinicOrder++;
-        }
-        output += '\n';
-    }
-
 
     //----
 
 
-    let adults = userData.attendees.filter( a => { 
-      return (a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL);
-    });
+    if (userData.attendance !== 'workshops'  &&  userData.attendance !== 'picnic') {
 
-    if (adults.length > 0) {
+          let anySoftChildren = userData.attendees.find( a => { 
+            return (a.peopleType === peopleTypes.SOFTCHILD);
+          });
 
-        output += add_line(0, '\nWorkshops:');
-        output += '\n';
+          if (anySoftChildren) {
+              output += add_line(0, '\nClinics:');
+              output += '\n';
+              output += add_line(1, 'Transportation tie-downs needed: ' + userData.clinicTieDowns);
+              output += '\n';
 
-        for (let adult of adults) {
-
-          output += add_line(1, adult.firstName + ' ' + adult.lastName + ':');
-
-          for (let sess of thisState.eventInfo.workshopSessions) {
-            let workshop = sess.workshops.find( ws => ws.id === adult.workshops[sess.id]);
-            output += add_line(2, sess.name + ': ' + workshop.title + (workshop.moderator !== '' ? ' - ' + workshop.moderator : ''));
+              let clinicOrder = 1;
+              for (let clinic of userData.clinics) {
+                let suffix = 'th';
+                if (clinicOrder === 1)  suffix = 'st';
+                if (clinicOrder === 2)  suffix = 'nd';
+                if (clinicOrder === 3)  suffix = 'rd';
+                output += add_line(1, clinicOrder + suffix + ' Choice: ' + clinic);
+                clinicOrder++;
+              }
+              output += '\n';
           }
-          output += '\n';
-        }
+
     }
 
 
     //----
 
 
-    let children = userData.attendees.filter( a => { 
-      return ((a.peopleType === peopleTypes.CHILD  &&  a.age <= 11)  ||  a.peopleType === peopleTypes.SOFTCHILD);
-    });
+    if (userData.attendance !== 'picnic') { 
 
-    if (children.length > 0) {
+          let adults = userData.attendees.filter( a => { 
+            return (a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL);
+          });
 
-        output += add_line(0, '\nChildcare:');
-        output += '\n';
+          if (adults.length > 0) {
 
-        for (let child of children) {
+              output += add_line(0, '\nWorkshops:');
+              output += '\n';
 
-          output += add_line(1, child.firstName + ' ' + child.lastName + ':');
+              for (let adult of adults) {
 
-          for (let sess of thisState.eventInfo.childCareSessions) {
+                output += add_line(1, adult.firstName + ' ' + adult.lastName + ':');
 
-            if (child.childCareSessions.hasOwnProperty(sess.id) && qualifiesChildCare(child.age, sess, thisState.boardMember)) {
-              output += add_line(2, sess.title + ': ' + boolToYN(child.childCareSessions[sess.id]));
+                for (let sess of thisState.eventInfo.workshopSessions) {
+                  let workshop = sess.workshops.find( ws => ws.id === adult.workshops[sess.id]);
+                  output += add_line(2, sess.name + ': ' + workshop.title + (workshop.moderator !== '' ? ' - ' + workshop.moderator : ''));
+                }
+                output += '\n';
+              }
+          }
+    }
+
+
+    //----
+
+    if (userData.attendance !== 'workshops') {
+
+          if (userData.attendance !== 'picnic') {
+
+                let children = userData.attendees.filter( a => { 
+                  return ((a.peopleType === peopleTypes.CHILD  &&  a.age <= 11)  ||  a.peopleType === peopleTypes.SOFTCHILD);
+                });
+
+                if (children.length > 0) {
+
+                    output += add_line(0, '\nChildcare:');
+                    output += '\n';
+
+                    for (let child of children) {
+
+                      output += add_line(1, child.firstName + ' ' + child.lastName + ':');
+
+                      for (let sess of thisState.eventInfo.childCareSessions) {
+
+                        if (child.childCareSessions.hasOwnProperty(sess.id) && qualifiesChildCare(child.age, sess, thisState.boardMember)) {
+                          output += add_line(2, sess.title + ': ' + boolToYN(child.childCareSessions[sess.id]));
+                        }
+                      }
+
+                      output += '\n';
+                    }
+                }
+
+
+                //----
+
+
+                if (userData.chapterChair) {
+                  output += add_line(0, '\nAttending Chapter Chair Luncheon:');
+                  output += '\n';
+
+                  for (let attendee of userData.attendees) {
+                    if (attendee.peopleType === peopleTypes.ADULT) {
+                      output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.chapterChairLunch));
+                    }
+                    else {
+                      attendee.chapterChairLunch = false;           //  Enforce proper state for non-adults
+                    }
+                  }
+
+                  output += '\n';
+                }
+
+
+                //----
+
+
+                if (userData.softAngels.length !== 0) {
+                  output += add_line(0, '\nAttending Remembrance Outing:');
+                  output += '\n';
+
+                  for (let attendee of userData.attendees) {
+                    if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL) {
+                      output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.rembOuting) + (attendee.rembOuting ? ' -- meal: ' + attendee.rembLunch : ''));
+                    }
+                  }
+                  output += '\n';
+                }
+
+
+                //----
+
+
+                output += add_line(0, '\nNeeds transportation to the picnic:');
+                output += '\n';
+
+                for (let attendee of userData.attendees) {
+                  if (attendee.peopleType === peopleTypes.SOFTCHILD) {
+                    output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnic) + 
+                              (attendee.picnic ? ' -- Needs tie-down: ' + boolToYN(attendee.picnicTiedown) : ''));
+                  }
+                  else {
+                    output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnic));
+                  }
+                }
+                output += '\n';
+
+          }
+
+          //----
+
+
+          output += add_line(0, '\nSOFT Wear Shirts:');
+          output += '\n';
+
+          for (let shirtType of thisState.eventInfo.shirtTypes) {
+
+            output += add_line(1, shirtType.description);
+
+            let totalShirts = 0;
+            for (let shirt of userData.shirtsOrdered) {
+              if (shirt.shirtID === shirtType.id) {
+                output += add_line(2, 'Ordered: ' + shirt.quantity + ', ' + shirtDisplay[shirt.size] + ', $' + shirt.quantity*shirtType.cost);
+                totalShirts++;
+              }
             }
+
+            if (totalShirts === 0) {
+              output += add_line(2, 'None ordered');
+            }
+
+            output += '\n';
           }
-
-          output += '\n';
-        }
-    }
-
-
-    //----
-
-
-    if (userData.chapterChair) {
-      output += add_line(0, '\nAttending Chapter Chair Luncheon:');
-      output += '\n';
-
-      for (let attendee of userData.attendees) {
-        if (attendee.peopleType === peopleTypes.ADULT) {
-          output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.chapterChairLunch));
-        }
-        else {
-          attendee.chapterChairLunch = false;           //  Enforce proper state for non-adults
-        }
-      }
-
-      output += '\n';
-    }
-
-
-    //----
-
-
-    if (userData.softAngels.length !== 0) {
-      output += add_line(0, '\nAttending Remembrance Outing:');
-      output += '\n';
-
-      for (let attendee of userData.attendees) {
-        if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL) {
-          output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.rembOuting) + (attendee.rembOuting ? ' -- meal: ' + attendee.rembLunch : ''));
-        }
-      }
-      output += '\n';
-    }
-
-
-    //----
-
-
-    output += add_line(0, '\nNeeds transportation to the picnic:');
-    output += '\n';
-
-    for (let attendee of userData.attendees) {
-      if (attendee.peopleType === peopleTypes.SOFTCHILD) {
-        output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnic) + 
-                  (attendee.picnic ? ' -- Needs tie-down: ' + boolToYN(attendee.picnicTiedown) : ''));
-      }
-      else {
-        output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnic));
-      }
-    }
-    output += '\n';
-
-
-    //----
-
-
-    output += add_line(0, '\nSOFT Wear Shirts:');
-    output += '\n';
-
-    for (let shirtType of thisState.eventInfo.shirtTypes) {
-
-      output += add_line(1, shirtType.description);
-
-      let totalShirts = 0;
-      for (let shirt of userData.shirtsOrdered) {
-        if (shirt.shirtID === shirtType.id) {
-          output += add_line(2, 'Ordered: ' + shirt.quantity + ', ' + shirtDisplay[shirt.size] + ', $' + shirt.quantity*shirtType.cost);
-          totalShirts++;
-        }
-      }
-
-      if (totalShirts === 0) {
-        output += add_line(2, 'None ordered');
-      }
-
-      output += '\n';
     }
 
   }
@@ -3022,13 +3072,16 @@ const Summary = ({thisState}) => {
 
   //----
 
+  if (userData.attendance === 'full'  ||  userData.attendance === 'picnic') {
 
-  output += add_line(0, '\nFamily Directory:');
-  output += '\n';
-  output += add_line(1, 'Include phone: ' + (userData.directory.phone ? 'Yes' : 'No'));
-  output += add_line(1, 'Include email: ' + (userData.directory.email ? 'Yes' : 'No'));
-  output += add_line(1, 'Include city: ' + (userData.directory.city ? 'Yes' : 'No'));
-  output += '\n';
+    output += add_line(0, '\nFamily Directory:');
+    output += '\n';
+    output += add_line(1, 'Include phone: ' + (userData.directory.phone ? 'Yes' : 'No'));
+    output += add_line(1, 'Include email: ' + (userData.directory.email ? 'Yes' : 'No'));
+    output += add_line(1, 'Include city: ' + (userData.directory.city ? 'Yes' : 'No'));
+    output += '\n';
+
+}
 
 
   //----
