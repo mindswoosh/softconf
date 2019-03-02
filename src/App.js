@@ -48,7 +48,7 @@ library.add(faQuestionCircle);
 library.add(faBars);
 library.add(faRibbon);
 
-const DEBUG = true;  //  Set to false for production
+const DEBUG = false;  //  Set to false for production
 
 const JSONversion = '1.0';
 
