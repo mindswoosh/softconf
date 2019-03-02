@@ -48,7 +48,7 @@ library.add(faQuestionCircle);
 library.add(faBars);
 library.add(faRibbon);
 
-const DEBUG = false;  //  Set to false for production
+const DEBUG = true;  //  Set to false for production
 
 const JSONversion = '1.0';
 
@@ -2672,7 +2672,7 @@ const Dinner = ({attendees, adultMenu, kidsMenu, blurb, onChangeDinner}) =>
         {return <div key={a.id} className="indent">
             <span className="bold">{i+1}.</span> <span className="remb-name"> {a.firstName} {a.lastName}</span>
             <div className="inline">
-              {a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL ?
+              {a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL  || (a.peopleType === peopleTypes.CHILD  &&  a.age >= 12) ?
                   <Select
                     defaultValue={ a.welcomeDinner !== '' ? { label: a.welcomeDinner, value: a.welcomeDinner } : null }
                     options={arrayToOptions(adultMenu)}
