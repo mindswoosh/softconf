@@ -48,7 +48,7 @@ library.add(faQuestionCircle);
 library.add(faBars);
 library.add(faRibbon);
 
-const DEBUG = false;  //  Set to false for production
+const DEBUG = true;  //  Set to false for production
 
 const JSONversion = '1.0';
 
@@ -560,6 +560,7 @@ class App extends Component {
       currentPage: pages.WELCOME,
       pageHistory: [],                //  Keep a history of the pages visited for use by the Back button
       workshopAttendee: 0,
+      userDataSaved: false,
       shirtDropdowns: {},             //  { id1: { size, quantity }, id2: {...} }
 
       eventInfo: {
@@ -618,6 +619,7 @@ class App extends Component {
     //  This set of change handlers could probably be drastically reduced by using
     //  generic handlers that take values, not events or opts as arguments
 
+    this.setUserData          = this.setUserData.bind(this);
     this.onChangeStateCheckbox = this.onChangeStateCheckbox.bind(this);
     this.setEventInfo         = this.setEventInfo.bind(this);
     this.onChangeContactInfo  = this.onChangeContactInfo.bind(this);
@@ -893,7 +895,10 @@ class App extends Component {
                   <Summary thisState={this.state} />,
 
               [pages.CHECKOUT]:
-                  <Checkout thisState={this.state} />,
+                  <Checkout
+                    thisState={this.state}
+                    setUserData={this.setUserData}
+                  />,
 
               // [pages.MERCHANDISE]:  <Merchancise merchandise={merchandise} />,
             }[currentPage]
@@ -1576,6 +1581,7 @@ class App extends Component {
           pageHistory.push(currentPage);
 
           this.setState({
+            userDataSaved: false,
             pageHistory,
             currentPage: pages.CHECKOUT,
           });
@@ -1599,6 +1605,12 @@ class App extends Component {
     }
   }
 
+
+  setUserData(saved) {
+    this.setState ({
+      userDataSaved: saved,
+    });
+  }
 
 
   //-------------------------------------------------------------------------------------------
@@ -2832,10 +2844,11 @@ const Summary = ({thisState}) => {
     clinicTieDowns:     thisState.clinicTieDowns,
     workshops:          thisState.workshops,
     childCareSessions:  thisState.childCareSessions,
+    summary:            '',
+    paid:               false,
   }
 
-  userDataJSON = JSON.stringify(userData);
-
+  
   let output = '';
 
   let reg = '';
@@ -3141,6 +3154,7 @@ const Summary = ({thisState}) => {
 
   //----
 
+  userData.summary = output;
 
   let html = output.replace(/\n/g, "<br />");
   html = html.replace(/\s{3}/g,'<span class="indent"></span>')
@@ -3155,6 +3169,7 @@ const Summary = ({thisState}) => {
       <div>{ ReactHtmlParser(html) }</div>
     </div>
   );
+
 }
 
 
@@ -3162,43 +3177,110 @@ const Summary = ({thisState}) => {
 //----------------------------------------------------------------------------------------------------
 
 
-// Using fetch() to send data
-// https://developers.google.com/web/updates/2015/03/introduction-to-fetch
+ 
 
-// fetch('./api/some.json')
-//   .then(
-//     function(response) {
-//       if (response.status !== 200) {
-//         console.log('Looks like there was a problem. Status Code: ' +
-//           response.status);
-//         return;
-//       }
+const Checkout = ({thisState, setUserData}) => {
 
-//       // Examine the text in the response
-//       response.json().then(function(data) {
-//         console.log(data);
-//       });
-//     }
-//   )
-//   .catch(function(err) {
-//     console.log('Fetch Error :-S', err);
-//   });
+    userDataJSON = JSON.stringify(userData);
 
-  
+    //  Send data to server to store in DB
+    //  Display "Pay" button after we have been successful
 
-const Checkout = ({thisState}) =>
-  <div>
-    <h2>Checkout</h2>
-    <p>Enter some more data:</p>
+    // Using fetch() to send data
+    // https://developers.google.com/web/updates/2015/03/introduction-to-fetch
 
-    <p>UNDER CONSTRUCTION</p>
-    You cannot submit the data yet.
-    <p>UNDER CONSTRUCTION</p>
-    <form method="post" action="http://softconf.org/index.pl">
-      <input id="json-data" type="hidden" name="data" value={userDataJSON}/>
-      <button type="submit">Send Data</button>
-    </form>
-  </div>
+    // fetch('./api/some.json')
+    //   .then(
+    //     function(response) {
+    //       if (response.status !== 200) {
+    //         console.log('Looks like there was a problem. Status Code: ' +
+    //           response.status);
+    //         return;
+    //       }
+
+    //       // Examine the text in the response
+    //       response.json().then(function(data) {
+    //         console.log(data);
+    //       });
+    //     }
+    //   )
+    //   .catch(function(err) {
+    //     console.log('Fetch Error :-S', err);
+    //   });
+
+    //  Another example:
+    //  https://stackoverflow.com/questions/39085575/javascript-fetch-cant-get-post-response-data-from-perl-script
+
+    var proxyUrl = 'https://cors-anywhere.herokuapp.com/',
+        targetUrl = 'http://softconf.org/cgi-bin/form.cgi';
+
+    // fetch('http://softconf.org/index.pl', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Accept': 'application/json',
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: userDataJSON,
+    // })
+
+    // fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}`)
+    // .then(response => response.json())
+    // .then(result => this.setEventInfo(result))
+    // .catch(error => error);
+
+
+    // fetch(proxyUrl + targetUrl)
+    // .then(blob => userDataJSON)
+
+//Missing required request header. Must specify one of: origin,x-requested-with
+    if (!thisState.userDataSaved) {
+      fetch(proxyUrl + targetUrl, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: userDataJSON,
+      })
+      .then(response => {
+        console.log(response);
+        return response.json();
+      })
+      .then(data => {
+          console.log('Success in fetching!');
+          console.log(data);
+          setUserData(true);
+          // thisState.setState({
+          //   userDataSaved: true,
+          // });
+          return data;
+      })
+      .catch(e => {
+        console.log('Caught an error');
+        console.log(e);
+        return e;
+      });
+    }
+
+    return (
+      <div>
+        <h2>Checkout</h2>
+        <p>Enter some more data:</p>
+
+        <p>UNDER CONSTRUCTION</p>
+        You cannot submit the data yet.
+        <p>UNDER CONSTRUCTION</p>
+        <form method="post" action="http://softconf.org/index.pl">
+          <input id="json-data" type="hidden" name="data" value={userDataJSON}/>
+        </form>
+        {!thisState.userDataSaved &&
+          <div className="greyed-background">
+            <div className="loading"></div>
+          </div>
+        }
+      </div>
+    );
+  }
 
 
 //----------------------------------------------------------------------------------------------------

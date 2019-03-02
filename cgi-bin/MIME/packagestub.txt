@@ -1,0 +1,6 @@
+
+This folder and file exist solely to
+appease the Perl Editor’s “lint” checker
+which expects to find MIME::Lite
+but is on the production server, not
+here in this development directory.
