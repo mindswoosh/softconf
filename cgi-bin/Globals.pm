@@ -19,11 +19,11 @@ use warnings;
 
 use Exporter 'import';
 our @EXPORT = qw(
+  $TRUE
+  $FALSE
   $dbh
-  CONFERENCE_ID
-  DEBUG 
-	TRUE
-	FALSE
+  $CONFERENCE_ID
+  $DEBUG 
 );
 
 
@@ -31,11 +31,17 @@ use Settings;
 use strict;
 
 
+#----------------------------------------------------------------------
+#  Useful constants
+
+our $TRUE = 1;
+our $FALSE = 0;
+
 
 #----------------------------------------------------------------------
 #  This year's conference ID.  State abbreviation + year
 
-use constant CONFERENCE_ID  => "MI2019";
+our $CONFERENCE_ID = "MI2019";
 
 
 
@@ -49,16 +55,7 @@ our $dbh;
 #----------------------------------------------------------------------
 #  Include DEBUG code?
 
-use constant DEBUG  => 1;
-
-
-
-#----------------------------------------------------------------------
-#  We use TRUE and FALSE all the time...
-
-
-use constant FALSE  => 0;
-use constant TRUE   => 1;
+our $DEBUG = 1;
 
 
 

@@ -30,10 +30,10 @@
 DROP TABLE IF EXISTS posts;
 CREATE TABLE posts
 (
-    id              INT(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    date_created    DATETIME NOT NULL,
-    conference_id   TINYTEXT,               #  eg. "2019" (Might have text in it at some point)
-    json            TEXT
+    id                  INT(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    date_created        DATETIME NOT NULL,
+    conference_id       VARCHAR(15),               #  eg. "2019" (Might have text in it at some point)
+    json                TEXT
 );
 
 
@@ -43,6 +43,9 @@ DROP TABLE IF EXISTS contacts;
 CREATE TABLE contacts
 (
     id                  INT(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    date_created        DATETIME NOT NULL,
+    conference_id       VARCHAR(15),
+    post_id             INT(10) UNSIGNED,
     form_id             VARCHAR(30),
 
     firstName           VARCHAR(30),
@@ -74,7 +77,6 @@ CREATE TABLE contacts
     dir_email           TINYINT DEFAULT FALSE,
     dir_city            TINYINT DEFAULT FALSE,
 
-    summary             VARCHAR(10000),
     paid                TINYINT DEFAULT FALSE,
     transactionCode     VARCHAR(255)
 );
@@ -85,30 +87,30 @@ DROP TABLE IF EXISTS attendees;
 CREATE TABLE attendees
 (
     id                  INT(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    contact_id          INT(10) UNSIGNED NOT NULL
+    contact_id          INT(10) UNSIGNED NOT NULL,
     firstName           VARCHAR(30),
     lastName            VARCHAR(30),
     peopleType          VARCHAR(15),
 
     welcomeDinner       VARCHAR(30),                #  Meal choice
 
-    // Adults
+    #  Adults
     rembOuting          TINYINT DEFAULT FALSE,      #  Attending the remembrance outing?
     rembLunch           VARCHAR(30),                #  Meal choice. Name of meal
     chapterChairLunch   TINYINT DEFAULT FALSE,      #  Attending the luncheon?
 
-    // Child
+    #  Child
     age                 TINYINT,
     sibOuting           TINYINT DEFAULT FALSE,
     shirtSize           VARCHAR(30),                #  Sib outing shirt size
 
-    // SOFT Child
+    # SOFT Child
     dateOfBirth         VARCHAR(15),                #  MM/DD/YY  format
     diagnosis           VARCHAR(20),                #  If "Other" then use "otherDiagnosis"
     otherDiagnosis      VARCHAR(30),
     eatsMeals           TINYINT DEFAULT FALSE,
 
-    // Picnic
+    # Picnic
     picnic              TINYINT DEFAULT FALSE,      #  Needs transportation to the picnic?
     picnicTiedown       TINYINT DEFAULT FALSE
 );
@@ -119,7 +121,7 @@ DROP TABLE IF EXISTS softangels;
 CREATE TABLE softangels
 (
     id                  INT(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    contact_id          INT(10) UNSIGNED NOT NULL
+    contact_id          INT(10) UNSIGNED NOT NULL,
     firstName           VARCHAR(30),
     lastName            VARCHAR(30),
 
@@ -136,11 +138,13 @@ CREATE TABLE clinics
 (
     id                  INT(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     contact_id          INT(10) UNSIGNED NOT NULL,
-    order               TINYINT,
+    position            TINYINT,
     title               VARCHAR(50)
 );
 
 
+
+# Workshops are only for people attending the "full" conference or "workshops" only
 
 DROP TABLE IF EXISTS workshops;
 CREATE TABLE workshops
@@ -161,7 +165,7 @@ CREATE TABLE childcare
     contact_id      INT(10) UNSIGNED NOT NULL,
     attendee_id     INT(10) UNSIGNED NOT NULL,
     session_id      VARCHAR(20),
-    title           VARCHAR(30)
+    needed          TINYINT DEFAULT 0               #  Bool. Attending?
 );
 
 
@@ -173,6 +177,5 @@ CREATE TABLE shirts
     contact_id      INT(10) UNSIGNED NOT NULL,
     shirt_id        VARCHAR(30),
     shirtSize       VARCHAR(30),
-    quantity        TINYINT,
-    cost            VARCHAR(10)                     #  "15.50", etc
+    quantity        TINYINT
 );

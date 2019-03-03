@@ -511,14 +511,14 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     lastName,
     peopleType,
 
-    welcomeDinner: '',            //  Meal choice
+    welcomeDinner: '',              //  Meal choice
 
     // Adults
-    rembOuting: false,            //  Attending the remembrance outing?
-    rembLunch:  '',               //  Meal choice
-    chapterChairLunch: false,     //  Attending the luncheon?
-    workshops: {},
-    childCareSessions: {},
+    rembOuting: false,              //  Attending the remembrance outing?
+    rembLunch:  '',                 //  Meal choice
+    chapterChairLunch: false,       //  Attending the luncheon?
+    workshops: {},                  //  { sessID1: choice, sessID1: choice, ... }   E.g., {  "1": "1n", "2": "2a", "3": "3c" }
+    childCareSessions: {},          //  { ccID1: bool, ccID2: bool, ccID3:bool, ... }
 
     // Child
     age:         age,
@@ -526,10 +526,10 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     shirtSize:   '',
 
     // SOFT Child / Angel
-    dateOfBirth: null,
-    dateOfDeath: null,            //  SOFT angels only 
-    diagnosis:   null,
-    otherDiagnosis: "",
+    dateOfBirth: null,              //  Unspecified dates must be null or we crash
+    dateOfDeath: null,              //  SOFT angels only 
+    diagnosis:   '',
+    otherDiagnosis: '',
     eatsMeals:   false,
 
     // Picnic
@@ -559,6 +559,7 @@ class App extends Component {
     this.state = {
       currentPage: pages.WELCOME,
       pageHistory: [],                //  Keep a history of the pages visited for use by the Back button
+      formID: new Date().getTime(),
       workshopAttendee: 0,
       userDataSaved: false,
       shirtDropdowns: {},             //  { id1: { size, quantity }, id2: {...} }
@@ -612,7 +613,7 @@ class App extends Component {
       attendingClinics:   true,
       clinicTieDowns:     '',
 
-      shirtsOrdered: [],              //  { shirtID, quantity, size }
+      shirtsOrdered: [],              //  { shirtID, quantity, size, cost }
     };
 
 
@@ -687,9 +688,9 @@ class App extends Component {
 
     if (DEBUG) {
       attendees = [
-        attendee("Steve", "Maguire",   peopleTypes.ADULT,        -1, eventInfoDefault),
+        attendee("Steve", "Maguire",   peopleTypes.ADULT,        '', eventInfoDefault),
         attendee("Beth",  "Mountjoy",  peopleTypes.CHILD,         5, eventInfoDefault),
-        attendee("Terre", "Krotzer",   peopleTypes.PROFESSIONAL, -1, eventInfoDefault),
+        attendee("Terre", "Krotzer",   peopleTypes.PROFESSIONAL, '', eventInfoDefault),
         attendee("Jane",  "Mountjoy",  peopleTypes.CHILD,        11, eventInfoDefault),
         attendee("Helen", "Mountjoy",  peopleTypes.CHILD,        12, eventInfoDefault),
         attendee("Cliff", "Mountjoy",  peopleTypes.CHILD,        17, eventInfoDefault),
@@ -2617,7 +2618,7 @@ const Picnic = ({attendees, onChangeAttendee, blurb}) =>
     </p>
     <div className="remembrance">
       {attendees.map( (a,i) => 
-        <div key={a.id} className="indent">
+        <div key={a.id} className="picnic-row">
           <Checkbox defaultChecked={a.picnic} onChange={event => onChangeAttendee(a.id, "picnic", event.target.checked)} />
           <span className="remb-name">{a.firstName} {a.lastName}</span>
           <div className={(a.picnic && a.peopleType === peopleTypes.SOFTCHILD) ? "inline" : "inline invisible"}>
@@ -2820,13 +2821,9 @@ function add_line(indent, str) {
 
 const Summary = ({thisState}) => {
 
-  let t = new Date().getTime();
-
-  let contactID = thisState.contactInfo.firstName.toLowerCase().replace(/[^A-Za-z]/g, '')+t;
-
   userData = {
     version:            JSONversion,
-    contactID:          contactID,
+    formID:             thisState.formID,
     contactInfo:        thisState.contactInfo,
     attendees:          thisState.attendees,
     softAngels:         thisState.softAngels,
@@ -2846,6 +2843,7 @@ const Summary = ({thisState}) => {
     childCareSessions:  thisState.childCareSessions,
     summary:            '',
     paid:               false,
+    transactionCode:    '',
   }
 
   
@@ -2960,8 +2958,7 @@ const Summary = ({thisState}) => {
 
     //----
 
-
-    if (userData.attendance !== 'workshops'  &&  userData.attendance !== 'picnic') {
+    if (userData.attendance === 'full') {
 
           let anySoftChildren = userData.attendees.find( a => { 
             return (a.peopleType === peopleTypes.SOFTCHILD);
@@ -2998,7 +2995,8 @@ const Summary = ({thisState}) => {
     //----
 
 
-    if (userData.attendance !== 'picnic') { 
+    //  Consider using this format: if (userData.attendance.match(/full|workshops/i)) { 
+    if (userData.attendance === 'full'  ||  userData.attendance === 'workshops') { 
 
           let adults = userData.attendees.filter( a => { 
             return (a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL);
@@ -3044,6 +3042,7 @@ const Summary = ({thisState}) => {
 
                       for (let sess of thisState.eventInfo.childCareSessions) {
 
+                        // child.childCareSessions:  { ccID1: bool, ccID2: bool, ccID3:bool... }
                         if (child.childCareSessions.hasOwnProperty(sess.id) && qualifiesChildCare(child.age, sess, thisState.boardMember)) {
                           output += add_line(2, sess.title + ': ' + boolToYN(child.childCareSessions[sess.id]));
                         }
