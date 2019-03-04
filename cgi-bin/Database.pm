@@ -89,91 +89,40 @@ sub CloseDatabase {
 #------------------------------------------------------------------------
 
 
+our @post_cols = qw(
+    date_created
+    conference_id
+    json
+);
+
+
 sub GetPost {
-    my $id   = shift;
-    my ($dbh, $sth, %post);
-
-    $dbh = OpenDatabase();
-    {
-        $sth = $dbh->prepare("SELECT * FROM posts WHERE id=?");
-        $sth->execute($id);
-
-        my $rhash = $sth->fetchrow_hashref();   # Should only be 1...
-        %post = %$rhash  if (defined($rhash));
-
-        $sth->finish();
-    }
-    CloseDatabase($dbh);
-
-    return(%post);
+    my $id = shift;
+    return GetObject("posts", $id);
 }
-
 
 sub UpdatePost {
     my %post = @_;
-    my ($dbh, $result);
-
-    $dbh = OpenDatabase();
-    $result = $dbh->do (
-        "UPDATE posts SET
-            conference_id = ?, json = ?
-        WHERE id = ?",
-            undef,
-            $post{conference_id}, $post{json},
-        $post{id}
-    );
-    CloseDatabase($dbh);
-
-    return $result ? %post : undef;
+    return UpdateObject("posts", \@post_cols, %post);
 }
-
 
 sub InsertPost {
     my %post = @_;
-    my ($dbh, $result);
-
-    $dbh = OpenDatabase();
-    $result = $dbh->do (
-        "INSERT INTO posts (
-            date_created,
-            conference_id,
-            json
-        )
-        VALUES(NOW(),?,?)",
-        undef,
-        $post{conference_id},
-        $post{json}
-    );
-
-    $post{id} = $dbh->{mysql_insertid};
-    CloseDatabase($dbh);
-
-    return $result ? %post : undef;
+    return InsertObject("posts", \@post_cols, %post);
 }
 
-
-sub DeletePost {
+sub DeleteAPost {
     my $id = shift;
-    my $dbh;
-
-    $dbh = OpenDatabase();
-    {
-        $dbh->do(
-            "DELETE FROM posts WHERE id=?",
-            undef, $id
-        );
-    }
-    CloseDatabase($dbh);
+    DeleteObject("posts", $id);
 }
 
 
 #------------------------------------------------------------------------
 
-our @contact_insert_cols = qw(
-    date_created
-);
 
 our @contact_cols = qw(
+    date_created
+
     conference_id
     post_id
     form_id
@@ -213,74 +162,27 @@ our @contact_cols = qw(
 
 
 sub GetContact {
-    my $id   = shift;
-    my ($dbh, $sth, %contact);
-
-    $dbh = OpenDatabase();
-    {
-        $sth = $dbh->prepare("SELECT * FROM contacts WHERE id=?");
-        $sth->execute($id);
-
-        my $rhash = $sth->fetchrow_hashref();   # Should only be 1...
-        %contact = %$rhash  if (defined($rhash));
-
-        $sth->finish();
-    }
-    CloseDatabase($dbh);
-
-    return(%contact);
+    my $id = shift;
+    return GetObject("contacts", $id);
 }
 
 
 sub UpdateContact {
     my %contact = @_;
-    my ($dbh, $result);
-
-    $dbh = OpenDatabase();
-
-        my $stmt = "UPDATE contacts SET " . UpdateColumns(@contact_cols) . " WHERE id = ?";
-        $result = $dbh->do($stmt, undef, ColumnValues(\%contact, @contact_cols), $contact{id});
-
-    CloseDatabase($dbh);
-
-    return $result ? %contact : undef;
+    return UpdateObject("contacts", \@contact_cols, %contact);
 }
 
 
 sub InsertContact {
     my %contact = @_;
-    my ($dbh, $result);
-
-    $dbh = OpenDatabase();
-
-        $result = $dbh->do ("INSERT INTO contacts " .
-            InsertColumns(@contact_insert_cols, @contact_cols),
-            undef,
-            ColumnValues(\%contact,  @contact_insert_cols, @contact_cols)
-        );
-
-        $contact{id} = $dbh->{mysql_insertid};
-        
-    CloseDatabase($dbh);
-
-    return $result ? %contact : undef;
+    return InsertObject("contacts", \@contact_cols, %contact);
 }
 
 
 sub DeleteContact {
     my $id = shift;
-    my $dbh;
-
-    $dbh = OpenDatabase();
-    {
-        $dbh->do(
-            "DELETE FROM attendees WHERE id=?",
-            undef, $id
-        );
-    }
-    CloseDatabase($dbh);
+    DeleteObject("contacts", $id);
 }
-
 
 
 #------------------------------------------------------------------------
@@ -298,85 +200,34 @@ our @attendee_cols = qw(
     age
     sibOuting
     shirtSize
-    dateOfBirth
+    birthDate
     diagnosis
     otherDiagnosis
     eatsMeals
-    picnic
+    picnicTrans
     picnicTiedown
 );
 
 
 sub GetAttendee {
-    my $id   = shift;
-    my ($dbh, $sth, %attendee);
-
-    $dbh = OpenDatabase();
-    {
-        $sth = $dbh->prepare("SELECT * FROM attendees WHERE id=?");
-        $sth->execute($id);
-
-        my $rhash = $sth->fetchrow_hashref();   # Should only be 1...
-        %attendee = %$rhash  if (defined($rhash));
-
-        $sth->finish();
-    }
-    CloseDatabase($dbh);
-
-    return(%attendee);
+    my $id = shift;
+    return GetObject("attendees", $id);
 }
-
 
 sub UpdateAttendee {
     my %attendee = @_;
-    my ($dbh, $result);
-
-    $dbh = OpenDatabase();
-
-        my $stmt = "UPDATE attendees SET " . UpdateColumns(@attendee_cols) . " WHERE id = ?";
-        $result = $dbh->do($stmt, undef, ColumnValues(\%attendee, @attendee_cols), $attendee{id});
-
-    CloseDatabase($dbh);
-
-    return $result ? %attendee : undef;
+    return UpdateObject("attendees", \@attendee_cols, %attendee);
 }
-
 
 sub InsertAttendee {
     my %attendee = @_;
-    my ($dbh, $result);
-
-    $dbh = OpenDatabase();
-
-        $result = $dbh->do ("INSERT INTO attendees " .
-            InsertColumns(@attendee_cols),
-            undef,
-            ColumnValues(\%attendee,  @attendee_cols)
-        );
-
-        $attendee{id} = $dbh->{mysql_insertid};
-
-    CloseDatabase($dbh);
-
-    return $result ? %attendee : undef;
+    return InsertObject("attendees", \@attendee_cols, %attendee);
 }
-
 
 sub DeleteAttendee {
     my $id = shift;
-    my $dbh;
-
-    $dbh = OpenDatabase();
-    {
-        $dbh->do(
-            "DELETE FROM attendees WHERE id=?",
-            undef, $id
-        );
-    }
-    CloseDatabase($dbh);
+    DeleteObject("attendees", $id);
 }
-
-
 
 
 #------------------------------------------------------------------------
@@ -386,83 +237,32 @@ our @softangels_cols = qw(
     contact_id
     firstName
     lastName
-    dateOfBirth
-    dateOfDeath
+    birthDate
+    deathDate
     diagnosis
     otherDiagnosis
 );
 
 
 sub GetSoftAngel {
-    my $id   = shift;
-    my ($dbh, $sth, %softangel);
-
-    $dbh = OpenDatabase();
-    {
-        $sth = $dbh->prepare("SELECT * FROM softangels WHERE id=?");
-        $sth->execute($id);
-
-        my $rhash = $sth->fetchrow_hashref();   # Should only be 1...
-        %softangel = %$rhash  if (defined($rhash));
-
-        $sth->finish();
-    }
-    CloseDatabase($dbh);
-
-    return(%softangel);
+    my $id = shift;
+    return GetObject("softangels", $id);
 }
-
 
 sub UpdateSoftAngel {
     my %softangel = @_;
-    my ($dbh, $result);
-
-    $dbh = OpenDatabase();
-
-        my $stmt = "UPDATE softangels SET " . UpdateColumns(@softangels_cols) . " WHERE id = ?";
-        $result = $dbh->do($stmt, undef, ColumnValues(\%softangel, @softangels_cols), $softangel{id});
-
-    CloseDatabase($dbh);
-
-    return $result ? %softangel : undef;
+    return UpdateObject("softangels", \@softangels_cols, %softangel);
 }
-
 
 sub InsertSoftAngel {
     my %softangel = @_;
-    my ($dbh, $result);
-
-    $dbh = OpenDatabase();
-
-        $result = $dbh->do ("INSERT INTO softangels " .
-            InsertColumns(@softangels_cols),
-            undef,
-            ColumnValues(\%softangel,  @softangels_cols)
-        );
-
-        $softangel{id} = $dbh->{mysql_insertid};
-
-    CloseDatabase($dbh);
-
-    return $result ? %softangel : undef;
+    return InsertObject("softangels", \@softangels_cols, %softangel);
 }
-
 
 sub DeleteSoftAngel {
     my $id = shift;
-    my $dbh;
-
-    $dbh = OpenDatabase();
-    {
-        $dbh->do(
-            "DELETE FROM softangels WHERE id=?",
-            undef, $id
-        );
-    }
-    CloseDatabase($dbh);
+    DeleteObject("softangels", $id);
 }
-
-
 
 
 #------------------------------------------------------------------------
@@ -477,74 +277,24 @@ our @workshops_cols = qw(
 
 
 sub GetWorkshop {
-    my $id   = shift;
-    my ($dbh, $sth, %workshop);
-
-    $dbh = OpenDatabase();
-    {
-        $sth = $dbh->prepare("SELECT * FROM workshops WHERE id=?");
-        $sth->execute($id);
-
-        my $rhash = $sth->fetchrow_hashref();   # Should only be 1...
-        %workshop = %$rhash  if (defined($rhash));
-
-        $sth->finish();
-    }
-    CloseDatabase($dbh);
-
-    return(%workshop);
+    my $id = shift;
+    return GetObject("workshops", $id);
 }
-
 
 sub UpdateWorkshop {
     my %workshop = @_;
-    my ($dbh, $result);
-
-    $dbh = OpenDatabase();
-
-        my $stmt = "UPDATE workshops SET " . UpdateColumns(@workshops_cols) . " WHERE id = ?";
-        $result = $dbh->do($stmt, undef, ColumnValues(\%workshop, @workshops_cols), $workshop{id});
-
-    CloseDatabase($dbh);
-
-    return $result ? %workshop : undef;
+    return UpdateObject("workshops", \@workshops_cols, %workshop);
 }
-
 
 sub InsertWorkshop {
     my %workshop = @_;
-    my ($dbh, $result);
-
-    $dbh = OpenDatabase();
-
-        $result = $dbh->do ("INSERT INTO workshops " .
-            InsertColumns(@workshops_cols),
-            undef,
-            ColumnValues(\%workshop,  @workshops_cols)
-        );
-
-        $workshop{id} = $dbh->{mysql_insertid};
-
-    CloseDatabase($dbh);
-
-    return $result ? %workshop : undef;
+    return InsertObject("workshops", \@workshops_cols, %workshop);
 }
-
 
 sub DeleteWorkshop {
     my $id = shift;
-    my $dbh;
-
-    $dbh = OpenDatabase();
-    {
-        $dbh->do(
-            "DELETE FROM workshops WHERE id=?",
-            undef, $id
-        );
-    }
-    CloseDatabase($dbh);
+    DeleteObject("workshops", $id);
 }
-
 
 
 #------------------------------------------------------------------------
@@ -558,74 +308,24 @@ our @clinics_cols = qw(
 
 
 sub GetClinic {
-    my $id   = shift;
-    my ($dbh, $sth, %clinic);
-
-    $dbh = OpenDatabase();
-    {
-        $sth = $dbh->prepare("SELECT * FROM clinics WHERE id=?");
-        $sth->execute($id);
-
-        my $rhash = $sth->fetchrow_hashref();   # Should only be 1...
-        %clinic = %$rhash  if (defined($rhash));
-
-        $sth->finish();
-    }
-    CloseDatabase($dbh);
-
-    return(%clinic);
+    my $id = shift;
+    return GetObject("clinics", $id);
 }
-
 
 sub UpdateClinic {
     my %clinic = @_;
-    my ($dbh, $result);
-
-    $dbh = OpenDatabase();
-
-        my $stmt = "UPDATE clinics SET " . UpdateColumns(@clinics_cols) . " WHERE id = ?";
-        $result = $dbh->do($stmt, undef, ColumnValues(\%clinic, @clinics_cols), $clinic{id});
-
-    CloseDatabase($dbh);
-
-    return $result ? %clinic : undef;
+    return UpdateObject("clinics", \@clinics_cols, %clinic);
 }
-
 
 sub InsertClinic {
     my %clinic = @_;
-    my ($dbh, $result);
-
-    $dbh = OpenDatabase();
-
-        $result = $dbh->do ("INSERT INTO clinics " .
-            InsertColumns(@clinics_cols),
-            undef,
-            ColumnValues(\%clinic,  @clinics_cols)
-        );
-
-        $clinic{id} = $dbh->{mysql_insertid};
-
-    CloseDatabase($dbh);
-
-    return $result ? %clinic : undef;
+    return InsertObject("clinics", \@clinics_cols, %clinic);
 }
-
 
 sub DeleteClinic {
     my $id = shift;
-    my $dbh;
-
-    $dbh = OpenDatabase();
-    {
-        $dbh->do(
-            "DELETE FROM clinics WHERE id=?",
-            undef, $id
-        );
-    }
-    CloseDatabase($dbh);
+    DeleteObject("clinics", $id);
 }
-
 
 
 #------------------------------------------------------------------------
@@ -691,8 +391,12 @@ sub DeleteShirt {
 }
 
 
-#------------------------------------------------------------------------
 
+#------------------------------------------------------------------------
+#
+#  These are the workhorse functions for working with tables
+#
+#
 
 sub valid_table_name {
     my $table = shift;
@@ -828,6 +532,7 @@ sub UpdateColumns {
     my @fields = @field_names;
     while (@fields) {
         my $field = shift @fields;
+        next if ($field eq "date_created");             #  Creation dates don't get updated
         $stmt .= $field . "=?";
         $stmt .= ", "  if (@fields);
     }
@@ -844,6 +549,10 @@ sub ColumnValues {
     my @result;
 
     foreach my $field (@field_names) {
+
+        #  Creation dates don't get set from object values. Updates don't do it
+        #  at all, and inserts use NOW().
+
         if ($field ne "date_created") {
             warn ("Undefined column: " . $field)  if (!defined($hash_ref->{$field}));
             push @result, $hash_ref->{$field};

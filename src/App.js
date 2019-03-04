@@ -40,13 +40,15 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAngleDoubleLeft, faAngleDoubleRight, faHandPointRight, faQuestionCircle, faBars, faRibbon } from '@fortawesome/free-solid-svg-icons'
 
-
 library.add(faAngleDoubleLeft);
 library.add(faAngleDoubleRight);
 library.add(faHandPointRight);
 library.add(faQuestionCircle);
 library.add(faBars);
 library.add(faRibbon);
+
+var sprintf = require('sprintf-js').sprintf;
+
 
 const DEBUG = true;  //  Set to false for production
 
@@ -526,14 +528,16 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     shirtSize:   '',
 
     // SOFT Child / Angel
-    dateOfBirth: null,              //  Unspecified dates must be null or we crash
-    dateOfDeath: null,              //  SOFT angels only 
+    dateOfBirth: null,              //  Unspecified dates must be null or we crash (This is a Date object)
+    birthDate: '',                  //  Textual version
+    dateOfDeath: null,              //  SOFT angels only
+    deathDate: '',
     diagnosis:   '',
     otherDiagnosis: '',
-    eatsMeals:   false,
+    eatsMeals:   true,
 
     // Picnic
-    picnic:         false,                //  Needs transportation to the picnic?
+    picnicTrans:    false,                //  Needs transportation to the picnic?
     picnicTiedown:  false,
 
     // Professional
@@ -548,6 +552,11 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
   });
 
   return attendee;
+}
+
+
+function textFromDate(date) {
+  return sprintf("%02d/%02d/%04d", date.getMonth()+1, date.getDate(), date.getFullYear());
 }
 
 
@@ -659,8 +668,8 @@ class App extends Component {
 
     this.onChangeChildCare    = this.onChangeChildCare.bind(this);
 
-    this.onChangePicnic       = this.onChangePicnic.bind(this);
-    this.onChangePicnicTiedown = this.onChangePicnicTiedown.bind(this);
+    // this.onChangePicnic       = this.onChangePicnic.bind(this);
+    // this.onChangePicnicTiedown = this.onChangePicnicTiedown.bind(this);
 
     this.onChangeDirectory    = this.onChangeDirectory.bind(this);
 
@@ -699,20 +708,9 @@ class App extends Component {
 
       let softchild = attendees.find( a => { return (a.lastName === 'Jones' ) });
       softchild.dateOfBirth = new Date();
+      softchild.birthDate = textFromDate(softchild.dateOfBirth);
       softchild.diagnosis = 'Full Trisomy 18';
     }
-
-    // let shirtDropdowns = eventInfo.shirtTypes.map( (shirt) => {
-    //   console.log(shirt);
-    //   return {
-    //     [shirt.id]: {
-    //       size:     "",
-    //       quantity: 0,
-    //     }
-    //   }
-    // });
-    // console.log("shirtDropdowns");
-    // console.log(shirtDropdowns);
 
     let shirtDropdowns = {};
 
@@ -1239,6 +1237,8 @@ class App extends Component {
             a.firstName = smartFixName(a.firstName.trim());
             a.lastName  = smartFixName(a.lastName.trim());
             a.otherDiagnosis = a.otherDiagnosis.trim();
+            if (a.dateOfBirth) a.birthDate = textFromDate(a.dateOfBirth);
+            if (a.dateOfDeath) a.deathDate = textFromDate(a.dateOfDeath);
             return a;
           });
 
@@ -1280,6 +1280,9 @@ class App extends Component {
             a.firstName = smartFixName(a.firstName.trim());
             a.lastName  = smartFixName(a.lastName.trim());
             a.otherDiagnosis = a.otherDiagnosis.trim();
+            if (a.dateOfBirth) {
+              a.birthDate = textFromDate(a.dateOfBirth);
+            }
             return a;
           });
 
@@ -1618,6 +1621,12 @@ class App extends Component {
   //  Generic handlers
   //
   //  A lot of the additional handlers could be changed to use these
+  //
+  //  REVIEW: If we change all the handlers to accept VALUES and not events or opts, then
+  //  all of the speific event handlers over the next few pages can be reduced to just a
+  //  few: one that changes top-level state variables, and a handler apiece to handle each
+  //  top-level property that is an array or another object. For example, everything that 
+  //  uses onChangeStateCheckbox() could use onChangeFieldValue instead.
 
   onChangeStateCheckbox(event, field) {       //  User's of this func should use onChangeFieldValue()
     this.setState ({
@@ -1640,6 +1649,13 @@ class App extends Component {
       attendees
     });
   }
+
+
+
+  //-------------------------------------------------------------------------------------------
+  //  All of the handlers from here down should be reviewed to use the more general
+  //  above...
+
 
   //-------------------------------------------------------------------------------------------
   //  Process Contact Info page
@@ -1728,6 +1744,7 @@ class App extends Component {
     let i = attendees.findIndex(a => a.id === id);
     console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
     attendees[i].dateOfBirth = date;
+    attendees[i].birthDate = textFromDate(date);
     this.setState({
       attendees
     });
@@ -1784,6 +1801,14 @@ class App extends Component {
     let i = softAngels.findIndex(a => a.id === id);
     console.assert(i !== -1, "Warning -- didn't find SOFT Angel in softAngels list: id = " + id);
     softAngels[i][field] = date;
+
+    if (field === 'dateOfBirth') {                            //  This feels like a total hack...
+      softAngels[i].birthDate = textFromDate(date);
+    }
+    else {
+      softAngels[i].deathDate = textFromDate(date);
+    }
+
     this.setState({
       softAngels
     });
@@ -1891,45 +1916,6 @@ class App extends Component {
     let i = attendees.findIndex( (a) => { return (a.id === attendeeID) } );
     attendees[i].childCareSessions[sessionID] = !attendees[i].childCareSessions[sessionID];
 
-    this.setState ({
-      attendees
-    });
-  }
-
-
-  //-------------------------------------------------------------------------------------------
-  //  Process Remembrance page
-  
-
-  onChangePicnic(event, id) {
-    let { attendees } = this.state;
-    let i = attendees.findIndex(a => a.id === id);
-    console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
-
-    //  Flip state of attendance and lunch option
-    attendees[i].picnic = !attendees[i].picnic;
-    if (!attendees[i].picnic) {
-      attendees[i].picnicTiedown = 0;
-    }
-    this.setState ({
-      attendees
-    });
-  }
-
-  // onChangePicnicTiedown(opt, id) {
-  //   let { attendees } = this.state;
-  //   let i = attendees.findIndex(a => a.id === id);
-  //   console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
-  //   attendees[i].picnicTiedown = opt.value;
-  //   this.setState ({
-  //     attendees
-  //   });
-  // }
-  onChangePicnicTiedown(value, id) {
-    let { attendees } = this.state;
-    let i = attendees.findIndex(a => a.id === id);
-    console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
-    attendees[i].picnicTiedown = value;
     this.setState ({
       attendees
     });
@@ -2619,9 +2605,9 @@ const Picnic = ({attendees, onChangeAttendee, blurb}) =>
     <div className="remembrance">
       {attendees.map( (a,i) => 
         <div key={a.id} className="picnic-row">
-          <Checkbox defaultChecked={a.picnic} onChange={event => onChangeAttendee(a.id, "picnic", event.target.checked)} />
+          <Checkbox defaultChecked={a.picnicTrans} onChange={event => onChangeAttendee(a.id, "picnicTrans", event.target.checked)} />
           <span className="remb-name">{a.firstName} {a.lastName}</span>
-          <div className={(a.picnic && a.peopleType === peopleTypes.SOFTCHILD) ? "inline" : "inline invisible"}>
+          <div className={(a.picnicTrans && a.peopleType === peopleTypes.SOFTCHILD) ? "inline" : "inline invisible"}>
             Needs tie-downs?
             <div className="inline">
               <RadioGroup name={"picnicTiedown" + a.id} selectedValue={a.picnicTiedown} onChange={(val) => onChangeAttendee(a.id, "picnicTiedown", val)}>
@@ -2811,7 +2797,6 @@ function boolToYN(f) {
   return "No";
 }
 
-
 var userData = {};
 var userDataJSON = '';
 
@@ -2846,7 +2831,6 @@ const Summary = ({thisState}) => {
     transactionCode:    '',
   }
 
-  
   let output = '';
 
   let reg = '';
@@ -2906,8 +2890,8 @@ const Summary = ({thisState}) => {
     else {
       for (let softAngel of userData.softAngels) {
         output += add_line(1, softAngel.firstName + ' ' + softAngel.lastName);
-        output += add_line(1, 'Date of birth: ' + softAngel.dateOfBirth.toDateString());
-        output += add_line(1, 'Date of death: ' + softAngel.dateOfDeath.toDateString());
+        output += add_line(1, 'Date of birth: ' + softAngel.birthDate);
+        output += add_line(1, 'Date of death: ' + softAngel.deathDate);
         output += add_line(1, 'Diagnosis: ' + (softAngel.diagnosis === "Other" ? softAngel.otherDiagnosis : softAngel.diagnosis));
         output += '\n';
       }
@@ -2940,7 +2924,7 @@ const Summary = ({thisState}) => {
         }
         else if (attendee.peopleType === peopleTypes.SOFTCHILD) {
           output += add_line(2, attendee.peopleType);
-          output += add_line(2, 'Date of birth: ' + attendee.dateOfBirth.toDateString());
+          output += add_line(2, 'Date of birth: ' + attendee.birthDate);
           output += add_line(2, 'Diagnosis: ' + (attendee.diagnosis === "Other" ? attendee.otherDiagnosis : attendee.diagnosis));
           output += add_line(2, 'Eats meals: ' + boolToYN(attendee.eatsMeals));
         }
@@ -3082,7 +3066,7 @@ const Summary = ({thisState}) => {
 
                   for (let attendee of userData.attendees) {
                     if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL) {
-                      output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.rembOuting) + (attendee.rembOuting ? ' -- meal: ' + attendee.rembLunch : ''));
+                      output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.rembOuting) + (attendee.rembOuting ? ' — meal: ' + attendee.rembLunch : ''));
                     }
                   }
                   output += '\n';
@@ -3097,11 +3081,11 @@ const Summary = ({thisState}) => {
 
                 for (let attendee of userData.attendees) {
                   if (attendee.peopleType === peopleTypes.SOFTCHILD) {
-                    output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnic) + 
-                              (attendee.picnic ? ' -- Needs tie-down: ' + boolToYN(attendee.picnicTiedown) : ''));
+                    output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnicTrans) + 
+                              (attendee.picnicTrans ? ' — Needs tie-down: ' + boolToYN(attendee.picnicTiedown) : ''));
                   }
                   else {
-                    output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnic));
+                    output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnicTrans));
                   }
                 }
                 output += '\n';
@@ -3232,6 +3216,8 @@ const Checkout = ({thisState, setUserData}) => {
     // .then(blob => userDataJSON)
 
 //Missing required request header. Must specify one of: origin,x-requested-with
+
+
     if (!thisState.userDataSaved) {
       fetch(proxyUrl + targetUrl, {
         method: 'POST',
@@ -3365,23 +3351,6 @@ const RembLunch = ({value, menuInfo, isDisabled, onChange, className="edit-remb-
         </div>
       );
     }
-
-
-// const SelectYesNo = ({value, isDisabled, onChange, className="edit-remb-lunch"}) => {
-//       const defaultOpt = optionsYesNo.find(opt => (opt.value === value));
-//       return (
-//         <div className={className}>
-//           <Select
-//             options={optionsYesNo}
-//             defaultValue={defaultOpt}
-//             placeholder={"Select..."}
-//             isDisabled={isDisabled}
-//             onChange={onChange}
-//             styles={selectStyle(90, 60)}
-//           />
-//         </div>
-//       );
-//     }
 
 
 const Country = ({value, onChange, className="edit-country"}) => {

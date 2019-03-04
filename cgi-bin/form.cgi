@@ -128,14 +128,17 @@ if ($q->param)            #  fetches the names of the params as a list
           sibOuting           => $attendee_ref->{sibOuting},
           shirtSize           => $attendee_ref->{shirtSize},
 
-          dateOfBirth         => $attendee_ref->{dateOfBirth} || "",
+          birthDate           => $attendee_ref->{birthDate} || "",
           diagnosis           => $attendee_ref->{diagnosis},
           otherDiagnosis      => $attendee_ref->{otherDiagnosis},
           eatsMeals           => $attendee_ref->{eatsMeals},
 
-          picnic              => $attendee_ref->{picnic},
+          picnicTrans         => $attendee_ref->{picnicTrans},
           picnicTiedown       => $attendee_ref->{picnicTiedown},
         );
+
+        #  Only children (not even SOFT Children) have ages
+        $attendee{age} = 0  if ($attendee{peopleType} !~ /^Child$/i);     
 
         %attendee = InsertAttendee(%attendee);
         $successful &&= %attendee;
@@ -150,7 +153,7 @@ if ($q->param)            #  fetches the names of the params as a list
 
           my %workshop_choices = %{$attendee_ref->{workshops}};
 
-          foreach my $sessionID (keys %workshop_choices) {
+          foreach my $sessionID (sort keys %workshop_choices) {
 
             my %workshop = (             
               contact_id      => $contact{id},
@@ -173,7 +176,7 @@ if ($q->param)            #  fetches the names of the params as a list
 
           my %childcare_choices = %{$attendee_ref->{childCareSessions}};
 
-          foreach my $sessionID (keys %childcare_choices) {
+          foreach my $sessionID (sort keys %childcare_choices) {
 
             my %childcare = (             
               contact_id      => $contact{id},
@@ -202,8 +205,8 @@ if ($q->param)            #  fetches the names of the params as a list
           firstName           => $softangel_ref->{firstName},
           lastName            => $softangel_ref->{lastName},
 
-          dateOfBirth         => $softangel_ref->{dateOfBirth} || "",
-          dateOfDeath         => $softangel_ref->{dateOfBirth} || "",
+          birthDate           => $softangel_ref->{birthDate} || "",
+          deathDate           => $softangel_ref->{deathDate} || "",
           diagnosis           => $softangel_ref->{diagnosis},
           otherDiagnosis      => $softangel_ref->{otherDiagnosis},
         );

@@ -105,13 +105,13 @@ CREATE TABLE attendees
     shirtSize           VARCHAR(30),                #  Sib outing shirt size
 
     # SOFT Child
-    dateOfBirth         VARCHAR(15),                #  MM/DD/YY  format
+    birthDate           VARCHAR(15),                #  MM/DD/YY  format
     diagnosis           VARCHAR(20),                #  If "Other" then use "otherDiagnosis"
     otherDiagnosis      VARCHAR(30),
     eatsMeals           TINYINT DEFAULT FALSE,
 
     # Picnic
-    picnic              TINYINT DEFAULT FALSE,      #  Needs transportation to the picnic?
+    picnicTrans         TINYINT DEFAULT FALSE,      #  Needs transportation to the picnic?
     picnicTiedown       TINYINT DEFAULT FALSE
 );
 
@@ -125,8 +125,8 @@ CREATE TABLE softangels
     firstName           VARCHAR(30),
     lastName            VARCHAR(30),
 
-    dateOfBirth         VARCHAR(15),                #  MM/DD/YY  format
-    dateOfDeath         VARCHAR(15),                #  SOFT angels only 
+    birthDate           VARCHAR(15),                #  MM/DD/YY  format
+    deathDate           VARCHAR(15),                #  SOFT angels only 
     diagnosis           VARCHAR(20),                #  If "Other" then use "otherDiagnosis"
     otherDiagnosis      VARCHAR(30)
 );
