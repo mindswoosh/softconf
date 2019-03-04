@@ -20,49 +20,57 @@ use DBI;
 
 use Exporter 'import';
 our @EXPORT = qw(
-        OpenDatabase
-        CloseDatabase
-        
-        GetPost
-        UpdatePost
-        InsertPost
-        DeletePost
-        
-        GetContact
-        UpdateContact
-        InsertContact
-        DeleteContact
+    OpenDatabase
+    CloseDatabase
+    
+    GetPost
+    UpdatePost
+    InsertPost
+    DeletePost
+    
+    GetContact
+    UpdateContact
+    InsertContact
+    DeleteContact
+    GetContactByFormID
+    TotallyDeleteContact
 
-        GetAttendee
-        UpdateAttendee
-        InsertAttendee
-        DeleteAttendee
+    GetAttendee
+    UpdateAttendee
+    InsertAttendee
+    DeleteAttendee
+    DeleteContactAttendees
 
-        GetSoftAngel
-        UpdateSoftAngel
-        InsertSoftAngel
-        DeleteSoftAngel
+    GetSoftAngel
+    UpdateSoftAngel
+    InsertSoftAngel
+    DeleteSoftAngel
+    DeleteContactSoftAngels
 
-        GetWorkshop
-        UpdateWorkshop
-        InsertWorkshop
-        DeleteWorkshop
+    GetWorkshop
+    UpdateWorkshop
+    InsertWorkshop
+    DeleteWorkshop
+    DeleteContactWorkshops
 
-        GetChildCare
-        UpdateChildCare
-        InsertChildCare
-        DeleteChildCare
+    GetChildCare
+    UpdateChildCare
+    InsertChildCare
+    DeleteChildCare
+    DeleteContactChildCare
 
-        GetClinic
-        UpdateClinic
-        InsertClinic
-        DeleteClinic
+    GetClinic
+    UpdateClinic
+    InsertClinic
+    DeleteClinic
+    DeleteContactClinics
 
-        GetShirt
-        UpdateShirt
-        InsertShirt
-        DeleteShirt
-    );
+    GetShirt
+    UpdateShirt
+    InsertShirt
+    DeleteShirt
+    DeleteContactShirts
+);
 
 
 
@@ -166,24 +174,51 @@ sub GetContact {
     return GetObject("contacts", $id);
 }
 
-
 sub UpdateContact {
     my %contact = @_;
     return UpdateObject("contacts", \@contact_cols, %contact);
 }
-
 
 sub InsertContact {
     my %contact = @_;
     return InsertObject("contacts", \@contact_cols, %contact);
 }
 
-
 sub DeleteContact {
     my $id = shift;
     DeleteObject("contacts", $id);
 }
 
+sub GetContactByFormID {
+    my $form_id   = shift;
+    my ($dbh, $sth, %contact);
+
+    $dbh = OpenDatabase();
+    {
+        $sth = $dbh->prepare("SELECT * FROM contacts WHERE form_id=?");
+        $sth->execute($form_id);
+
+        my $rhash = $sth->fetchrow_hashref();   # Should only be 1...
+        %contact = %$rhash  if (defined($rhash));
+
+        $sth->finish();
+    }
+    CloseDatabase($dbh);
+
+    return(%contact);
+}
+
+sub TotallyDeleteContact {
+    my $contact_id = shift;
+
+    DeleteContactAttendees($contact_id);
+    DeleteContactSoftAngels($contact_id);
+    DeleteContactClinics($contact_id);
+    DeleteContactWorkshops($contact_id);
+    DeleteContactChildCare($contact_id);
+    DeleteContactShirts($contact_id);
+    DeleteContact($contact_id);
+}
 
 #------------------------------------------------------------------------
 
@@ -229,6 +264,11 @@ sub DeleteAttendee {
     DeleteObject("attendees", $id);
 }
 
+sub DeleteContactAttendees {
+    my $contact_id = shift;
+    DeleteContactObjects("attendees", $contact_id);
+}
+
 
 #------------------------------------------------------------------------
 
@@ -264,6 +304,11 @@ sub DeleteSoftAngel {
     DeleteObject("softangels", $id);
 }
 
+sub DeleteContactSoftAngels {
+    my $contact_id = shift;
+    DeleteContactObjects("softangels", $contact_id);
+}
+
 
 #------------------------------------------------------------------------
 
@@ -294,6 +339,11 @@ sub InsertWorkshop {
 sub DeleteWorkshop {
     my $id = shift;
     DeleteObject("workshops", $id);
+}
+
+sub DeleteContactWorkshops {
+    my $contact_id = shift;
+    DeleteContactObjects("workshops", $contact_id);
 }
 
 
@@ -327,6 +377,11 @@ sub DeleteClinic {
     DeleteObject("clinics", $id);
 }
 
+sub DeleteContactClinics {
+    my $contact_id = shift;
+    DeleteContactObjects("clinics", $contact_id);
+}
+
 
 #------------------------------------------------------------------------
 
@@ -358,6 +413,10 @@ sub DeleteChildCare {
     DeleteObject("childcare", $id);
 }
 
+sub DeleteContactChildCare {
+    my $contact_id = shift;
+    DeleteContactObjects("childcare", $contact_id);
+}
 
 
 #------------------------------------------------------------------------
@@ -390,6 +449,10 @@ sub DeleteShirt {
     DeleteObject("shirts", $id);
 }
 
+sub DeleteContactShirts {
+    my $contact_id = shift;
+    DeleteContactObjects("shirts", $contact_id);
+}
 
 
 #------------------------------------------------------------------------
@@ -490,6 +553,23 @@ sub DeleteObject {
     CloseDatabase($dbh);
 }
 
+
+sub DeleteContactObjects {
+    my $table = shift;
+    my $contact_id = shift;
+    my $dbh;
+
+    warn("Bad table name: " . $table)  unless (valid_table_name($table));
+
+    $dbh = OpenDatabase();
+    {
+        $dbh->do(
+            "DELETE FROM $table WHERE contact_id=?",
+            undef, $contact_id
+        );
+    }
+    CloseDatabase($dbh);
+}
 
 
 #------------------------------------------------------------------------
