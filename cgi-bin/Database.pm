@@ -157,6 +157,10 @@ our @contact_cols = qw(
     chapterChair
     joeyWatson
 
+    conferenceTotal
+    softDonation
+    fundDonation
+
     attendingClinics
     clinicTieDowns
 

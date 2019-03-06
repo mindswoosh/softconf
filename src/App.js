@@ -50,7 +50,7 @@ library.add(faRibbon);
 var sprintf = require('sprintf-js').sprintf;
 
 
-const DEBUG = true;  //  Set to false for production
+const DEBUG = false;  //  Set to false for production
 
 const JSONversion = '1.0';
 
@@ -94,13 +94,16 @@ const eventInfoDefault = {
 
   eventTitle: '2019 Conference Registration',
 
-  costAdult:            135,         // One free registration for board members
-  costChild:             90,         // Children under 5? are free
+  costAdult:            145,         // One free registration for board members
+  costChild:             95,         // Children under 2 are free
   costSoftChild:          0,
   costProfessional:     135,
-  costWorkshopsOnly:     65,
-  costYoungerSibOuting:  35,
-  costOlderSibOuting:    35,
+  costWorkshopsOnly:     62,
+  costYoungerSibOuting:  42,
+  costOlderSibOuting:    42,
+  costRembOuting:        25,
+  costAdultPicnic:       35,
+  costChildPicnic:       20,          // child <= 11
   joeyWatsonSecretCode:  'JW2019MI',
 
   workshopSessions: [
@@ -600,16 +603,18 @@ class App extends Component {
         email:       '',
       },
 
-      photoWaiver:        false, 
-      attendance:         'full',     //  "full", "workshops" (only), picnic" (only), "balloon" release - not attending 
-      reception:          false,
-      sundayBreakfast:    false,
-      boardMember:        false,
-      chapterChair:       false,
-      joeyWatson:         false,
-      joeyWatsonCode:     '',
+      photoWaiver:      false, 
+      attendance:       'full',     //  "full", "workshops" (only), picnic" (only), "balloon" release - not attending 
+      reception:        false,
+      sundayBreakfast:  false,
+      boardMember:      false,
+      chapterChair:     false,
+      joeyWatson:       false,
+      joeyWatsonCode:   '',
+      softDonation:     0,
+      fundDonation:     0,
 
-      attendees: [],
+      attendees:  [],
       softAngels: [],
 
       directory: {
@@ -897,6 +902,9 @@ class App extends Component {
                   <Checkout
                     thisState={this.state}
                     setUserData={this.setUserData}
+                    softDonation={this.state.softDonation}
+                    fundDonation={this.state.fundDonation}
+                    onChange={this.onChangeFieldValue}
                   />,
 
               // [pages.MERCHANDISE]:  <Merchancise merchandise={merchandise} />,
@@ -1635,6 +1643,11 @@ class App extends Component {
   }
 
   onChangeFieldValue(field, value) {
+    
+    if (field === "softDonation" || field === "fundDonation") {
+        value = value.replace(/\D/g, '');     //  Only allow digits in donations
+    }
+
     this.setState({
       [field]: value
     });
@@ -2827,6 +2840,8 @@ const Summary = ({thisState}) => {
     workshops:          thisState.workshops,
     childCareSessions:  thisState.childCareSessions,
     summary:            '',
+    softDonation:       thisState.softDonation,
+    fundDonation:       thisState.fundDonation,
     paid:               false,
     transactionCode:    '',
   }
@@ -3105,7 +3120,7 @@ const Summary = ({thisState}) => {
             let totalShirts = 0;
             for (let shirt of userData.shirtsOrdered) {
               if (shirt.shirtID === shirtType.id) {
-                output += add_line(2, 'Ordered: ' + shirt.quantity + ', ' + shirtDisplay[shirt.size] + ', $' + shirt.quantity*shirtType.cost);
+                output += add_line(2, 'Ordered: ' + shirt.quantity + ' x ' + shirtDisplay[shirt.size] + ', $' + shirt.quantity*shirtType.cost);
                 totalShirts++;
               }
             }
@@ -3162,9 +3177,7 @@ const Summary = ({thisState}) => {
 
  
 
-const Checkout = ({thisState, setUserData}) => {
-
-    userDataJSON = JSON.stringify(userData);
+const Checkout = ({thisState, setUserData, softDonation, fundDonation, onChange}) => {
 
     //  Send data to server to store in DB
     //  Display "Pay" button after we have been successful
@@ -3194,9 +3207,6 @@ const Checkout = ({thisState, setUserData}) => {
     //  Another example:
     //  https://stackoverflow.com/questions/39085575/javascript-fetch-cant-get-post-response-data-from-perl-script
 
-    var proxyUrl = 'https://cors-anywhere.herokuapp.com/',
-        targetUrl = 'http://softconf.org/cgi-bin/form.cgi';
-
     // fetch('http://softconf.org/index.pl', {
     //   method: 'POST',
     //   headers: {
@@ -3215,8 +3225,230 @@ const Checkout = ({thisState, setUserData}) => {
     // fetch(proxyUrl + targetUrl)
     // .then(blob => userDataJSON)
 
-//Missing required request header. Must specify one of: origin,x-requested-with
 
+    //Missing required request header. Must specify one of: origin,x-requested-with
+
+    // var proxyUrl  = 'https://cors-anywhere.herokuapp.com/',
+    //     targetUrl = 'http://softconf.org/cgi-bin/form.cgi';
+
+    // if (!thisState.userDataSaved) {
+    //   fetch(proxyUrl + targetUrl, {
+    //     method: 'POST',
+    //     headers: {
+    //       'Accept': 'application/json',
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: userDataJSON,
+    //   })
+    //   .then(response => {
+    //     //console.log(response);
+    //     return response.json();
+    //   })
+    //   .then(data => {
+    //       console.log('Data stored successfully');
+    //       setUserData(true);
+    //       return data;
+    //   })
+    //   .catch(e => {
+    //     console.log('Data store failed');
+    //     console.log(e);
+    //     return e;
+    //   });
+    // }
+
+
+    let costPerAdult = 0;
+    let costPerChild = 0;
+    // let costPerSoftChild = 0;
+    let costYoungSib = 0;
+    let costOlderSib = 0;
+    let costRembOuting = 0;
+    let output = '';
+    let conferenceTotal = 0;
+    let grandTotal = 0;
+
+    let reg = '';
+    switch (userData.attendance) {
+      case 'full':
+        reg = 'Attending the full conference';
+        costPerAdult = thisState.eventInfo.costAdult;
+        costPerChild = thisState.eventInfo.costChild;
+        costYoungSib = thisState.eventInfo.costYoungerSibOuting;
+        costOlderSib = thisState.eventInfo.costOlderSibOuting;
+        costRembOuting = thisState.eventInfo.costRembOuting;
+        break;
+      case 'workshops':
+        reg = 'Attending only the workshops (for Professionals only)';
+        costPerAdult = thisState.eventInfo.costWorkshopsOnly;
+        break;
+      case 'picnic':
+        reg = 'Only attending the picnic';
+        costPerAdult = thisState.eventInfo.costAdultPicnic;
+        costPerChild = thisState.eventInfo.costChildPicnic;
+        break;
+      case 'balloon':
+        reg = 'Requesting a balloon (not attending)';
+        break;
+      default:
+        console.log('Problem with the type of attendance');
+    }
+
+    output += add_line(0, '\nRegistration: ' + reg);
+    output += '\n';
+
+    let regCost = 0;
+    for (let attendee of userData.attendees) {
+
+      let costThisPerson = 0;
+      if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL) {
+        costThisPerson = costPerAdult;
+      }
+      else if (attendee.peopleType === peopleTypes.CHILD  &&  attendee.age >= 2) {
+        costThisPerson = costPerChild;
+      }
+
+      output += add_line(1, sprintf("%-30s$%7.2f", attendee.firstName + ' ' + attendee.lastName, costThisPerson));
+      regCost += costThisPerson;
+    }
+    output += '\n';
+    output += add_line(1, sprintf("%30s$%8.2f", "Sub-total:  ", regCost));
+    // output += '\n';
+
+    conferenceTotal += regCost;
+
+
+
+    if (userData.attendance === 'full') {
+
+      //  Any Sibling Outings?
+      if (userData.attendees.find(a => (a.peopleType === peopleTypes.CHILD  &&  a.sibOuting))) {
+
+        output += add_line(0, '\nSibling Outings:');
+        output += '\n';
+
+        let sibCost = 0;
+
+        for (let attendee of userData.attendees) {
+
+          let costThisPerson = costYoungSib;    //  Assume younger sib
+
+          if (attendee.peopleType === peopleTypes.CHILD  &&  attendee.sibOuting) {
+            if (attendee.age >= 12) {
+              costThisPerson = costOlderSib;
+            }
+            output += add_line(1, sprintf("%-30s$%7.2f", attendee.firstName + ' ' + attendee.lastName, costThisPerson));
+            sibCost += costThisPerson;
+          }
+        }
+        output += '\n';
+        output += add_line(1, sprintf("%30s$%8.2f", "Sub-total:  ", sibCost));
+        // output += '\n';
+
+        conferenceTotal += sibCost;
+      }
+
+
+      //  Anybody attending the Remembrance Celebration?
+
+      if (userData.attendees.find(a => ((a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL)  &&  a.rembOuting))) {
+
+        output += add_line(0, '\nRemembrance Celebration:');
+        output += '\n';
+
+        let rembCost = 0;
+
+        for (let attendee of userData.attendees) {
+
+          if ((attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL)  &&  attendee.rembOuting) {
+            output += add_line(1, sprintf("%-30s$%7.2f", attendee.firstName + ' ' + attendee.lastName, costRembOuting));
+            rembCost += costRembOuting;
+          }
+        }
+        output += '\n';
+        output += add_line(1, sprintf("%30s$%8.2f", "Sub-total:  ", rembCost));
+        // output += '\n';
+
+        conferenceTotal += rembCost;
+      }
+
+    }
+
+
+
+    if ((userData.attendance === 'full'  ||  userData.attendance === 'picnic')  &&  userData.shirtsOrdered.length) {
+
+        output += add_line(0, '\nShirts ordered:');
+        output += '\n';
+
+        let shirtCost = 0;
+
+        userData.shirtsOrdered.sort((a,b) => a.shirtID.localeCompare(b.shirtID));      //  Group all orders by shirtID
+
+        for (let shirt of userData.shirtsOrdered) {
+          // shirt.id, shirt.size, shirt.quantity
+
+          let shirtType = thisState.eventInfo.shirtTypes.find(s => s.id === shirt.shirtID);
+          let type = thisState.eventInfo.shirtTypes.findIndex(st => st.id === shirtType.id) + 1;
+
+          if (!shirtType) console.log("Unfound shirtType...");
+
+          let cost = shirt.quantity*shirtType.cost;
+          output += add_line(1, sprintf("%-30s$%7.2f", "Type " + type + " => " + shirt.quantity + " x " + shirtDisplay[shirt.size], cost));
+          shirtCost += cost;
+        }
+
+        output += '\n';
+        output += add_line(1, sprintf("%30s$%8.2f", "Sub-total:  ", shirtCost));
+        // output += '\n';
+
+        conferenceTotal += shirtCost;
+    }
+
+
+    if (userData.attendance === 'full') {
+      let adjCost = 0;
+      if (userData.joeyWatson  ||  userData.boardMember) {
+        output += add_line(0, '\nAdjustments: ');
+        output += '\n';
+        
+        if (userData.boardMember) {
+          output += add_line(1, sprintf("%-30s$%8.2f", "Board member discount", -costPerAdult));
+          adjCost -= costPerAdult;
+        }
+        
+        if (userData.joeyWatson) {
+          output += add_line(1, sprintf("%-30s$%8.2f", "Joey Watson discount", -costPerAdult));
+          adjCost -= costPerAdult;
+        }
+        output += '\n';
+        output += add_line(1, sprintf("%30s$%8.2f", "Sub-total:  ", adjCost));
+        output += '\n';
+
+        conferenceTotal += adjCost;
+      }
+    }
+    output += add_line(0, '\nTotal:');
+    output += add_line(1, sprintf("%30s$%8.2f", " Conference total:  ", conferenceTotal));
+    output += '\n';
+
+    userData.conferenceTotal = conferenceTotal;
+    userData.checkout = output;
+
+    let html = output;
+    html = html.replace(/^(\x20+?)([^:]+?)(\s+\$\s+)([\d.-]+)/mg,'<span class="indent"></span><span class="cost-descr">$2</span>$<span class="cost">$4</span>');     //  In first capture, don't use \s -- it sucks up '\n's
+    html = html.replace(/^(\x20+?)(.+?)(\s+\$\s+)([\d.-]+)/mg,'<span class="indent"></span><div class="cost-descr-right">$2</div>$<span class="cost">$4</span>');    //  In first capture, don't use \s -- it sucks up '\n's
+    html = html.replace(/\n/g, "<br>");
+
+    grandTotal = sprintf("%8.2f", conferenceTotal + Number(softDonation) + Number(fundDonation));
+
+
+
+    //  Save everything in the database...
+
+    userDataJSON = JSON.stringify(userData);
+
+    var proxyUrl  = 'https://cors-anywhere.herokuapp.com/',
+        targetUrl = 'http://softconf.org/cgi-bin/form.cgi';
 
     if (!thisState.userDataSaved) {
       fetch(proxyUrl + targetUrl, {
@@ -3228,40 +3460,51 @@ const Checkout = ({thisState, setUserData}) => {
         body: userDataJSON,
       })
       .then(response => {
-        console.log(response);
+        //console.log(response);
         return response.json();
       })
       .then(data => {
-          console.log('Success in fetching!');
-          console.log(data);
+          //console.log('Data stored successfully');
           setUserData(true);
-          // thisState.setState({
-          //   userDataSaved: true,
-          // });
           return data;
       })
       .catch(e => {
-        console.log('Caught an error');
+        console.log('Data store failed');
         console.log(e);
         return e;
       });
     }
 
+
+    //  Finally, display everything...
+
     return (
       <div>
         <h2>Checkout</h2>
-        <p>Enter some more data:</p>
+        <p>Please double-check the registration fees below and then click either the "Pay By Check" button
+           or the PayPal button. The PayPal option will let you pay by credit card.</p>
 
-        <p>UNDER CONSTRUCTION</p>
-        You cannot submit the data yet.
-        <p>UNDER CONSTRUCTION</p>
-        <form method="post" action="http://softconf.org/index.pl">
-          <input id="json-data" type="hidden" name="data" value={userDataJSON}/>
-        </form>
-        {!thisState.userDataSaved &&
-          <div className="greyed-background">
-            <div className="loading"></div>
+        <div className="summary">{ ReactHtmlParser(html) }</div>
+
+        {userData.attendance !== 'workshops'  &&
+          <div>
+
+            <p className="v-indent">Would you like to contribute to the SOFT Conference or General Fund?</p>
+            <div className="indent">
+              <span className="cost-descr">SOFT Conference:</span>$ <Input value={softDonation} className="donation-box" onChange={event => onChange("softDonation", event.target.value)} />
+            </div>
+            <div className="indent">
+              <span className="cost-descr">General Fund:</span>$ <Input value={fundDonation} className="donation-box" onChange={event => onChange("fundDonation", event.target.value)} />
+            </div>
           </div>
+        }
+        <br />
+        <p className="v-indent">Conference and Donations:</p> 
+        <div className="v-indent">
+          <span className="indent"></span><div className="cost-descr-right">Grand Total:</div>$<span className="cost">{grandTotal}</span>
+        </div>
+        {!thisState.userDataSaved &&
+          <Loading />
         }
       </div>
     );
@@ -3422,6 +3665,10 @@ const Button = ({ onClick = null, onSubmit = null, className = 'btn', children, 
   </button>
 
 
+const Loading = () =>
+  <div className="greyed-background">
+    <div className="loading"></div>
+  </div>
 
 function ucFirst(string) 
 {

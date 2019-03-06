@@ -75,6 +75,10 @@ if ($q->param)            #  fetches the names of the params as a list
       boardMember       => $userData{boardMember},
       chapterChair      => $userData{chapterChair},
       joeyWatson        => $userData{joeyWatson},
+      
+      conferenceTotal   => $userData{conferenceTotal},
+      softDonation      => $userData{softDonation},
+      fundDonation      => $userData{fundDonation},
 
       attendingClinics  => $userData{attendingClinics},
       clinicTieDowns    => $userData{clinicTieDowns},

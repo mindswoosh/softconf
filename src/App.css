@@ -331,6 +331,32 @@ p {
   width: 200px;
 }
 
+.cost-descr {
+  display: inline-block;
+  padding-left: 10px;
+  width: 225px;
+}
+
+.cost-descr-right {
+  display: inline-block;
+  padding-left: 10px;
+  padding-right: 20px;
+  width: 205px;
+  text-align: right;
+}
+
+.donation {
+  display: inline-block;
+  padding-left: 10px;
+  width: 200px;
+}
+
+.donation-box {
+  margin: 3px 0 0 0;
+  display: inline-block;
+  width: 60px;
+}
+
 .edit-remb-lunch, .edit-shirt-size {
     display: inline-block;
 }
@@ -374,6 +400,15 @@ p {
   width: 60px;
 }
 
+.cost {
+  display: inline-block;
+  width: 65px;
+  text-align: right;
+}
+
+.summary {
+  /*font-family: monospace, monospace; */     /* Double monospace fixes Firefox browser bug */
+}
 
 .button-bar {
 

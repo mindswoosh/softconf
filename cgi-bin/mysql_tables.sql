@@ -70,6 +70,10 @@ CREATE TABLE contacts
     chapterChair        TINYINT DEFAULT FALSE,
     joeyWatson          TINYINT DEFAULT FALSE,
 
+    conferenceTotal     VARCHAR(10),
+    softDonation        INT(10) UNSIGNED DEFAULT 0,
+    fundDonation        INT(10) UNSIGNED DEFAULT 0,
+
     attendingClinics    TINYINT DEFAULT FALSE,
     clinicTieDowns      TINYINT DEFAULT 0,
 
