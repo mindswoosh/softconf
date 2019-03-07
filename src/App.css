@@ -357,6 +357,19 @@ p {
   width: 60px;
 }
 
+.checkout-btn {
+  padding: 30px 0 0 10px;
+  width: 305px;
+  text-align: right;
+}
+
+.pay-by-check {
+  display: inline-block;
+  font-size: 75%;
+  width: 150px;
+  text-align: center;
+}
+
 .edit-remb-lunch, .edit-shirt-size {
     display: inline-block;
 }

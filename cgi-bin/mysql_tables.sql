@@ -82,7 +82,9 @@ CREATE TABLE contacts
     dir_city            TINYINT DEFAULT FALSE,
 
     paid                TINYINT DEFAULT FALSE,
-    transactionCode     VARCHAR(255)
+    payerID             VARCHAR(255),
+    paymentID           VARCHAR(255),
+    paymentToken        VARCHAR(255)
 );
 
 

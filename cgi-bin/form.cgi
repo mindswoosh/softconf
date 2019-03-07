@@ -88,7 +88,9 @@ if ($q->param)            #  fetches the names of the params as a list
       dir_city          => $directory{city},
 
       paid              => $userData{paid},
-      transactionCode   => $userData{transactionCode},
+      payerID           => $userData{payerID},
+      paymentID         => $userData{paymentID},
+      paymentToken      => $userData{paymentToken},
     );
 
 

@@ -169,7 +169,9 @@ our @contact_cols = qw(
     dir_city
 
     paid
-    transactionCode
+    payerID
+    paymentID
+    paymentToken
 );
 
 

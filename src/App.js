@@ -22,6 +22,7 @@ import React, { Component } from 'react';
 import Select from 'react-select';
 import {RadioGroup, Radio} from 'react-radio-group';
 import ReactHtmlParser from 'react-html-parser';
+import PaypalExpressBtn from 'react-paypal-express-checkout';
 import './App.css';
 
 // import FloatingLabelInput from 'react-floating-label-input';
@@ -49,8 +50,7 @@ library.add(faRibbon);
 
 var sprintf = require('sprintf-js').sprintf;
 
-
-const DEBUG = false;  //  Set to false for production
+const DEBUG = true;  //  Set to false for production
 
 const JSONversion = '1.0';
 
@@ -1645,7 +1645,8 @@ class App extends Component {
   onChangeFieldValue(field, value) {
     
     if (field === "softDonation" || field === "fundDonation") {
-        value = value.replace(/\D/g, '');     //  Only allow digits in donations
+        value = value.replace(/\D/g, '');                         //  Only allow digits in donations
+        value = value.replace(/^0(\d)/g, '$1');                   //  Strip leading zeros
     }
 
     this.setState({
@@ -2843,8 +2844,11 @@ const Summary = ({thisState}) => {
     softDonation:       thisState.softDonation,
     fundDonation:       thisState.fundDonation,
     paid:               false,
-    transactionCode:    '',
+    payerID:            '',
+    paymentID:          '',
+    paymentToken:       '',
   }
+
 
   let output = '';
 
@@ -3478,6 +3482,12 @@ const Checkout = ({thisState, setUserData, softDonation, fundDonation, onChange}
 
     //  Finally, display everything...
 
+
+    const client = {
+        sandbox:    'AfxDPuLCwqEXQXi-J-TmoqC9IEIl4UA9d6L84_Sp-xKuebeDaRyanklLx23mUeoVskOvKNGyfpHcWS9U',
+        production: 'YOUR-PRODUCTION-APP-ID',
+    }
+
     return (
       <div>
         <h2>Checkout</h2>
@@ -3502,6 +3512,13 @@ const Checkout = ({thisState, setUserData, softDonation, fundDonation, onChange}
         <p className="v-indent">Conference and Donations:</p> 
         <div className="v-indent">
           <span className="indent"></span><div className="cost-descr-right">Grand Total:</div>$<span className="cost">{grandTotal}</span>
+        </div>
+        <div className="indent">
+          <div className="checkout-btn">
+            <PaypalExpressBtn client={client} currency={'USD'} total={17.00} />
+            <br />
+            <span className="pay-by-check">(or... <a href="http://msn.com">Pay by Check</a>)</span>
+          </div>
         </div>
         {!thisState.userDataSaved &&
           <Loading />
