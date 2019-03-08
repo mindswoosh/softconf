@@ -171,9 +171,9 @@ our @contact_cols = qw(
     paid
     payerID
     paymentID
-    paymentToken
-);
 
+);
+    #paymentToken
 
 sub GetContact {
     my $id = shift;

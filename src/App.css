@@ -7,6 +7,14 @@ body {
   background-image: url(skyballoons.png);   
 }
 
+.footer-balloons {
+  width: 40px;
+  height: 75px;
+  margin: 30px auto 0 auto;
+  background-image: url(3balloons.gif);
+  background-repeat: no-repeat; 
+}
+
 .logo-header {
 }
 
@@ -382,6 +390,9 @@ p {
   margin: 15px 0 0 20px;
 }
 
+code {
+  font-size: 16px;
+}
 
 .small-gap {
   display: inline-block;

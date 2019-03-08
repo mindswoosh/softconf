@@ -79,6 +79,7 @@ const pages = {
   SOFTWEAR:     pageNum++,
   SUMMARY:      pageNum++,
   CHECKOUT:     pageNum++,
+  THANKYOU:     pageNum++,
   END:          pageNum++,
 };
 
@@ -93,6 +94,7 @@ const optionsCountries = countries.map(opt => ({ label: opt, value: opt }));
 const eventInfoDefault = {
 
   eventTitle: '2019 Conference Registration',
+  brochureURL: 'https://trisomy.org/conference-brochure-ann-arbor-2019/',
 
   costAdult:            145,         // One free registration for board members
   costChild:             95,         // Children under 2 are free
@@ -686,8 +688,11 @@ class App extends Component {
 
     this.onPrevPage           = this.onPrevPage.bind(this);
     this.onNextPage           = this.onNextPage.bind(this);
+    this.onClickByCheck       = this.onClickByCheck.bind(this);
     this.fetchEventInfo       = this.fetchEventInfo.bind(this);
     this.componentDidMount    = this.componentDidMount.bind(this);
+
+    this.onPaymentSuccess     = this.onPaymentSuccess.bind(this);
   }
 
 
@@ -761,7 +766,9 @@ class App extends Component {
           {
             {
               [pages.WELCOME]:
-                  <Welcome />,
+                  <Welcome
+                    brochureURL={eventInfo.brochureURL}
+                  />,
 
               [pages.BASICS]:
                   <Basics 
@@ -901,10 +908,18 @@ class App extends Component {
               [pages.CHECKOUT]:
                   <Checkout
                     thisState={this.state}
-                    setUserData={this.setUserData}
+                    // setUserData={this.setUserData}
                     softDonation={this.state.softDonation}
                     fundDonation={this.state.fundDonation}
                     onChange={this.onChangeFieldValue}
+                    onClickByCheck={this.onClickByCheck}
+                    onPaymentSuccess={this.onPaymentSuccess}
+                  />,
+
+              [pages.THANKYOU]:
+                  <ThankYou
+                    thisState={this.state}
+                    setUserData={this.setUserData}
                   />,
 
               // [pages.MERCHANDISE]:  <Merchancise merchandise={merchandise} />,
@@ -1612,11 +1627,21 @@ class App extends Component {
 
           break;
 
+      case pages.THANKYOU:
+          break;
+
       default:
           console.log("Error in onNextPage")
     }
   }
 
+
+  onClickByCheck(e) {
+    e.preventDefault();
+    this.setState ({
+      currentPage: pages.THANKYOU,
+    });
+  }
 
   setUserData(saved) {
     this.setState ({
@@ -2010,6 +2035,23 @@ class App extends Component {
     }
   }
 
+
+  //-------------------------------------------------------------------------------------------
+  //  SOFT Wear page
+
+  onPaymentSuccess(payment) {
+    // Congratulation, it came here means everything's fine!
+    console.log("The payment was successful!", payment);
+    userData.paid = true;
+    userData.payerID = payment.payerID;
+    userData.paymentID = payment.paymentID;
+    userData.paymentToken = payment.paymentToken;
+
+    this.setState ({
+      currentPage: pages.THANKYOU,
+    });
+  }
+
 }
 
 
@@ -2120,6 +2162,9 @@ const PageBar = ({pageNum}) =>
       case pages.CHECKOUT:
         title = 'Checkout';
         break;
+      case pages.THANKYOU:
+        title = '';
+        break;
       default:
         console.log('Unfound title in PageBar');
     }
@@ -2145,7 +2190,7 @@ const PageBar = ({pageNum}) =>
 
 
 
-const Welcome = () =>
+const Welcome = ({brochureURL}) =>
   <div className="welcome">
     <h2>Welcome!</h2>
     <p>Welcome to the SOFT Conference Registration form!</p>
@@ -2157,7 +2202,7 @@ const Welcome = () =>
     </p>
     <p>If you need a copy of the brochure, click this button:</p>
     <div className="welcome-button">
-      <Button>Download Brochure</Button>
+      <a href={brochureURL} target="_blank">Download Brochure</a>
     </div>
     <p>To get started, click on the Next button.</p>
   </div>
@@ -3181,85 +3226,7 @@ const Summary = ({thisState}) => {
 
  
 
-const Checkout = ({thisState, setUserData, softDonation, fundDonation, onChange}) => {
-
-    //  Send data to server to store in DB
-    //  Display "Pay" button after we have been successful
-
-    // Using fetch() to send data
-    // https://developers.google.com/web/updates/2015/03/introduction-to-fetch
-
-    // fetch('./api/some.json')
-    //   .then(
-    //     function(response) {
-    //       if (response.status !== 200) {
-    //         console.log('Looks like there was a problem. Status Code: ' +
-    //           response.status);
-    //         return;
-    //       }
-
-    //       // Examine the text in the response
-    //       response.json().then(function(data) {
-    //         console.log(data);
-    //       });
-    //     }
-    //   )
-    //   .catch(function(err) {
-    //     console.log('Fetch Error :-S', err);
-    //   });
-
-    //  Another example:
-    //  https://stackoverflow.com/questions/39085575/javascript-fetch-cant-get-post-response-data-from-perl-script
-
-    // fetch('http://softconf.org/index.pl', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Accept': 'application/json',
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: userDataJSON,
-    // })
-
-    // fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}`)
-    // .then(response => response.json())
-    // .then(result => this.setEventInfo(result))
-    // .catch(error => error);
-
-
-    // fetch(proxyUrl + targetUrl)
-    // .then(blob => userDataJSON)
-
-
-    //Missing required request header. Must specify one of: origin,x-requested-with
-
-    // var proxyUrl  = 'https://cors-anywhere.herokuapp.com/',
-    //     targetUrl = 'http://softconf.org/cgi-bin/form.cgi';
-
-    // if (!thisState.userDataSaved) {
-    //   fetch(proxyUrl + targetUrl, {
-    //     method: 'POST',
-    //     headers: {
-    //       'Accept': 'application/json',
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: userDataJSON,
-    //   })
-    //   .then(response => {
-    //     //console.log(response);
-    //     return response.json();
-    //   })
-    //   .then(data => {
-    //       console.log('Data stored successfully');
-    //       setUserData(true);
-    //       return data;
-    //   })
-    //   .catch(e => {
-    //     console.log('Data store failed');
-    //     console.log(e);
-    //     return e;
-    //   });
-    // }
-
+const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByCheck, onPaymentSuccess}) => {
 
     let costPerAdult = 0;
     let costPerChild = 0;
@@ -3270,6 +3237,8 @@ const Checkout = ({thisState, setUserData, softDonation, fundDonation, onChange}
     let output = '';
     let conferenceTotal = 0;
     let grandTotal = 0;
+
+if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
 
     let reg = '';
     switch (userData.attendance) {
@@ -3304,10 +3273,10 @@ const Checkout = ({thisState, setUserData, softDonation, fundDonation, onChange}
     for (let attendee of userData.attendees) {
 
       let costThisPerson = 0;
-      if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL) {
+      if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL  ||  (attendee.peopleType === peopleTypes.CHILD  &&  attendee.age >= 12)) {
         costThisPerson = costPerAdult;
       }
-      else if (attendee.peopleType === peopleTypes.CHILD  &&  attendee.age >= 2) {
+      else if (attendee.peopleType === peopleTypes.CHILD  &&  attendee.age >= 2  &&  attendee.age <= 11) {
         costThisPerson = costPerChild;
       }
 
@@ -3446,42 +3415,26 @@ const Checkout = ({thisState, setUserData, softDonation, fundDonation, onChange}
     grandTotal = sprintf("%8.2f", conferenceTotal + Number(softDonation) + Number(fundDonation));
 
 
+    //  Finally, display everything...
 
-    //  Save everything in the database...
 
-    userDataJSON = JSON.stringify(userData);
+    const onCancel = (data) => {
+        // User pressed "cancel" or close Paypal's popup!
+        console.log('The payment was cancelled!', data);
+        // You can bind the "data" object's value to your state or props or whatever here, please see below for sample returned data
+    }
 
-    var proxyUrl  = 'https://cors-anywhere.herokuapp.com/',
-        targetUrl = 'http://softconf.org/cgi-bin/form.cgi';
-
-    if (!thisState.userDataSaved) {
-      fetch(proxyUrl + targetUrl, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: userDataJSON,
-      })
-      .then(response => {
-        //console.log(response);
-        return response.json();
-      })
-      .then(data => {
-          //console.log('Data stored successfully');
-          setUserData(true);
-          return data;
-      })
-      .catch(e => {
-        console.log('Data store failed');
-        console.log(e);
-        return e;
-      });
+    const onError = (err) => {
+        // The main Paypal's script cannot be loaded or somethings block the loading of that script!
+        console.log("Error!", err);
+        // Because the Paypal's main script is loaded asynchronously from "https://www.paypalobjects.com/api/checkout.js"
+        // => sometimes it may take about 0.5 second for everything to get set, or for the button to appear
     }
 
 
-    //  Finally, display everything...
-
+    let total = Number(grandTotal);
+    let currency = 'USD'; // or you can set this value from your props or state
+    let env = 'sandbox'; // you can set here to 'production' for production
 
     const client = {
         sandbox:    'AfxDPuLCwqEXQXi-J-TmoqC9IEIl4UA9d6L84_Sp-xKuebeDaRyanklLx23mUeoVskOvKNGyfpHcWS9U',
@@ -3515,17 +3468,92 @@ const Checkout = ({thisState, setUserData, softDonation, fundDonation, onChange}
         </div>
         <div className="indent">
           <div className="checkout-btn">
-            <PaypalExpressBtn client={client} currency={'USD'} total={17.00} />
+            <PaypalExpressBtn env={env} client={client} currency={currency} total={total} onError={onError} onSuccess={onPaymentSuccess} onCancel={onCancel} />
             <br />
-            <span className="pay-by-check">(or... <a href="http://msn.com">Pay by Check</a>)</span>
+            <span className="pay-by-check">(or... <a href="" onClick={onClickByCheck}>Pay by Check</a>)</span>
           </div>
         </div>
-        {!thisState.userDataSaved &&
-          <Loading />
-        }
       </div>
     );
   }
+
+
+
+//----------------------------------------------------------------------------------------------------
+
+
+const ThankYou = ({thisState, setUserData}) => {
+
+  //  Save everything in the database...
+
+  // Create a unique "invoice" ID
+  userData.formID =  userData.contactInfo.lastName.replace(/[^A-Za-z]/g, '').toUpperCase().substring(0,3) + new Date().getTime();
+
+  userDataJSON = JSON.stringify(userData);
+
+  var proxyUrl  = 'https://cors-anywhere.herokuapp.com/',
+      targetUrl = 'http://softconf.org/cgi-bin/form.cgi';
+
+  if (!thisState.userDataSaved) {
+    fetch(proxyUrl + targetUrl, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: userDataJSON,
+    })
+    .then(response => {
+      //console.log(response);
+      return response.json();
+    })
+    .then(data => {
+        console.log('Data stored successfully');
+        setUserData(true);
+        return data;
+    })
+    .catch(e => {
+      console.log('Data store failed');
+      console.log(e);
+      return e;
+    });
+  }
+
+
+  return (
+    <div>
+      <h2>Thank You!</h2>
+      <p>Thank you for registering for the convention. You should be receiving an email message with a summary
+         page and invoice. If you don't see the email, please check your Junk folder.
+      </p>
+      {userData.paid ?
+          <div>
+          </div>
+        :
+          <div>
+            <p>To pay by check, send your check to:</p>
+            <div className="indent">
+              Support Organization for Trisomy<br />
+              2982 Sound Union St.<br />
+              Rochester, NY  14624<br />
+              <br />
+              Please include the invoice number with the check:<br />
+              <div className="indent v-indent"><code>{userData.formID}</code></div>
+            </div>
+          </div>
+      }
+      <p className="v-indent">We would love to include photos of your family in the Directory. Please emails photos to:</p>
+      <div className="indent">
+        <a href="mailto:webmaster@example.com"><code>photos@softregistration.com</code></a>
+      </div>
+      <br />
+      <div className="footer-balloons"></div>
+      {!thisState.userDataSaved &&
+        <Loading />
+      }
+    </div>
+  );
+}
 
 
 //----------------------------------------------------------------------------------------------------
@@ -3648,10 +3676,10 @@ const ShirtSize = ({value, isDisabled, onChange, className="edit-shirt-size"}) =
 
 const PrevNextButtons = ({pageNum, contact, onClickPrev, onClickNext}) =>
   <div className="button-bar">
-    {pageNum > pages.START+1  &&
+    {pageNum > pages.START+1  &&  pageNum < pages.THANKYOU  &&
       <Button className="button button-prev" onClick={onClickPrev}><FontAwesomeIcon icon="angle-double-left" /> BACK</Button>
     }
-    {pageNum < pages.END-1  &&
+    {pageNum < pages.CHECKOUT  &&
       <Button className="button button-next" onClick={onClickNext}>NEXT <FontAwesomeIcon icon="angle-double-right" /></Button>
     }
   </div>
@@ -3819,6 +3847,30 @@ function smartFixEmail(email) {
     //  Correct misspellings of gmail.com, etc
     return email.toLowerCase();
 }
+
+//  Fix this on the reporting side so we can see what they've entered and correct it in the reports. Just
+//  a bit safer until we know the kinds of things people actually enter.
+// function smartFixDiagnosis(diagnosis) {
+//   diagnosis = diagnosis.replace(/\bf\s*t\s*/i, 'Full Trisomy ');
+//   diagnosis = diagnosis.replace(/\bp\s*t\s*/i, 'Partial Trisomy ');
+//   diagnosis = diagnosis.replace(/\bt\s*p\s*/i, 'Partial Trisomy ');
+//   diagnosis = diagnosis.replace(/\bt\s*(\d+)/i, 'Trisomy $1');
+//   diagnosis = diagnosis.replace(/\bp\s*(\d+)/i, 'Partial Trisomy $1');
+//   diagnosis = diagnosis.replace(/\bt\s*m\s*(\d+)/i, 'Trisomy $1 Mosaic');
+//   diagnosis = diagnosis.replace(/(\d+)\s*m\b/i, '$1 Mosaic');
+//   diagnosis = diagnosis.replace(/trisomy/i, 'Trisomy');
+//   diagnosis = diagnosis.replace(/mosaic/i, 'Mosaic');
+//   diagnosis = diagnosis.replace(/partial/i, 'Partial');
+//   diagnosis = diagnosis.replace(/trisomy partial/i, 'Partial Trisomy');
+//   diagnosis = diagnosis.replace(/\bm\s*(\d+)/i, '$1 Mosaic');
+
+//   // if (!diagnosis.match(/trisomy/i)) {      //  Might not make sense for complex "other"-cases to simpy tack this on the front
+//   //   diagnosis = 'Trisomy ' + diagnosis;
+//   // }
+
+//   return diagnosis.replace(/\s+/g, ' ');
+// }
+
 
 function validateEmail(email) {
     var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
