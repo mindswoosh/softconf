@@ -539,7 +539,7 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     deathDate: '',
     diagnosis:   '',
     otherDiagnosis: '',
-    eatsMeals:   true,
+    eatsMeals:   false,
 
     // Picnic
     picnicTrans:    false,                //  Needs transportation to the picnic?
@@ -3528,6 +3528,7 @@ const ThankYou = ({thisState, setUserData}) => {
       </p>
       {userData.paid ?
           <div>
+          <p>That's it, you're all set for the convention! Oh, one last thing...</p>
           </div>
         :
           <div>
@@ -3537,16 +3538,17 @@ const ThankYou = ({thisState, setUserData}) => {
               2982 Sound Union St.<br />
               Rochester, NY  14624<br />
               <br />
-              Please include the invoice number with the check:<br />
+              Please include your invoice number with the check:<br />
               <div className="indent v-indent"><code>{userData.formID}</code></div>
             </div>
           </div>
       }
-      <p className="v-indent">We would love to include photos of your family in the Directory. Please emails photos to:</p>
+      <p className="v-indent">We would love to include photos of your family in the Conference Directory. Please email any photos that you would like to share with everyone to:</p>
       <div className="indent">
         <a href="mailto:webmaster@example.com"><code>photos@softregistration.com</code></a>
       </div>
       <br />
+      <p className="v-indent">Thanks again!</p>
       <div className="footer-balloons"></div>
       {!thisState.userDataSaved &&
         <Loading />
