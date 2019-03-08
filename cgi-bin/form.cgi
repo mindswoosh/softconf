@@ -10,6 +10,7 @@ use Database;
 use CGI;
 use CGI::Carp;
 use JSON::PP;
+use MIME::Lite;
 
 my $json = JSON::PP->new->ascii->pretty->allow_nonref;
 
@@ -278,7 +279,72 @@ if ($q->param)            #  fetches the names of the params as a list
 
     }
 
+    warn("Contact email is '" . $contactInfo{email} . "'");
+
+my $to = 'stormdevelopment@gmail.com';
+my $from = 'invoice@softconf.org';
+my $subject = 'Registered for SOFT Conference';
+ 
+open(MAIL, "|/usr/sbin/sendmail -t -oi -oem");
+ 
+# Email Header
+print MAIL "From: $from\n";
+print MAIL "To: $to\n";
+print MAIL "From: $from\n";
+print MAIL "Subject: $subject\n\n";
+print MAIL "Test message";
+
+warn(close(MAIL));
+warn "Email Sent Successfully\n";
+
+
+#     my $htmlEmail = qq~
+#       <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+#       <html>
+#       <head>
+#       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+#       </head>
+#       <body>
+#           $userData{checkout}
+#       </body>
+#       </html>
+#     ~;
+
+# MIME::Lite->send('smtp','smtp.gmail.com', SSL=>1, AuthUser=>"stormdevelopment\@gmail.com", AuthPass=>"Bigfoot3600!", DEBUG=>1);
+
+#     if ($successful) {
+     
+#       my $message = MIME::Lite->new(
+#         From     => "SOFT Registration <invoices\@softconf.org>",
+#         To       => $contactInfo{email},
+#         Cc       => "stormdevelopment\@gmail.com",
+#         Subject  => "Registered for SOFT Conference",
+#         Type     => "text/html",
+#         Encoding => "quoted-printable",
+#         Data     => $htmlEmail
+#       );
+      
+#       $message->send();
+
+#     }
+#     else {
+#       my $message = MIME::Lite->new(
+#         From     => "SOFT Registration <invoices\@softconf.org>",
+#         To       => $contactInfo{email},
+#         Cc       => "stormdevelopment\@gmail.com",
+#         Subject  => "Failed: Registered for SOFT Conference",
+#         Type     => "text/html",
+#         Encoding => "quoted-printable",
+#         Data     => $htmlEmail
+#       );
+      
+#       $message->send();
+#     }
+
   }
+
+
+
 
 
   my %msg = ( 

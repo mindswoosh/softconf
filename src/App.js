@@ -1141,7 +1141,7 @@ class App extends Component {
             contactInfo.postalCode  = "98354";
             contactInfo.country     = "United States";
             contactInfo.phoneMobile = "(206) 528-1962";
-            contactInfo.email       = "steve@bestcoolproducts.com";
+            contactInfo.email       = "stormdevelopment@gmail.com";
           }
 
           pageHistory.push(currentPage);
@@ -2201,8 +2201,8 @@ const Welcome = ({brochureURL}) =>
        out this registration form will be helpful.
     </p>
     <p>If you need a copy of the brochure, click this button:</p>
-    <div className="welcome-button">
-      <a href={brochureURL} target="_blank">Download Brochure</a>
+    <div className="welcome-button-pos">
+      <a className="welcome-button" href={brochureURL} target="_blank">Download Brochure</a>
     </div>
     <p>To get started, click on the Next button.</p>
   </div>
@@ -3508,7 +3508,7 @@ const ThankYou = ({thisState, setUserData}) => {
       return response.json();
     })
     .then(data => {
-        console.log('Data stored successfully');
+        console.log('Data stored successfully: ' + data);
         setUserData(true);
         return data;
     })
