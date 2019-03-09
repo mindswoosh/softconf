@@ -108,10 +108,11 @@ const eventInfoDefault = {
   costChildPicnic:       20,          // child <= 11
   joeyWatsonSecretCode:  'JW2019MI',
 
+  workshopBlurb: "Workshops will be held on Thursday July 18 from 9am–4pm.",
   workshopSessions: [
       {
         id: 1,
-        name:   "Session 1",
+        name:   "Session 1: 9am—10am",
         workshops: [
           {
             id:           "1n",
@@ -127,15 +128,28 @@ const eventInfoDefault = {
           },
           {
             id:           "1b",
-            title:        "Tapping to clear emotions",
-            moderator:    "Rev. Robin Whitaker",
+            title:        "Self Care",
+            moderator:    "",
             description:  ""
           },
+          {
+            id:           "1c",
+            title:        "Wheelchair and seating",
+            moderator:    "Julie Hawkins, Mike Barner",
+            description:  ""
+          },
+          {
+            id:           "1d",
+            title:        "Simon's law",
+            moderator:    "Sheryl Crosier",
+            description:  ""
+          },
+
         ]
       },
       {
         id: 2,
-        name:   "Session 2",
+        name:   "Session 2: 10:10am—11:10am",
         workshops: [
           {
             id:           "2n",
@@ -145,14 +159,14 @@ const eventInfoDefault = {
           },
           {
             id:           "2a",
-            title:        "",
+            title:        "Trisomy 18, 13. Preventing Seizures, Light Sensitivity and Headaches",
             moderator:    "Dr. Steve Cantrell",
             description:  ""
           },
           {
             id:           "2b",
-            title:        "Canvas Painting Party OR CARDMAKING Cost TBD",
-            moderator:    "",
+            title:        "Art Party",
+            moderator:    "Denise Ferber",
             description:  ""
           },
           {
@@ -161,11 +175,17 @@ const eventInfoDefault = {
             moderator:    "Julie Hawkins, Mike Barner",
             description:  ""
           },
+          {
+            id:           "2d",
+            title:        '"I am": The Journey',
+            moderator:    "Martiana Biagi",
+            description:  ""
+          },
         ]
       },
       {
         id: 3,
-        name:   "Session 3",
+        name:   "Session 3: 11:20am-12:20pm",
         workshops: [
           {
             id:           "3n",
@@ -181,15 +201,27 @@ const eventInfoDefault = {
           },
           {
             id:           "3b",
-            title:        "TRIS",
+            title:        "The TRIS Project",
             moderator:    "Debbie Bruns",
+            description:  ""
+          },
+          {
+            id:           "3c",
+            title:        "Wheelchair and seating",
+            moderator:    "Julie Hawkins, Mike Barner",
+            description:  ""
+          },
+          {
+            id:           "3d",
+            title:        "Crafting Your Story",
+            moderator:    "Terre Krotzer",
             description:  ""
           },
         ]
       },
       {
-        id: 4,
-        name:   "Session 4",
+        id: 5,
+        name:   "Session 4: 2:30pm—4:15pm",
         workshops: [
           {
             id:           "4n",
@@ -199,37 +231,13 @@ const eventInfoDefault = {
           },
           {
             id:           "4a",
-            title:        "",
-            moderator:    "Dr. Glenn Green, ENT?",
+            title:        "Moms Only — Sharing Workshop",
+            moderator:    "",
             description:  ""
           },
           {
             id:           "4b",
-            title:        "CPR and First Aid",
-            moderator:    "Allison Westman-Grigg RN-BSN",
-            description:  ""
-          },
-        ]
-      },
-      {
-        id: 5,
-        name:   "Session 5",
-        workshops: [
-          {
-            id:           "5n",
-            title:        "None",
-            moderator:    "",
-            description:  ""
-          },
-          {
-            id:           "5a",
-            title:        "Moms Only - Sharing Workshop",
-            moderator:    "",
-            description:  ""
-          },
-          {
-            id:           "5b",
-            title:        "Dads Only - Sharing Workshop",
+            title:        "Dads Only — Sharing Workshop",
             moderator:    "",
             description:  ""
           },
@@ -237,7 +245,8 @@ const eventInfoDefault = {
       },
     ],
 
-  clinicsBlurb: "This year’s SOFT Clinics will be held at C.S. Mott Children’s Hospital on Friday July 19, 2019 from 1pm – 5pm. Please number your clinic preferences (up to 5). We will attempt to schedule each child into 3 of the 5 preferences.",
+
+  clinicsBlurb: "This year’s SOFT Medical Clinics will be held at C.S. Mott Children’s Hospital on Friday July 19, 2019 from 1pm–5pm. Please number your clinic preferences (up to 5). We will attempt to schedule each child into 3 of the 5 preferences.",
   clinics: [
       'Cardiology',
       'Neurology',
@@ -248,10 +257,10 @@ const eventInfoDefault = {
       'Genetics',
     ],
 
-  youngerSibOutingBlurb: "The Younger Sibling outing is for children ages 5 to 11 and will be at the Ann Arbor Children’s museum on _______.  Lunch is included as well as a goody bag and a SOFT Sibs T-shirt! Price for the outing is $35.",
+  youngerSibOutingBlurb: "This year the Younger Sibling outing will be combined with the Older Sib Outing. They will be going to the Detroit Zoo on Friday, July 19th from 9am–2pm. Lunch is included as well as a SOFT Sibs T-shirt! Price for the outing is $42.",
   youngerSibCost: 35,
 
-  olderSibOutingBlurb: "The Older Sibling outing is for children 12 and up and will be to the Detroit Zoo on July 18th. Lunch is included in the outing and every child will get a SOFT Sibs T-shirt. Price for the outing is $35.",
+  olderSibOutingBlurb: "This year the Older Sibling outing will be combined with the Younger Sib Outing. They will be going to the Detroit Zoo on Friday, July 19th from 9am–2pm. Lunch is included as well as a SOFT Sibs T-shirt! Price for the outing is $42.",
   olderSibCost: 35,
 
   childCareBlurb: "Childcare will be available during the Workshops and Clinics and is available for children 11 and under and for SOFT children of any age. Please refer to the brochure for the times of the Workshops and Clinics you plan to attend in which you might need childcare.",
@@ -282,7 +291,7 @@ const eventInfoDefault = {
     },
   ],
 
-  welcomeDinnerBlurb: "Our annual welcome dinner will be held Thursday night from 6pm – 10pm.",
+  welcomeDinnerBlurb: "Our annual welcome dinner will be held Thursday night from 6pm–11pm. Please make your meal choices below.",
   adultMenu: [
       'Portabella Napolean',
       'Sliced Sirloin Medallions',
@@ -295,7 +304,9 @@ const eventInfoDefault = {
       'Celery',
     ],
 
-  remembranceBlurb: "This year’s Remembrance Celebration will be to Matthaei Botanical Gardens. This event is only for those who have lost a child. If you plan to attend, please put a checkmark next to each person who will be attending, and select the type of lunch for each. Otherwise, simply click the Next button.",
+  chapterChairBlurb: "The Chapter Chair Luncheon will be held on Thursday July 18th from 12:25–1:25. Please indicate below which adults in your party will attend.",
+
+  remembranceBlurb: "This year’s Remembrance Outing will be at the Matthaei Botanical Gardens. This event is for those who have lost a child. Fee is $25 per person and includes lunch. If you plan to attend, please put a checkmark next to each person who will be attending, and select the type of lunch for each. Otherwise, simply click the Next button.",
   remembranceMenu: [
       'Vegetarian',
       'Non-vegetarian',
@@ -525,7 +536,7 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     welcomeDinner: '',              //  Meal choice
 
     // Adults
-    rembOuting: false,              //  Attending the Remembrance Celebration?
+    rembOuting: false,              //  Attending the Remembrance Outing?
     rembLunch:  '',                 //  Meal choice
     chapterChairLunch: false,       //  Attending the luncheon?
     workshops: {},                  //  { sessID1: choice, sessID1: choice, ... }   E.g., {  "1": "1n", "2": "2a", "3": "3c" }
@@ -610,7 +621,7 @@ class App extends Component {
       },
 
       photoWaiver:      false, 
-      attendance:       'full',     //  "full", "workshops" (only), picnic" (only), "balloon" release - not attending 
+      attendance:       'full',     //  "full", "workshops" (only), picnic" (only), "balloon" celebration - not attending 
       reception:        false,
       sundayBreakfast:  false,
       boardMember:      false,
@@ -857,7 +868,8 @@ class App extends Component {
                   />,
 
               [pages.WORKSHOPS]:
-                  <Workshops 
+                  <Workshops
+                    blurb={eventInfo.workshopBlurb}
                     attendee={attendees[this.state.workshopAttendee]} 
                     sessions={eventInfo.workshopSessions}
                     onChange={this.onChangeWorkshops}
@@ -881,6 +893,7 @@ class App extends Component {
 
               [pages.CHAPTERCHAIR]:
                   <ChapterChair
+                    blurb={eventInfo.chapterChairBlurb}
                     attendees={attendees}
                     onChange={this.onChangechapterChairLunch}
                   />,
@@ -2364,8 +2377,13 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangeSelection, onC
   <div>
     <h2>Conference Attendees</h2>
     <p>Please list everybody in your party who will be attending any part of the Conference. Be sure to include
-       the Contact Person here if he or she will be attending.
+       the Contact Person here if he or she will be attending.<br />
+       <br />
+       Full Conference rates:<br />
+       Adults: $145  (Ages 12 and above are charged as adults)<br />
+       Children: $95 (Ages 11 and under)
     </p>
+
     {attendees.length > 0  &&
       <div>
         {attendees.map( (a, i) =>
@@ -2470,10 +2488,10 @@ const SoftAngels = ({softAngels, onRemove, onAdd, onChange, onChangeDiagnosis, o
 //----------------------------------------------------------------------------------------------------
 
 
-const Workshops = ({attendee, sessions, onChange}) =>
+const Workshops = ({attendee, sessions, blurb, onChange}) =>
   <div>
     <h2>Workshops</h2>
-    <p>Please choose which workshops that <strong>{attendee.firstName} {attendee.lastName}</strong> will be attending. Refer to the brochure for 
+    <p>{blurb} Please choose which workshops that <strong>{attendee.firstName} {attendee.lastName}</strong> will be attending. Refer to the brochure for 
        specific times that each workshop will be held.
     </p>
     <p className="indent"><strong>{attendee.firstName} {attendee.lastName} plans to attend:</strong></p>
@@ -2663,7 +2681,7 @@ const Picnic = ({attendees, onChangeAttendee, blurb}) =>
     <h2>Picnic</h2>
     <p>{blurb}</p>
     <p>Please place a checkmark next to each person who will need bus transportation. If wheelchair tie-downs are
-       needed for the bus, choose that too.
+       needed for the bus, choose that too. If you have your own transportation, then just click NEXT.
     </p>
     <div className="remembrance">
       {attendees.map( (a,i) => 
@@ -2689,12 +2707,10 @@ const Picnic = ({attendees, onChangeAttendee, blurb}) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const ChapterChair = ({ attendees, onChange, onChangeLunch }) =>
+const ChapterChair = ({ blurb, attendees, onChange, onChangeLunch }) =>
   <div>
     <h2>Chapter Chair Luncheon</h2>
-    <p>Is anyone in your party a registered or prospective Chapter Chair? If so, please check everyone
-       who will be attending the Chapter Chair Lunch; otherwise, simply click the Next buttton.
-    </p>
+    <p>{blurb}</p>
     <p><i>(If you don't know what a Chapter Chair is, this doesn't apply to you. Please click NEXT.)</i></p>
     <div className="chapter-chair">
       {attendees.map( (a,i) =>
@@ -2717,6 +2733,10 @@ const Dinner = ({attendees, adultMenu, kidsMenu, blurb, onChangeDinner}) =>
   <div>
     <h2>Welcome Dinner</h2>
     <p>{blurb}</p>
+    <p>
+      Adult meal options are: {adultMenu.join(', ')}<br />
+      Child meal options are: {kidsMenu.join(', ')}
+    </p>
     <div className="remembrance">
       {attendees.map( (a,i) =>
         {return <div key={a.id} className="indent">
@@ -2756,7 +2776,7 @@ const Dinner = ({attendees, adultMenu, kidsMenu, blurb, onChangeDinner}) =>
 const Balloons = ({contact}) =>
   <div>
     <h2>Balloon Release</h2>
-    <p>You are invited to honor your SOFT Angel during our Memorial Balloon Release. It is not necessary to attend
+    <p>You are invited to honor your SOFT Angel during our Memorial Balloon Celebration. It is not necessary to attend
        the Conference to request a balloon for your child.
     </p>
     <b>
@@ -3134,9 +3154,9 @@ const Summary = ({thisState}) => {
                 //----
 
 
-                //  Include Remembrance Celebration section?
+                //  Include Remembrance Outing section?
                 if (userData.softAngels.length !== 0) {
-                  output += add_line(0, '\nAttending Remembrance Celebration:');
+                  output += add_line(0, '\nAttending Remembrance Outing:');
                   output += '\n';
 
                   for (let attendee of userData.attendees) {
@@ -3330,11 +3350,11 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
       }
 
 
-      //  Anybody attending the Remembrance Celebration?
+      //  Anybody attending the Remembrance Outing?
 
       if (userData.attendees.find(a => ((a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL)  &&  a.rembOuting))) {
 
-        output += add_line(0, '\nRemembrance Celebration:');
+        output += add_line(0, '\nRemembrance Outing:');
         output += '\n';
 
         let rembCost = 0;
