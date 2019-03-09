@@ -70,10 +70,6 @@ CREATE TABLE contacts
     chapterChair        TINYINT DEFAULT FALSE,
     joeyWatson          TINYINT DEFAULT FALSE,
 
-    conferenceTotal     VARCHAR(10),
-    softDonation        INT(10) UNSIGNED DEFAULT 0,
-    fundDonation        INT(10) UNSIGNED DEFAULT 0,
-
     attendingClinics    TINYINT DEFAULT FALSE,
     clinicTieDowns      TINYINT DEFAULT 0,
 
@@ -81,7 +77,12 @@ CREATE TABLE contacts
     dir_email           TINYINT DEFAULT FALSE,
     dir_city            TINYINT DEFAULT FALSE,
 
-    paid                TINYINT DEFAULT FALSE,
+    conferenceTotal     FLOAT DEFAULT 0,
+    softDonation        FLOAT DEFAULT 0,
+    fundDonation        FLOAT DEFAULT 0,
+    grandTotal          FLOAT DEFAULT 0,
+
+    paid                FLOAT DEFAULT 0,
     payerID             VARCHAR(255),
     paymentID           VARCHAR(255),
     paymentToken        VARCHAR(255)

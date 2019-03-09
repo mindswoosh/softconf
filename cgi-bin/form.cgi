@@ -80,6 +80,7 @@ if ($q->param)            #  fetches the names of the params as a list
       conferenceTotal   => $userData{conferenceTotal},
       softDonation      => $userData{softDonation},
       fundDonation      => $userData{fundDonation},
+      grandTotal        => $userData{grandTotal},
 
       attendingClinics  => $userData{attendingClinics},
       clinicTieDowns    => $userData{clinicTieDowns},
@@ -157,7 +158,7 @@ if ($q->param)            #  fetches the names of the params as a list
         );
 
         #  Only children (not even SOFT Children) have ages
-        $attendee{age} = 0  if ($attendee{peopleType} !~ /^Child$/i);     
+        $attendee{age} = 0  if ($attendee{peopleType} !~ /^(Child|Teen)$/i);     
 
         %attendee = InsertAttendee(%attendee);
         $successful &&= %attendee;
@@ -189,7 +190,7 @@ if ($q->param)            #  fetches the names of the params as a list
         #  Each Child (11 or under) and all SOFT Children can have daycare
 
         if ($userData{attendance} =~ /full/i  &&
-            ($attendee{peopleType} =~ /^SOFT Child$/i  ||  ($attendee{peopleType} =~ /^Child$/i  &&  $attendee{age} <= 11))  &&  
+            ($attendee{peopleType} =~ /^SOFT Child$/i  ||  $attendee{peopleType} =~ /^Child$/i)  &&  
             $attendee_ref->{childCareSessions}) {
 
           #  From JavaScript: {  "1": "1n", "2": "2a", "3": "3c" }
@@ -282,7 +283,7 @@ if ($q->param)            #  fetches the names of the params as a list
     warn("Contact email is '" . $contactInfo{email} . "'");
 
 my $to = 'stormdevelopment@gmail.com';
-my $from = 'invoice@softconf.org';
+my $from = 'invoices@softconf.org';
 my $subject = 'Registered for SOFT Conference';
  
 open(MAIL, "|/usr/sbin/sendmail -t -oi -oem");
@@ -305,7 +306,7 @@ warn "Email Sent Successfully\n";
 #       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 #       </head>
 #       <body>
-#           $userData{checkout}
+#           $userData{invoice}
 #       </body>
 #       </html>
 #     ~;

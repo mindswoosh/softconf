@@ -1,5 +1,5 @@
 //
-//  SOFT Convention Registration
+//  SOFT Conference Registration
 //
 //  9/18/18 v0.1 Steve Maguire steve@stormdev.com
 //
@@ -295,7 +295,7 @@ const eventInfoDefault = {
       'Celery',
     ],
 
-  remembranceBlurb: "This year’s Remembrance Outing will be to Matthaei Botanical Gardens. This event is only for those who have lost a child. If you plan to attend, please put a checkmark next to each person who will be attending, and select the type of lunch for each. Otherwise, simply click the Next button.",
+  remembranceBlurb: "This year’s Remembrance Celebration will be to Matthaei Botanical Gardens. This event is only for those who have lost a child. If you plan to attend, please put a checkmark next to each person who will be attending, and select the type of lunch for each. Otherwise, simply click the Next button.",
   remembranceMenu: [
       'Vegetarian',
       'Non-vegetarian',
@@ -303,7 +303,7 @@ const eventInfoDefault = {
 
   picnicBlurb: "The Annual Ryan Cantrell Memorial Picnic and Balloon Celebration will be at Dawn Farms on Saturday July 20th from 11:30–3pm.",
 
-  shirtsBlurb: "Order your SOFT conference shirts ahead of time so they'll be ready and waiting for you when you check in at the conference. Note that the Sib shirts given to the kids at the Sibling Outings are different than these shirts.",
+  shirtsBlurb: "Order your SOFT Conference shirts ahead of time so they'll be ready and waiting for you when you check in at the Conference. Note that the Sib shirts given to the kids at the Sibling Outings are different than these shirts.",
 
   shirtTypes: [
       {
@@ -341,7 +341,7 @@ const eventInfoDefault = {
       }
   ],
 
-  directoryBlurb: "Each year we create a Conference Family directory. By including your contact information in the directory, families will be able keep in touch with each other after the conference. By default, we include your phone number, email address, and the city that you live in (the street address is NOT included).",
+  directoryBlurb: "Each year we create a Conference Family directory. By including your contact information in the directory, families will be able keep in touch with each other after the Conference. By default, we include your phone number, email address, and the city that you live in (the street address is NOT included).",
 };
 
 
@@ -430,20 +430,22 @@ function optFromOptions(options, value) {
 const peopleTypes = {
   SOFTCHILD:    "SOFT Child",
   CHILD:        "Child",
+  TEEN:         "Teen",
   ADULT:        "Adult",
   PROFESSIONAL: "Professional",
   SOFTANGEL:    "SOFT Angel",
 };
 
 const optionsPeopleTypes = [
-  { label: "SOFT child",    value: peopleTypes.SOFTCHILD },
-  { label: "Child",         value: peopleTypes.CHILD },  
-  { label: "Adult",         value: peopleTypes.ADULT },
-  { label: "Professional",  value: peopleTypes.PROFESSIONAL },
+  { label: "SOFT child",        value: peopleTypes.SOFTCHILD },
+  { label: "Child (under 12)",  value: peopleTypes.CHILD },
+  { label: "Teen (12-17)",      value: peopleTypes.TEEN },
+  { label: "Adult",             value: peopleTypes.ADULT },
+  { label: "Professional",      value: peopleTypes.PROFESSIONAL },
 ];
 
 
-const optionsAges = [
+const optionsChildAges = [
   { label: "< 6 months", value: 0 },
   { label: "1 year old", value: 1 },  
   { label: "2",          value: 2 },
@@ -456,6 +458,9 @@ const optionsAges = [
   { label: "9",          value: 9 },
   { label: "10",         value: 10 },
   { label: "11",         value: 11 },
+];
+
+const optionsTeenAges = [
   { label: "12",         value: 12 },
   { label: "13",         value: 13 },
   { label: "14",         value: 14 },
@@ -463,7 +468,6 @@ const optionsAges = [
   { label: "16",         value: 16 },
   { label: "17",         value: 17 },
 ];
-
 
 const Diagnoses = [
   "Full Trisomy 18",
@@ -521,7 +525,7 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     welcomeDinner: '',              //  Meal choice
 
     // Adults
-    rembOuting: false,              //  Attending the remembrance outing?
+    rembOuting: false,              //  Attending the Remembrance Celebration?
     rembLunch:  '',                 //  Meal choice
     chapterChairLunch: false,       //  Attending the luncheon?
     workshops: {},                  //  { sessID1: choice, sessID1: choice, ... }   E.g., {  "1": "1n", "2": "2a", "3": "3c" }
@@ -711,8 +715,8 @@ class App extends Component {
         attendee("Beth",  "Mountjoy",  peopleTypes.CHILD,         5, eventInfoDefault),
         attendee("Terre", "Krotzer",   peopleTypes.PROFESSIONAL, '', eventInfoDefault),
         attendee("Jane",  "Mountjoy",  peopleTypes.CHILD,        11, eventInfoDefault),
-        attendee("Helen", "Mountjoy",  peopleTypes.CHILD,        12, eventInfoDefault),
-        attendee("Cliff", "Mountjoy",  peopleTypes.CHILD,        17, eventInfoDefault),
+        attendee("Helen", "Mountjoy",  peopleTypes.TEEN,         12, eventInfoDefault),
+        attendee("Cliff", "Mountjoy",  peopleTypes.TEEN,         17, eventInfoDefault),
         attendee("Jamie", "Jones",     peopleTypes.SOFTCHILD,     3, eventInfoDefault),
       ];
 
@@ -951,7 +955,7 @@ class App extends Component {
     let { attendees } = this.state;
 
     for (let i = currentSib+1; i < attendees.length; i++) {
-      if (attendees[i].peopleType === peopleTypes.CHILD  &&  attendees[i].age >= 5  &&  attendees[i].age < 12) {
+      if (attendees[i].peopleType === peopleTypes.CHILD  &&  attendees[i].age >= 5) {
         return i;
       }
     }
@@ -964,7 +968,7 @@ class App extends Component {
     let { attendees } = this.state;
 
     for (let i = currentSib+1; i < attendees.length; i++) {
-      if (attendees[i].peopleType === peopleTypes.CHILD  &&  attendees[i].age >= 12) {
+      if (attendees[i].peopleType === peopleTypes.TEEN) {
         return i;
       }
     }
@@ -977,7 +981,7 @@ class App extends Component {
     let { attendees } = this.state;
 
     for (let i = currentSib+1; i < attendees.length; i++) {
-      if (attendees[i].peopleType === peopleTypes.CHILD  &&  attendees[i].age <= 11) {
+      if (attendees[i].peopleType === peopleTypes.CHILD) {
         return i;
       }
     }
@@ -1160,7 +1164,7 @@ class App extends Component {
           let jwcode = this.state.joeyWatsonCode.trim().replace(/\s+/g, '').toUpperCase();
 
           if (this.state.attendance !== 'balloon'  &&  !this.state.photoWaiver) {
-            alert('To register for the conference, you must agree to the photo and video waiver. Please check the box to agree.');
+            alert('To register for the Conference, you must agree to the photo and video waiver. Please check the box to agree.');
           }
           else if (this.state.attendance === 'full'  &&  this.state.joeyWatson  &&  jwcode !== this.state.eventInfo.joeyWatsonSecretCode.toUpperCase() ) {
             alert('Oops! the Joey Watson confirmation code is incorrect. Enter the correct code, or choose "No" for the Joey Watson fund.');
@@ -1239,7 +1243,7 @@ class App extends Component {
           }
           else {
             if (attendees.length === 0) {
-                attendees.push( attendee(contact.firstName, contact.lastName, peopleTypes.ADULT, -1, this.state.eventInfo) );
+                attendees.push( attendee(contact.firstName, contact.lastName, peopleTypes.ADULT, '', this.state.eventInfo) );
             }
 
             pageHistory.push(currentPage);
@@ -1313,8 +1317,10 @@ class App extends Component {
           attendees = attendees.filter(a => { return (a.firstName !== ''  ||  a.lastName !== '') });
 
           let bad_attendee = attendees.find( a => { 
-            return (  a.firstName === ''  ||  a.lastName === ''  ||  a.peopleType === ''  ||  (a.peopleType === peopleTypes.CHILD  &&  a.age === null) ||
-                      (a.peopleType === peopleTypes.SOFTCHILD  &&  (a.dateOfBirth === null  ||  a.diagnosis === null  ||  (a.diagnosis === "Other" && a.otherDiagnosis === "")) )
+            return (  a.firstName === ''  ||  a.lastName === ''  ||  a.peopleType === ''  || 
+                     (a.peopleType === peopleTypes.CHILD  &&  (a.age === null || a.age > 11)) ||
+                     (a.peopleType === peopleTypes.TEEN   &&  (a.age === null || a.age < 12)) ||
+                     (a.peopleType === peopleTypes.SOFTCHILD  &&  (a.dateOfBirth === null  ||  a.diagnosis === null  ||  (a.diagnosis === "Other" && a.otherDiagnosis === "")) )
                    ) 
           });
 
@@ -1331,7 +1337,7 @@ class App extends Component {
             alert("Oops! You must list at least one person. Will the Contact Person be attending?");
           }
           else if (bad_attendee !== undefined) {
-            alert("Oops! Something is missing in the information for one or more of the people listed. Please fill in the missing information.");
+            alert("Oops! Something is incorrect in the information for one or more of the people listed. Please double-check the information.");
           }
           else {
             pageHistory.push(currentPage);
@@ -1433,7 +1439,7 @@ class App extends Component {
               return a;
             });
 
-            let $missing_shirt = attendees.find( a => { return (a.peopleType === peopleTypes.CHILD  &&  a.age >= 5  &&  a.age < 12  &&  a.sibOuting  &&  a.shirtSize === '' ) });
+            let $missing_shirt = attendees.find( a => { return (a.peopleType === peopleTypes.CHILD  &&  a.age >= 5  &&  a.sibOuting  &&  a.shirtSize === '' ) });
             if ($missing_shirt) {
               alert("Oops! Please select a shirt for each person attending the outing.");
             }
@@ -1459,7 +1465,7 @@ class App extends Component {
               return a;
             });
 
-            let missing_shirt = attendees.find( a => { return (a.peopleType === peopleTypes.CHILD  &&  a.age >= 12  &&  a.sibOuting  &&  a.shirtSize === '') });
+            let missing_shirt = attendees.find( a => { return (a.peopleType === peopleTypes.TEEN  &&  a.sibOuting  &&  a.shirtSize === '') });
             if (missing_shirt) {
               alert("Oops! Please select a shirt for each person attending the outing.");
             }
@@ -1479,7 +1485,7 @@ class App extends Component {
       case pages.CHILDCARE:
 
           attendees = attendees.map(a => {
-            if ((a.peopleType === peopleTypes.CHILD  &&  a.age <= 11)  ||  a.peopleType === peopleTypes.SOFTCHILD) {
+            if (a.peopleType === peopleTypes.CHILD  ||  a.peopleType === peopleTypes.SOFTCHILD) {
               for (let sess of this.state.eventInfo.childCareSessions) {
                 if (!qualifiesChildCare(a.age, sess, this.state.boardMember)) {
                   a.childCareSessions[sess.id] = false;                               //  Make sure non-board members always have false for board-only settings
@@ -1723,7 +1729,7 @@ class App extends Component {
     let { attendees, contactInfo } = this.state;
 
     if (attendees.length === 0)
-      attendees.push( attendee(contactInfo.firstName, contactInfo.lastName,  peopleTypes.ADULT, -1, this.state.eventInfo) );
+      attendees.push( attendee(contactInfo.firstName, contactInfo.lastName,  peopleTypes.ADULT, '', this.state.eventInfo) );
     else
       attendees.push( attendee('', '', '', -1, this.state.eventInfo) );
 
@@ -2194,19 +2200,18 @@ const Welcome = ({brochureURL}) =>
   <div className="welcome">
     <h2>Welcome!</h2>
     <p>Welcome to the SOFT Conference Registration form!</p>
-    <p>The 2019 SOFT Conference is going to be held at the _____ Hotel in Ann Arbor, MI, July 17-21, 2019.
+    <p>The 2019 SOFT Conference is going to be held on July 17-21, 2019 in Ann Arbor Michigan at the Marriott Ypsilanti at Eagle Creek, 1275 South Huron St., Ypsilanti, MI, 48197.
     </p>
-    <p>If you haven't read the 2019 Conference brochure yet, you'll want to do that first before going
-       through this form so you know exactly what's going on. Having the brochure available as you fill
+    <p>If you haven't read the 2019 Conference Brochure yet, you'll want to do that first before going
+       through this form so you know exactly what's going on. Having the brochure open in another window as you fill
        out this registration form will be helpful.
     </p>
-    <p>If you need a copy of the brochure, click this button:</p>
+    <p>If you need to review the brochure, click this button:</p>
     <div className="welcome-button-pos">
-      <a className="welcome-button" href={brochureURL} target="_blank">Download Brochure</a>
+      <a className="welcome-button" href={brochureURL} target="_blank">View Online Brochure</a>
     </div>
     <p>To get started, click on the Next button.</p>
   </div>
-
 
 
 //----------------------------------------------------------------------------------------------------
@@ -2217,32 +2222,32 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
   <div>
     <h2>Getting Started</h2>
     <p>In the next few pages, you'll be asked a series of questions so that we can tailor this year's
-       SOFT convention specifically for you and your family. If you're only requesting a balloon
+       SOFT Conference specifically for you and your family. If you're only requesting a balloon
        in memory of a SOFT Angel, you will only be asked about that. To get started, please 
        answer the following questions:
     </p>
     <div className="indent">
-      How much, if any, of the conference are you planning to attend?
+      How much, if any, of the Conference are you planning to attend?
 
       <div className="v-indent indent">
         <RadioGroup name="attendance" selectedValue={attendance} onChange={(val) => onChangeField("attendance", val)}>
           <Radio value="full" /> Full Conference<br />
           <Radio value="workshops" /> Only attending the workshops (for Professionals)<br />
           <Radio value="picnic" /> Only attending the picnic<br />
-          <Radio value="balloon" /> Requesting a Balloon (not attending the conference)
+          <Radio value="balloon" /> Requesting a Balloon (not attending the Conference)
         </RadioGroup>
       </div>
       {attendance !== 'balloon' &&
         <div>
           <div className="v-indent">
             <b>Photography Waiver</b><br />
-            <div className="inline photo-waiver-blurb">Photos and videos will be taken throughout the conference. Click the waiver acceptance box to indicate that you agree to this:</div>
+            <div className="inline photo-waiver-blurb">Photos and videos will be taken throughout the Conference. Click the waiver acceptance box to indicate that you agree to this:</div>
             <table>
               <tbody>
                 <tr>
                   <td valign="top"><Checkbox defaultChecked={photoWaiver} onChange={event => handleCheckbox(event, "photoWaiver")} /> </td>
                   <td>
-                    <span>I agree that my registration means I accept that random photos and videos will be taken at conference which may appear on social media or the SOFT website.</span>
+                    <span>I agree that my registration means I accept that random photos and videos will be taken at Conference which may appear on social media or the SOFT website.</span>
                   </td>
                 </tr>
               </tbody>
@@ -2321,7 +2326,7 @@ const ContactInfo = ({contact, onChangeContactInfo, onChangeCountry}) =>
   <div>
     <h2>Contact Information</h2>
     <p style={{marginBottom: 8}}>Please enter the contact information for the person handling this registration. The contact person
-       does not need to be attending the conference.
+       does not need to be attending the Conference.
     </p>
     <div style={{marginLeft: 35}}>
       <div>
@@ -2369,11 +2374,10 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangeSelection, onC
             <Input label="FIRST Name" value={a.firstName} id={"attendee-firstname-" + a.id} onChange={event => onChange(event, a.id, "firstName")} />
             <Input label="LAST Name"  value={a.lastName}  id={"attendee-lastname-" + a.id}  onChange={event => onChange(event, a.id, "lastName")} />
             <PeopleType value={a.peopleType} onChange={(opt) => onChangeSelection(opt, a.id, "peopleType")}/>
-            {a.peopleType !== peopleTypes.CHILD  &&
-              <div className="edit-age"></div>
-            }
-            {a.peopleType === peopleTypes.CHILD  &&
-              <Age label="Age" value={a.age}  id={"attendee-age-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "age")} />
+            {(a.peopleType === peopleTypes.CHILD  ||  a.peopleType === peopleTypes.TEEN)  ?
+                <Age label="Age" value={a.age}  id={"attendee-age-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "age")} optionsAges={a.peopleType === peopleTypes.CHILD ? optionsChildAges : optionsTeenAges} />
+              :
+                <div className="edit-age"></div>
             }
             <Button onClick={() => onRemove(a.id)}>Remove</Button>
             {a.peopleType === peopleTypes.SOFTCHILD  &&
@@ -2414,7 +2418,7 @@ const Attendees = ({attendees, onRemove, onAdd, onChange, onChangeSelection, onC
 const SoftAngels = ({softAngels, onRemove, onAdd, onChange, onChangeDiagnosis, onChangeOther, onChangeDate}) =>
   <div>
     <h2>SOFT Angels</h2>
-    <p>Every year at the convention, we have a balloon release for SOFT children who have passed away.
+    <p>Every year at the Conference, we have a balloon release for SOFT children who have passed away.
        If you would like to have a balloon released for any SOFT Angels in your family, please give us
        their names and information here. Otherwise, click on the NEXT button below.
     </p>
@@ -2500,7 +2504,7 @@ const YoungerSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
     <p>Check each child who will be attending the outing and choose a shirt size.</p>
     <div className="remembrance">
       {attendees.map( (a,i) => 
-        {return a.peopleType === peopleTypes.CHILD  &&  a.age >= 5  &&  a.age <= 11  &&
+        {return a.peopleType === peopleTypes.CHILD  &&  a.age >= 5  &&
           <div key={a.id} className="indent">
             <Checkbox defaultChecked={a.sibOuting} onChange={event => onChange(event, a.id)} />
             <span className="remb-name">{a.firstName} {a.lastName}{a.sibOuting ? " - $" + cost : ""}</span>
@@ -2522,7 +2526,7 @@ const OlderSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
     <p>Check each child who will be attending the outing and choose a shirt size.</p>
     <div className="remembrance">
       {attendees.map( (a,i) => 
-        { return a.peopleType === peopleTypes.CHILD  &&  a.age >= 12  &&
+        { return a.peopleType === peopleTypes.TEEN  &&
           <div key={a.id} className="indent">
             <Checkbox defaultChecked={a.sibOuting} onChange={event => onChange(event, a.id)} />
             <span className="remb-name">{a.firstName} {a.lastName}{a.sibOuting ? " - $" + cost : ""}</span>
@@ -2601,7 +2605,7 @@ const Remembrance = ({ attendees, blurb, menuInfo, onChange, onChangeLunch }) =>
     <p>{blurb}</p>
     <div className="remembrance">
       {attendees.map( (a,i) => 
-        {return (a.peopleType === peopleTypes.ADULT)  && 
+        {return (a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL)  && 
           <div key={a.id} className="indent">
             <Checkbox defaultChecked={a.rembOuting} onChange={event => onChange(event, a.id)} />
             <span className="remb-name">{a.firstName} {a.lastName}</span>
@@ -2631,7 +2635,7 @@ const Childcare = ({attendees, childCareSessions, boardMember, onChange, blurb})
     <p>Please put a checkmark next to each timeslot where you will need childcare.</p>
     <div className="remembrance">
       {attendees.map( (a,i) => 
-        {return (a.peopleType === peopleTypes.SOFTCHILD  ||  (a.peopleType === peopleTypes.CHILD  &&  a.age <= 11))  &&
+        {return (a.peopleType === peopleTypes.SOFTCHILD  ||  a.peopleType === peopleTypes.CHILD)  &&
           <div key={a.id} className="indent">
             <span className="remb-name"><strong>{a.firstName} {a.lastName}</strong></span>
             {childCareSessions.map( (ccs,i) =>
@@ -2666,7 +2670,7 @@ const Picnic = ({attendees, onChangeAttendee, blurb}) =>
         <div key={a.id} className="picnic-row">
           <Checkbox defaultChecked={a.picnicTrans} onChange={event => onChangeAttendee(a.id, "picnicTrans", event.target.checked)} />
           <span className="remb-name">{a.firstName} {a.lastName}</span>
-          <div className={(a.picnicTrans && a.peopleType === peopleTypes.SOFTCHILD) ? "inline" : "inline invisible"}>
+          <div className={(a.picnicTrans  &&  a.peopleType === peopleTypes.SOFTCHILD) ? "inline" : "inline invisible"}>
             Needs tie-downs?
             <div className="inline">
               <RadioGroup name={"picnicTiedown" + a.id} selectedValue={a.picnicTiedown} onChange={(val) => onChangeAttendee(a.id, "picnicTiedown", val)}>
@@ -2694,7 +2698,7 @@ const ChapterChair = ({ attendees, onChange, onChangeLunch }) =>
     <p><i>(If you don't know what a Chapter Chair is, this doesn't apply to you. Please click NEXT.)</i></p>
     <div className="chapter-chair">
       {attendees.map( (a,i) =>
-        {return a.peopleType === peopleTypes.ADULT ? 
+        {return (a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL)? 
           <div key={a.id} className="chair-row">
             <Checkbox defaultChecked={a.chapterChairLunch} onChange={event => onChange(event, a.id)} />
             <span className="remb-name">{a.firstName} {a.lastName}</span>
@@ -2718,7 +2722,7 @@ const Dinner = ({attendees, adultMenu, kidsMenu, blurb, onChangeDinner}) =>
         {return <div key={a.id} className="indent">
             <span className="bold">{i+1}.</span> <span className="remb-name"> {a.firstName} {a.lastName}</span>
             <div className="inline">
-              {a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL  || (a.peopleType === peopleTypes.CHILD  &&  a.age >= 12) ?
+              {a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL  ||  a.peopleType === peopleTypes.TEEN ?
                   <Select
                     defaultValue={ a.welcomeDinner !== '' ? { label: a.welcomeDinner, value: a.welcomeDinner } : null }
                     options={arrayToOptions(adultMenu)}
@@ -2727,7 +2731,7 @@ const Dinner = ({attendees, adultMenu, kidsMenu, blurb, onChangeDinner}) =>
                     styles={selectStyle(300, 110)}
                   />
                 : 
-                  <div className={(a.peopleType !== peopleTypes.SOFTCHILD || a.eatsMeals) ? "inline" : "inline invisible"}>
+                  <div className={(a.peopleType !== peopleTypes.SOFTCHILD  ||  a.eatsMeals)  ?  "inline" : "inline invisible"}>
                     <Select
                       defaultValue={ a.welcomeDinner !== '' ? { label: a.welcomeDinner, value: a.welcomeDinner } : null }
                       options={arrayToOptions(kidsMenu)}
@@ -2753,7 +2757,7 @@ const Balloons = ({contact}) =>
   <div>
     <h2>Balloon Release</h2>
     <p>You are invited to honor your SOFT Angel during our Memorial Balloon Release. It is not necessary to attend
-       the conference to request a balloon for your child.
+       the Conference to request a balloon for your child.
     </p>
     <b>
       <p></p>
@@ -2769,7 +2773,7 @@ const Photos = ({contact}) =>
   <div>
     <h2>Photos</h2>
     <p>We invite you to share a family photo and a photo of your SOFT Child. Photos may be used for 
-       display during the conference and/or included in the SOFT Family Directory.
+       display during the Conference and/or included in the SOFT Family Directory.
     </p>
     <b>
       <p></p>
@@ -2886,9 +2890,11 @@ const Summary = ({thisState}) => {
     workshops:          thisState.workshops,
     childCareSessions:  thisState.childCareSessions,
     summary:            '',
-    softDonation:       thisState.softDonation,
-    fundDonation:       thisState.fundDonation,
-    paid:               false,
+    conferenceTotal:    0,
+    softDonation:       0,
+    fundDonation:       0,
+    grandTotal:         0,
+    paid:               0,
     payerID:            '',
     paymentID:          '',
     paymentToken:       '',
@@ -2899,7 +2905,7 @@ const Summary = ({thisState}) => {
 
   let reg = '';
   switch (userData.attendance) {
-    case 'full':        reg = 'Attending the full conference'; break;
+    case 'full':        reg = 'Attending the full Conference'; break;
     case 'workshops':   reg = 'Attending only the workshops (for Professionals only)'; break;
     case 'picnic':      reg = 'Only attending the picnic'; break;
     case 'balloon':     reg = 'Requesting a balloon (not attending)'; break;
@@ -2977,14 +2983,19 @@ const Summary = ({thisState}) => {
 
         if (attendee.peopleType === peopleTypes.CHILD) {
           output += add_line(2, 'Child, age: ' + attendee.age);
-          if (!attendee.sibOuting) {
-            output += add_line(2, 'Attending Sibling outing: No');
-          }
-          else {
+          if (attendee.sibOuting) {
             if (attendee.age < 5) console.log('Attendee too young for a sibling outing');
-            output += add_line(2, (attendee.age >= 12 ? "Attending older-sibling outing" : 'Attending younger-sibling outing'));
-            output += add_line(2, 'Shirt size: ' + shirtDisplay[attendee.shirtSize]);
+            output += add_line(2, "Attending younger-sibling outing");
           }
+          else
+            output += add_line(2, 'Attending Sibling outing: No');  
+        }
+        else if (attendee.peopleType === peopleTypes.TEEN) {
+          output += add_line(2, 'Teen, age: ' + attendee.age);
+          if (attendee.sibOuting)
+            output += add_line(2, "Attending older-sibling outing");
+          else
+            output += add_line(2, 'Attending Sibling outing: No');           
         }
         else if (attendee.peopleType === peopleTypes.SOFTCHILD) {
           output += add_line(2, attendee.peopleType);
@@ -2992,11 +3003,8 @@ const Summary = ({thisState}) => {
           output += add_line(2, 'Diagnosis: ' + (attendee.diagnosis === "Other" ? attendee.otherDiagnosis : attendee.diagnosis));
           output += add_line(2, 'Eats meals: ' + boolToYN(attendee.eatsMeals));
         }
-        else if (attendee.peopleType === peopleTypes.ADULT) {
-          output += add_line(2, attendee.peopleType);         //  Adult and Professional
-        }
         else {
-                  output += add_line(2, attendee.peopleType);         //  Professional
+          output += add_line(2, attendee.peopleType);         //  Adult and Professional
         }
         output += add_line(2, 'Welcome dinner meal: ' + (attendee.welcomeDinner !== '' ? attendee.welcomeDinner : 'N/A'));
         output += '\n';
@@ -3075,8 +3083,9 @@ const Summary = ({thisState}) => {
 
           if (userData.attendance !== 'picnic') {
 
+                //  Include Childcare section?
                 let children = userData.attendees.filter( a => { 
-                  return ((a.peopleType === peopleTypes.CHILD  &&  a.age <= 11)  ||  a.peopleType === peopleTypes.SOFTCHILD);
+                  return (a.peopleType === peopleTypes.CHILD  ||  a.peopleType === peopleTypes.SOFTCHILD);
                 });
 
                 if (children.length > 0) {
@@ -3104,12 +3113,13 @@ const Summary = ({thisState}) => {
                 //----
 
 
+                //  Include Chapter Chair section?
                 if (userData.chapterChair) {
                   output += add_line(0, '\nAttending Chapter Chair Luncheon:');
                   output += '\n';
 
                   for (let attendee of userData.attendees) {
-                    if (attendee.peopleType === peopleTypes.ADULT) {
+                    if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL) {
                       output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.chapterChairLunch));
                     }
                     else {
@@ -3124,8 +3134,9 @@ const Summary = ({thisState}) => {
                 //----
 
 
+                //  Include Remembrance Celebration section?
                 if (userData.softAngels.length !== 0) {
-                  output += add_line(0, '\nAttending Remembrance Outing:');
+                  output += add_line(0, '\nAttending Remembrance Celebration:');
                   output += '\n';
 
                   for (let attendee of userData.attendees) {
@@ -3273,10 +3284,10 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
     for (let attendee of userData.attendees) {
 
       let costThisPerson = 0;
-      if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL  ||  (attendee.peopleType === peopleTypes.CHILD  &&  attendee.age >= 12)) {
+      if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL  ||  attendee.peopleType === peopleTypes.TEEN) {
         costThisPerson = costPerAdult;
       }
-      else if (attendee.peopleType === peopleTypes.CHILD  &&  attendee.age >= 2  &&  attendee.age <= 11) {
+      else if (attendee.peopleType === peopleTypes.CHILD  &&  attendee.age >= 2) {
         costThisPerson = costPerChild;
       }
 
@@ -3294,7 +3305,7 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
     if (userData.attendance === 'full') {
 
       //  Any Sibling Outings?
-      if (userData.attendees.find(a => (a.peopleType === peopleTypes.CHILD  &&  a.sibOuting))) {
+      if (userData.attendees.find(a => ((a.peopleType === peopleTypes.CHILD ||  a.peopleType === peopleTypes.TEEN) &&  a.sibOuting))) {
 
         output += add_line(0, '\nSibling Outings:');
         output += '\n';
@@ -3303,16 +3314,14 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
 
         for (let attendee of userData.attendees) {
 
-          let costThisPerson = costYoungSib;    //  Assume younger sib
+          if ((attendee.peopleType === peopleTypes.CHILD  ||  attendee.peopleType === peopleTypes.TEEN)  &&  attendee.sibOuting) {
 
-          if (attendee.peopleType === peopleTypes.CHILD  &&  attendee.sibOuting) {
-            if (attendee.age >= 12) {
-              costThisPerson = costOlderSib;
-            }
+            let costThisPerson = (attendee.peopleType === peopleTypes.TEEN) ? costOlderSib : costYoungSib;
             output += add_line(1, sprintf("%-30s$%7.2f", attendee.firstName + ' ' + attendee.lastName, costThisPerson));
             sibCost += costThisPerson;
           }
         }
+
         output += '\n';
         output += add_line(1, sprintf("%30s$%8.2f", "Sub-total:  ", sibCost));
         // output += '\n';
@@ -3331,7 +3340,6 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
         let rembCost = 0;
 
         for (let attendee of userData.attendees) {
-
           if ((attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL)  &&  attendee.rembOuting) {
             output += add_line(1, sprintf("%-30s$%7.2f", attendee.firstName + ' ' + attendee.lastName, costRembOuting));
             rembCost += costRembOuting;
@@ -3404,15 +3412,20 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
     output += add_line(1, sprintf("%30s$%8.2f", " Conference total:  ", conferenceTotal));
     output += '\n';
 
+    grandTotal = sprintf("%8.2f", conferenceTotal + Number(softDonation) + Number(fundDonation));
+
     userData.conferenceTotal = conferenceTotal;
-    userData.checkout = output;
+    userData.softDonation = softDonation;
+    userData.fundDonation = fundDonation;
+    userData.grandTotal = grandTotal;
+    userData.invoice = output;
 
     let html = output;
     html = html.replace(/^(\x20+?)([^:]+?)(\s+\$\s+)([\d.-]+)/mg,'<span class="indent"></span><span class="cost-descr">$2</span>$<span class="cost">$4</span>');     //  In first capture, don't use \s -- it sucks up '\n's
     html = html.replace(/^(\x20+?)(.+?)(\s+\$\s+)([\d.-]+)/mg,'<span class="indent"></span><div class="cost-descr-right">$2</div>$<span class="cost">$4</span>');    //  In first capture, don't use \s -- it sucks up '\n's
     html = html.replace(/\n/g, "<br>");
 
-    grandTotal = sprintf("%8.2f", conferenceTotal + Number(softDonation) + Number(fundDonation));
+    
 
 
     //  Finally, display everything...
@@ -3523,12 +3536,12 @@ const ThankYou = ({thisState, setUserData}) => {
   return (
     <div>
       <h2>Thank You!</h2>
-      <p>Thank you for registering for the convention. You should be receiving an email message with a summary
+      <p>Thank you for registering for the Conference. You should be receiving an email message with a summary
          page and invoice. If you don't see the email, please check your Junk folder.
       </p>
       {userData.paid ?
           <div>
-          <p>That's it, you're all set for the convention! Oh, one last thing...</p>
+          <p>That's it, you're all set for the Conference! Oh, one last thing...</p>
           </div>
         :
           <div>
@@ -3593,7 +3606,7 @@ const PeopleType = ({value, onChange, className="edit-people"}) => {
 
 
 
-const Age = ({value, onChange, className="edit-age"}) => {
+const Age = ({value, optionsAges, onChange, className="edit-age"}) => {
       const defaultOpt = optionsAges.find(opt => (opt.value === value));
       return (
         <div className={className}>

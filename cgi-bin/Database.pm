@@ -6,8 +6,12 @@
 #  database access routines for the system so that any of a number
 #  of database engines can be used with the system.
 #
-#  This particular file implements access from a MySQL database.
+#  This particular file implements access to a MySQL database.
 #
+#  Because of the repetative nature of these subs, this is a
+#  perfect use of higher order sub factories to build each
+#  function at compile time... See "Higher Order Perl" by
+#  Mark Jason Dominus.
 
 package Database;
 
@@ -157,16 +161,17 @@ our @contact_cols = qw(
     chapterChair
     joeyWatson
 
-    conferenceTotal
-    softDonation
-    fundDonation
-
     attendingClinics
     clinicTieDowns
 
     dir_phone
     dir_email
     dir_city
+
+    conferenceTotal
+    softDonation
+    fundDonation
+    grandTotal
 
     paid
     payerID
