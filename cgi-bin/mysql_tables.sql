@@ -70,8 +70,10 @@ CREATE TABLE contacts
     chapterChair        TINYINT DEFAULT FALSE,
     joeyWatson          TINYINT DEFAULT FALSE,
 
-    attendingClinics    TINYINT DEFAULT FALSE,
-    clinicTieDowns      TINYINT DEFAULT 0,
+    attendingClinics     TINYINT DEFAULT FALSE,
+    clinicsTranportation TINYINT DEFAULT FALSE,
+    clinicBusSeats       TINYINT DEFAULT 0,
+    clinicTieDowns       TINYINT DEFAULT 0,
 
     dir_phone           TINYINT DEFAULT FALSE,      #  Directory
     dir_email           TINYINT DEFAULT FALSE,

@@ -83,6 +83,8 @@ if ($q->param)            #  fetches the names of the params as a list
       grandTotal        => $userData{grandTotal},
 
       attendingClinics  => $userData{attendingClinics},
+      clinicsTranportation  => $userData{clinicsTranportation},
+      clinicBusSeats    => $userData{clinicBusSeats},
       clinicTieDowns    => $userData{clinicTieDowns},
 
       dir_phone         => $directory{phone},
@@ -104,8 +106,11 @@ if ($q->param)            #  fetches the names of the params as a list
       $contact{boardMember} = $FALSE;
       $contact{chapterChair} = $FALSE;
       $contact{joeyWatson} = $FALSE;
+
       $contact{attendingClinics} = $FALSE;
-      $contact{clinicTieDowns} = $FALSE;
+      $contact{clinicsTranportation} = $FALSE;
+      $contact{clinicBusSeats} = 0;
+      $contact{clinicTieDowns} = 0;
     }
 
     if ($userData{attendance} =~ /workshops|balloon/i) {

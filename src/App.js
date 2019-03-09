@@ -641,8 +641,10 @@ class App extends Component {
       },
 
       //  Clinic list?
-      attendingClinics:   true,
-      clinicTieDowns:     '',
+      attendingClinics:     true,
+      clinicsTranportation: true,
+      clinicBusSeats:       '',
+      clinicTieDowns:       '',
 
       shirtsOrdered: [],              //  { shirtID, quantity, size, cost }
     };
@@ -832,10 +834,12 @@ class App extends Component {
                   <Clinics
                     attendees={attendees}
                     clinics={eventInfo.clinics}
-                    attendingClinics={this.state.attendingClinics}
                     onSortEnd={this.onClinicSortEnd}
                     blurb={eventInfo.clinicsBlurb}
-                    numTieDowns={this.state.clinicTieDowns}
+                    attendingClinics={this.state.attendingClinics}
+                    clinicsTranportation={this.state.clinicsTranportation}
+                    clinicBusSeats={this.state.clinicBusSeats}
+                    clinicTieDowns={this.state.clinicTieDowns}
                     onChangeField={this.onChangeFieldValue}
                     onChangeSelection={this.onChangeFieldValue}
                   />,
@@ -2562,18 +2566,7 @@ const OlderSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const Clinics = ({attendees, clinics, attendingClinics, numTieDowns, onSortEnd, blurb, onChangeField, onChangeSelection}) => {
-
-  attendees = attendees.filter(a => { return (a.peopleType === peopleTypes.SOFTCHILD) });
-
-  let optionsTieDowns = [];
-  for (let i = 0; i <= attendees.length; i++) {
-    optionsTieDowns.push( { label: i, value: i } );
-  }
-
-  if (numTieDowns !== '') {
-    numTieDowns = { label: numTieDowns, value: numTieDowns };
-  }
+const Clinics = ({attendees, clinics, attendingClinics, clinicsTranportation, clinicBusSeats, clinicTieDowns, onSortEnd, blurb, onChangeField, onChangeSelection}) => {
 
   return (
     <div>
@@ -2592,16 +2585,21 @@ const Clinics = ({attendees, clinics, attendingClinics, numTieDowns, onSortEnd, 
 
       {attendingClinics  && 
         <div>
-          <span><FontAwesomeIcon icon="hand-point-right" /> &nbsp;How many (if any) tie-downs will you need for transportation?</span>&nbsp;&nbsp;
-          <div className="inline">
-            <Select
-              defaultValue={ numTieDowns }
-              options={optionsTieDowns}
-              placeholder={"Number of tie-downs?..."}
-              onChange={(opt) => onChangeSelection("clinicTieDowns", opt.value)}
-              styles={selectStyle(200, 110)}
-            /> 
+          <div className="v-indent">
+            Will you need transportation to the Clinics?
+            <div className="inline">
+              <RadioGroup name="clinicsTranportation" selectedValue={clinicsTranportation} onChange={(val) => onChangeField("clinicsTranportation", val)}>
+                <span className="radio-yes"><Radio value={true} /> Yes</span>
+                <Radio value={false} /> No
+              </RadioGroup>
+            </div>
           </div>
+          {clinicsTranportation  &&
+            <div className="indent">
+              How many bus seats will you need? <Input value={clinicBusSeats} className="donation-box" onChange={event => onChangeField("clinicBusSeats", event.target.value)} /><br />
+              How many tie-downs will you need? <Input value={clinicTieDowns} className="donation-box" onChange={event => onChangeField("clinicTieDowns", event.target.value)} />
+            </div>
+          }
           <p className="v-indent">Rearrange the names of the clinics below from Most Interested to Least Interested by simultaneously clicking and dragging on the <span className="thumb-color"><FontAwesomeIcon icon="bars" /></span> character and moving
           the name of the clinic up or down.</p>
           <p>Move <strong>MOST Interested</strong> Clinic to the top, and the <strong>LEAST Interested</strong> Clinic to the bottom:</p>
@@ -2890,36 +2888,37 @@ function add_line(indent, str) {
 const Summary = ({thisState}) => {
 
   userData = {
-    version:            JSONversion,
-    formID:             thisState.formID,
-    contactInfo:        thisState.contactInfo,
-    attendees:          thisState.attendees,
-    softAngels:         thisState.softAngels,
-    directory:          thisState.directory,
-    shirtsOrdered:      thisState.shirtsOrdered,
-    photoWaiver:        thisState.photoWaiver, 
-    attendance:         thisState.attendance,
-    reception:          thisState.reception,
-    sundayBreakfast:    thisState.sundayBreakfast,
-    boardMember:        thisState.boardMember,
-    chapterChair:       thisState.chapterChair,
-    joeyWatson:         thisState.joeyWatson,
-    attendingClinics:   thisState.attendingClinics,
-    clinics:            thisState.eventInfo.clinics,
-    clinicTieDowns:     thisState.clinicTieDowns,
-    workshops:          thisState.workshops,
-    childCareSessions:  thisState.childCareSessions,
-    summary:            '',
-    conferenceTotal:    0,
-    softDonation:       0,
-    fundDonation:       0,
-    grandTotal:         0,
-    paid:               0,
-    payerID:            '',
-    paymentID:          '',
-    paymentToken:       '',
+    version:              JSONversion,
+    formID:               thisState.formID,
+    contactInfo:          thisState.contactInfo,
+    attendees:            thisState.attendees,
+    softAngels:           thisState.softAngels,
+    directory:            thisState.directory,
+    shirtsOrdered:        thisState.shirtsOrdered,
+    photoWaiver:          thisState.photoWaiver, 
+    attendance:           thisState.attendance,
+    reception:            thisState.reception,
+    sundayBreakfast:      thisState.sundayBreakfast,
+    boardMember:          thisState.boardMember,
+    chapterChair:         thisState.chapterChair,
+    joeyWatson:           thisState.joeyWatson,
+    attendingClinics:     thisState.attendingClinics,
+    clinicsTranportation: thisState.clinicsTranportation,
+    clinicBusSeats:       thisState.clinicBusSeats,
+    clinicTieDowns:       thisState.clinicTieDowns,
+    clinics:              thisState.eventInfo.clinics,
+    workshops:            thisState.workshops,
+    childCareSessions:    thisState.childCareSessions,
+    summary:              '',
+    conferenceTotal:      0,
+    softDonation:         0,
+    fundDonation:         0,
+    grandTotal:           0,
+    paid:                 0,
+    payerID:              '',
+    paymentID:            '',
+    paymentToken:         '',
   }
-
 
   let output = '';
 

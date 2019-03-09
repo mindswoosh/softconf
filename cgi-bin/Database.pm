@@ -162,6 +162,8 @@ our @contact_cols = qw(
     joeyWatson
 
     attendingClinics
+    clinicsTranportation
+    clinicBusSeats
     clinicTieDowns
 
     dir_phone
