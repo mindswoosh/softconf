@@ -73,6 +73,11 @@ p {
   margin-left: 40px;
 }
 
+.inline-info {
+  display: inline-block;
+  padding-left: 30px;
+}
+
 .v-indent {
   margin-top: 1.25em;
 }
@@ -80,6 +85,8 @@ p {
 .v-indent-below {
   margin-bottom: 1.25em;
 }
+
+
 
 .select-height {
   line-height: 40px;
@@ -543,6 +550,14 @@ code {
 }
 
 
+@media screen and (max-width: 720px) {
+
+  .inline-info {
+    display: inline-block;
+    padding-left: 0px;
+  }
+  
+}
 
 @media screen and (max-width: 500px) {
   .row-num {
@@ -558,4 +573,9 @@ code {
   .indent-twice {
     margin-left: 10px;
   }
+
+  .sortable-container {
+    padding-left: 5px;
+  }
+
 }

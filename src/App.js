@@ -248,13 +248,13 @@ const eventInfoDefault = {
 
   clinicsBlurb: "This year’s SOFT Medical Clinics will be held at C.S. Mott Children’s Hospital on Friday July 19, 2019 from 1pm–5pm. Please number your clinic preferences (up to 5). We will attempt to schedule each child into 3 of the 5 preferences.",
   clinics: [
-      'Cardiology',
-      'Neurology',
-      'GI',
-      'Pulmonology',
-      'Vision',
-      'Orthopedic',
+      'Otolaryngology',
+      'Infectious Disease',
+      'Immuno-Hematology',
       'Genetics',
+      'GI',
+      'Orthopedic',
+      'Pulmonology',
     ],
 
   youngerSibOutingBlurb: "This year the Younger Sibling outing will be combined with the Older Sib Outing. They will be going to the Detroit Zoo on Friday, July 19th from 9am–2pm. Lunch is included as well as a SOFT Sibs T-shirt! Price for the outing is $42.",
@@ -2616,8 +2616,8 @@ const Clinics = ({attendees, clinics, attendingClinics, needsClinicsTrans, clini
           </div>
           {needsClinicsTrans  &&
             <div className="indent">
-              How many bus seats will you need? <Input value={clinicBusSeats} className="donation-box" onChange={event => onChangeField("clinicBusSeats", event.target.value)} /><br />
-              How many tie-downs will you need? <Input value={clinicTieDowns} className="donation-box" onChange={event => onChangeField("clinicTieDowns", event.target.value)} />
+              How many bus seats will you need? <Input value={clinicBusSeats} className="donation-box" onChange={event => onChangeField("clinicBusSeats", event.target.value)} />
+              <span className="inline-info">How many tie-downs will you need? <Input value={clinicTieDowns} className="donation-box" onChange={event => onChangeField("clinicTieDowns", event.target.value)} /></span>
             </div>
           }
           <p className="v-indent">Rearrange the names of the clinics below from Most Interested to Least Interested by simultaneously clicking and dragging on the <span className="thumb-color"><FontAwesomeIcon icon="bars" /></span> character and moving
