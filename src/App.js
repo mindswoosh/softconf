@@ -471,14 +471,7 @@ const optionsChildAges = [
   { label: "11",         value: 11 },
 ];
 
-const optionsTeenAges = [
-  { label: "12",         value: 12 },
-  { label: "13",         value: 13 },
-  { label: "14",         value: 14 },
-  { label: "15",         value: 15 },
-  { label: "16",         value: 16 },
-  { label: "17",         value: 17 },
-];
+const optionsTeenAges = arrayToOptions([12, 13, 14, 15, 16, 17]);
 
 const Diagnoses = [
   "Full Trisomy 18",
@@ -575,7 +568,7 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
 }
 
 
-function textFromDate(date) {
+function slashDateFormat(date) {
   return sprintf("%02d/%02d/%04d", date.getMonth()+1, date.getDate(), date.getFullYear());
 }
 
@@ -641,10 +634,10 @@ class App extends Component {
       },
 
       //  Clinic list?
-      attendingClinics:     true,
-      clinicsTranportation: true,
-      clinicBusSeats:       '',
-      clinicTieDowns:       '',
+      attendingClinics:  true,
+      needsClinicsTrans: true,
+      clinicBusSeats:    '',
+      clinicTieDowns:    '',
 
       shirtsOrdered: [],              //  { shirtID, quantity, size, cost }
     };
@@ -735,7 +728,7 @@ class App extends Component {
 
       let softchild = attendees.find( a => { return (a.lastName === 'Jones' ) });
       softchild.dateOfBirth = new Date();
-      softchild.birthDate = textFromDate(softchild.dateOfBirth);
+      softchild.birthDate = slashDateFormat(softchild.dateOfBirth);
       softchild.diagnosis = 'Full Trisomy 18';
     }
 
@@ -837,7 +830,7 @@ class App extends Component {
                     onSortEnd={this.onClinicSortEnd}
                     blurb={eventInfo.clinicsBlurb}
                     attendingClinics={this.state.attendingClinics}
-                    clinicsTranportation={this.state.clinicsTranportation}
+                    needsClinicsTrans={this.state.needsClinicsTrans}
                     clinicBusSeats={this.state.clinicBusSeats}
                     clinicTieDowns={this.state.clinicTieDowns}
                     onChangeField={this.onChangeFieldValue}
@@ -880,10 +873,22 @@ class App extends Component {
                   />,
 
               [pages.YOUNGERSIB]:
-                  <YoungerSib attendees={attendees} onChange={this.onChangeSibOuting} onChangeShirtSize={this.onChangeShirtSize} cost={eventInfo.youngerSibCost} blurb={eventInfo.youngerSibOutingBlurb} />,
+                  <YoungerSib
+                    attendees={attendees}
+                    onChange={this.onChangeSibOuting}
+                    onChangeShirtSize={this.onChangeShirtSize} 
+                    cost={eventInfo.youngerSibCost} 
+                    blurb={eventInfo.youngerSibOutingBlurb}
+                  />,
 
               [pages.OLDERSIB]:
-                  <OlderSib attendees={attendees} onChange={this.onChangeSibOuting} onChangeShirtSize={this.onChangeShirtSize} cost={eventInfo.olderSibCost} blurb={eventInfo.olderSibOutingBlurb} />,
+                  <OlderSib 
+                    attendees={attendees}
+                    onChange={this.onChangeSibOuting}
+                    onChangeShirtSize={this.onChangeShirtSize}
+                    cost={eventInfo.olderSibCost}
+                    blurb={eventInfo.olderSibOutingBlurb}
+                  />,
 
               [pages.PICNIC]:
                   <Picnic
@@ -1281,8 +1286,8 @@ class App extends Component {
             a.firstName = smartFixName(a.firstName.trim());
             a.lastName  = smartFixName(a.lastName.trim());
             a.otherDiagnosis = a.otherDiagnosis.trim();
-            if (a.dateOfBirth) a.birthDate = textFromDate(a.dateOfBirth);
-            if (a.dateOfDeath) a.deathDate = textFromDate(a.dateOfDeath);
+            if (a.dateOfBirth) a.birthDate = slashDateFormat(a.dateOfBirth);
+            if (a.dateOfDeath) a.deathDate = slashDateFormat(a.dateOfDeath);
             return a;
           });
 
@@ -1325,7 +1330,7 @@ class App extends Component {
             a.lastName  = smartFixName(a.lastName.trim());
             a.otherDiagnosis = a.otherDiagnosis.trim();
             if (a.dateOfBirth) {
-              a.birthDate = textFromDate(a.dateOfBirth);
+              a.birthDate = slashDateFormat(a.dateOfBirth);
             }
             return a;
           });
@@ -1340,15 +1345,6 @@ class App extends Component {
                      (a.peopleType === peopleTypes.SOFTCHILD  &&  (a.dateOfBirth === null  ||  a.diagnosis === null  ||  (a.diagnosis === "Other" && a.otherDiagnosis === "")) )
                    ) 
           });
-
-          let softchildren = attendees.filter(a => { return (a.peopleType === peopleTypes.SOFTCHILD) });
-
-          let clinicTieDowns = this.state.clinicTieDowns;
-
-          if (clinicTieDowns !== ''  &&  clinicTieDowns > softchildren.length) {
-            clinicTieDowns = softchildren.length;
-          }
-
 
           if (attendees.length === 0) {
             alert("Oops! You must list at least one person. Will the Contact Person be attending?");
@@ -1370,7 +1366,6 @@ class App extends Component {
 
             this.setState({
               attendees,
-              clinicTieDowns,
               pageHistory,
               currentPage: newPage,     //  Can't call newPage(pages.DINNER) because attendees isn't in state yet
             });
@@ -1409,13 +1404,38 @@ class App extends Component {
 
       case pages.CLINICS:
 
-          if (this.state.attendingClinics  &&  this.state.clinicTieDowns === '') {
-            alert("Please select the number of tie-downs you'll need.");
+          let attendingClinics = this.state.attendingClinics;
+          let needsClinicsTrans = this.state.needsClinicsTrans;
+          let clinicBusSeats = '';
+          let clinicTieDowns = '';
+
+          //  Clean up data
+          if (!attendingClinics) needsClinicsTrans = false;
+
+          if (attendingClinics  &&  needsClinicsTrans) {
+            clinicBusSeats = this.state.clinicBusSeats.trim();
+            clinicTieDowns = this.state.clinicTieDowns.trim();
+          }
+
+          let numSoftChildren = attendees.filter(a => a.peopleType === peopleTypes.SOFTCHILD).length;
+          let numAttendees    = attendees.length;
+
+          if (needsClinicsTrans  &&  (clinicBusSeats.match(/(^$)|\D/)  ||  clinicTieDowns.match(/(^$)|\D/))) {
+            alert("Please enter valid numbers for the number of bus seats and tie-downs needed.");
+          }
+          else if (needsClinicsTrans  &&  Number(clinicTieDowns) > numSoftChildren) {
+            alert("You've chosen too many tie-downs. Enter only one tie-down per SOFT Child needing one.");
+          }
+          else if (needsClinicsTrans  &&  (Number(clinicBusSeats) + Number(clinicTieDowns)) > numAttendees) {
+            alert("You've got too many bus seats and tie-downs. Choose one or the other for each person.");
           }
           else {
             pageHistory.push(currentPage);
 
             this.setState({
+              needsClinicsTrans,
+              clinicBusSeats,
+              clinicTieDowns,
               pageHistory,
               currentPage: this.nextPage(pages.WORKSHOPS),
             });
@@ -1806,7 +1826,7 @@ class App extends Component {
     let i = attendees.findIndex(a => a.id === id);
     console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
     attendees[i].dateOfBirth = date;
-    attendees[i].birthDate = textFromDate(date);
+    attendees[i].birthDate = slashDateFormat(date);
     this.setState({
       attendees
     });
@@ -1865,10 +1885,10 @@ class App extends Component {
     softAngels[i][field] = date;
 
     if (field === 'dateOfBirth') {                            //  This feels like a total hack...
-      softAngels[i].birthDate = textFromDate(date);
+      softAngels[i].birthDate = slashDateFormat(date);
     }
     else {
-      softAngels[i].deathDate = textFromDate(date);
+      softAngels[i].deathDate = slashDateFormat(date);
     }
 
     this.setState({
@@ -2566,7 +2586,7 @@ const OlderSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const Clinics = ({attendees, clinics, attendingClinics, clinicsTranportation, clinicBusSeats, clinicTieDowns, onSortEnd, blurb, onChangeField, onChangeSelection}) => {
+const Clinics = ({attendees, clinics, attendingClinics, needsClinicsTrans, clinicBusSeats, clinicTieDowns, onSortEnd, blurb, onChangeField, onChangeSelection}) => {
 
   return (
     <div>
@@ -2588,13 +2608,13 @@ const Clinics = ({attendees, clinics, attendingClinics, clinicsTranportation, cl
           <div className="v-indent">
             Will you need transportation to the Clinics?
             <div className="inline">
-              <RadioGroup name="clinicsTranportation" selectedValue={clinicsTranportation} onChange={(val) => onChangeField("clinicsTranportation", val)}>
+              <RadioGroup name="needsClinicsTrans" selectedValue={needsClinicsTrans} onChange={(val) => onChangeField("needsClinicsTrans", val)}>
                 <span className="radio-yes"><Radio value={true} /> Yes</span>
                 <Radio value={false} /> No
               </RadioGroup>
             </div>
           </div>
-          {clinicsTranportation  &&
+          {needsClinicsTrans  &&
             <div className="indent">
               How many bus seats will you need? <Input value={clinicBusSeats} className="donation-box" onChange={event => onChangeField("clinicBusSeats", event.target.value)} /><br />
               How many tie-downs will you need? <Input value={clinicTieDowns} className="donation-box" onChange={event => onChangeField("clinicTieDowns", event.target.value)} />
@@ -2903,7 +2923,7 @@ const Summary = ({thisState}) => {
     chapterChair:         thisState.chapterChair,
     joeyWatson:           thisState.joeyWatson,
     attendingClinics:     thisState.attendingClinics,
-    clinicsTranportation: thisState.clinicsTranportation,
+    needsClinicsTrans:    thisState.needsClinicsTrans,
     clinicBusSeats:       thisState.clinicBusSeats,
     clinicTieDowns:       thisState.clinicTieDowns,
     clinics:              thisState.eventInfo.clinics,

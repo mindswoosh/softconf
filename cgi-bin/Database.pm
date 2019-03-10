@@ -162,7 +162,7 @@ our @contact_cols = qw(
     joeyWatson
 
     attendingClinics
-    clinicsTranportation
+    needsClinicsTrans
     clinicBusSeats
     clinicTieDowns
 
