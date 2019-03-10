@@ -106,7 +106,6 @@ const eventInfoDefault = {
   costRembOuting:        25,
   costAdultPicnic:       35,
   costChildPicnic:       20,          // child <= 11
-  joeyWatsonSecretCode:  'JW2019MI',
 
   workshopBlurb: "Workshops will be held on Thursday July 18 from 9am–4pm.",
   workshopSessions: [
@@ -647,7 +646,6 @@ class App extends Component {
     //  generic handlers that take values, not events or opts as arguments
 
     this.setUserData          = this.setUserData.bind(this);
-    this.onChangeStateCheckbox = this.onChangeStateCheckbox.bind(this);
     this.setEventInfo         = this.setEventInfo.bind(this);
     this.onChangeContactInfo  = this.onChangeContactInfo.bind(this);
     this.onChangeCountry      = this.onChangeCountry.bind(this);
@@ -791,7 +789,6 @@ class App extends Component {
                     joeyWatson={this.state.joeyWatson}
                     joeyWatsonCode={this.state.joeyWatsonCode}
                     onChangeField={this.onChangeFieldValue}
-                    handleCheckbox={this.onChangeStateCheckbox}
                   />,
 
               [pages.CONTACT]:
@@ -1183,12 +1180,15 @@ class App extends Component {
 
       case pages.BASICS:
 
+          //  Joey Watson code:  JW + A# + T# + C#. E.g, JWA2C1.  The A, T, and Cs can be in any order. All are optional, but there must be at least one of them.
           let jwcode = this.state.joeyWatsonCode.trim().replace(/\s+/g, '').toUpperCase();
+
+          let validJWCode = jwcode.match(/^JW([ATC]\d)+$/)  &&  !jwcode.match(/([ATC]).+\1/);       //  Make sure there are no dups:  JWA2A1...
 
           if (this.state.attendance !== 'balloon'  &&  !this.state.photoWaiver) {
             alert('To register for the Conference, you must agree to the photo and video waiver. Please check the box to agree.');
           }
-          else if (this.state.attendance === 'full'  &&  this.state.joeyWatson  &&  jwcode !== this.state.eventInfo.joeyWatsonSecretCode.toUpperCase() ) {
+          else if (this.state.attendance === 'full'  &&  this.state.joeyWatson  &&  !validJWCode) {
             alert('Oops! the Joey Watson confirmation code is incorrect. Enter the correct code, or choose "No" for the Joey Watson fund.');
           }
           else {
@@ -1210,6 +1210,7 @@ class App extends Component {
             pageHistory.push(currentPage);
 
             this.setState({
+              joeyWatsonCode: jwcode,
               attendees,
               directory,
               pageHistory,
@@ -1420,7 +1421,7 @@ class App extends Component {
           let numSoftChildren = attendees.filter(a => a.peopleType === peopleTypes.SOFTCHILD).length;
           let numAttendees    = attendees.length;
 
-          if (needsClinicsTrans  &&  (clinicBusSeats.match(/(^$)|\D/)  ||  clinicTieDowns.match(/(^$)|\D/))) {
+          if (needsClinicsTrans  &&  (clinicBusSeats.match(/(^$)|\D/)  ||  clinicTieDowns.match(/(^$)|\D/)  ||  (Number(clinicBusSeats) + Number(clinicTieDowns)) === 0)) {
             alert("Please enter valid numbers for the number of bus seats and tie-downs needed.");
           }
           else if (needsClinicsTrans  &&  Number(clinicTieDowns) > numSoftChildren) {
@@ -1701,14 +1702,8 @@ class App extends Component {
   //  REVIEW: If we change all the handlers to accept VALUES and not events or opts, then
   //  all of the speific event handlers over the next few pages can be reduced to just a
   //  few: one that changes top-level state variables, and a handler apiece to handle each
-  //  top-level property that is an array or another object. For example, everything that 
-  //  uses onChangeStateCheckbox() could use onChangeFieldValue instead.
+  //  top-level property that is an array or another object.
 
-  onChangeStateCheckbox(event, field) {       //  User's of this func should use onChangeFieldValue()
-    this.setState ({
-      [field]: event.target.checked,
-    });
-  }
 
   onChangeFieldValue(field, value) {
     
@@ -2255,7 +2250,7 @@ const Welcome = ({brochureURL}) =>
 
 
 
-const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMember, chapterChair, joeyWatson, joeyWatsonCode, onChangeField, handleCheckbox}) =>
+const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMember, chapterChair, joeyWatson, joeyWatsonCode, onChangeField}) =>
   <div>
     <h2>Getting Started</h2>
     <p>In the next few pages, you'll be asked a series of questions so that we can tailor this year's
@@ -2282,7 +2277,7 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
             <table>
               <tbody>
                 <tr>
-                  <td valign="top"><Checkbox defaultChecked={photoWaiver} onChange={event => handleCheckbox(event, "photoWaiver")} /> </td>
+                  <td valign="top"><Checkbox defaultChecked={photoWaiver} onChange={event => onChangeField("photoWaiver", event.target.checked)} /> </td>
                   <td>
                     <span>I agree that my registration means I accept that random photos and videos will be taken at Conference which may appear on social media or the SOFT website.</span>
                   </td>
@@ -2922,6 +2917,7 @@ const Summary = ({thisState}) => {
     boardMember:          thisState.boardMember,
     chapterChair:         thisState.chapterChair,
     joeyWatson:           thisState.joeyWatson,
+    joeyWatsonCode:       thisState.joeyWatsonCode,
     attendingClinics:     thisState.attendingClinics,
     needsClinicsTrans:    thisState.needsClinicsTrans,
     clinicBusSeats:       thisState.clinicBusSeats,
@@ -2962,6 +2958,9 @@ const Summary = ({thisState}) => {
     output += add_line(0, 'Board member: ' + boolToYN(userData.boardMember));
     output += add_line(0, 'Chapter Chair: ' + boolToYN(userData.chapterChair));
     output += add_line(0, 'Joey Watson Fund: ' + boolToYN(userData.joeyWatson));
+    if (userData.joeyWatson) {
+      output += add_line(0, 'Joey Watson Code: ' + userData.joeyWatsonCode);
+    }
     output += '\n';
   }
 
@@ -3274,7 +3273,9 @@ const Summary = ({thisState}) => {
 //----------------------------------------------------------------------------------------------------
 
 
- 
+function pluralize(n) {
+  return n !== 1 ? 's' : '';
+}
 
 const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByCheck, onPaymentSuccess}) => {
 
@@ -3437,8 +3438,23 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
         }
         
         if (userData.joeyWatson) {
-          output += add_line(1, sprintf("%-30s$%8.2f", "Joey Watson discount", -costPerAdult));
-          adjCost -= costPerAdult;
+          output += add_line(1, "Joey Watson discount");
+          let adult = Number(userData.joeyWatsonCode.match(/(?<=A)\d/i));
+          let teen  = Number(userData.joeyWatsonCode.match(/(?<=T)\d/i));
+          let child = Number(userData.joeyWatsonCode.match(/(?<=C)\d/i));
+
+          if (adult) {
+            output += add_line(1, sprintf("%-30s$%8.2f", adult + " Adult" + pluralize(adult), -(adult * costPerAdult)));
+            adjCost -= (adult * costPerAdult);
+          }
+          if (teen) {
+            output += add_line(1, sprintf("%-30s$%8.2f", teen + " Teen" + pluralize(teen), -(teen * costPerAdult)));
+            adjCost -= (teen * costPerAdult);
+          }
+          if (child) {
+            output += add_line(1, sprintf("%-30s$%8.2f", child + (child === 1 ? " Child" : " Children"), -(child * costPerChild)));
+            adjCost -= (child * costPerChild);
+          }
         }
         output += '\n';
         output += add_line(1, sprintf("%30s$%8.2f", "Sub-total:  ", adjCost));

@@ -160,6 +160,7 @@ our @contact_cols = qw(
     boardMember
     chapterChair
     joeyWatson
+    joeyWatsonCode
 
     attendingClinics
     needsClinicsTrans

@@ -69,6 +69,7 @@ CREATE TABLE contacts
     boardMember         TINYINT DEFAULT FALSE,
     chapterChair        TINYINT DEFAULT FALSE,
     joeyWatson          TINYINT DEFAULT FALSE,
+    joeyWatsonCode      VARCHAR(20),
 
     attendingClinics    TINYINT DEFAULT FALSE,
     needsClinicsTrans   TINYINT DEFAULT FALSE,
