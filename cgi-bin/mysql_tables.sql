@@ -118,7 +118,7 @@ CREATE TABLE attendees
     #  Child
     age                 TINYINT,
     sibOuting           TINYINT DEFAULT FALSE,
-    shirtSize           VARCHAR(30),                #  Sib outing shirt size
+    sibShirtSize        VARCHAR(30),                #  Sib outing shirt size
 
     # SOFT Child
     birthDate           VARCHAR(15),                #  MM/DD/YY  format

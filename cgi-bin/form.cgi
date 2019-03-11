@@ -178,7 +178,7 @@ if ($q->param)            #  fetches the names of the params as a list
 
           age                 => $attendee_ref->{age},
           sibOuting           => $attendee_ref->{sibOuting},
-          shirtSize           => $attendee_ref->{shirtSize},
+          sibShirtSize        => $attendee_ref->{sibShirtSize},
 
           birthDate           => $attendee_ref->{birthDate} || "",
           diagnosis           => $attendee_ref->{diagnosis},

@@ -254,7 +254,7 @@ our @attendee_cols = qw(
     chapterChairLunch
     age
     sibOuting
-    shirtSize
+    sibShirtSize
     birthDate
     diagnosis
     otherDiagnosis

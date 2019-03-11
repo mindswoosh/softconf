@@ -264,6 +264,20 @@ const eventInfoDefault = {
   olderSibOutingBlurb: "This year the Older Sibling outing will be combined with the Younger Sib Outing. They will be going to the Detroit Zoo on Friday, July 19th from 9am–2pm. Lunch is included as well as a SOFT Sibs T-shirt! Price for the outing is $42.",
   olderSibCost: 35,
 
+  sibShirtSizes: [
+      'Youth - S',  
+      'Youth - M',
+      'Youth - L',
+      'Adult - S',
+      'Adult - M',
+      'Adult - L',
+      'Adult - XL',
+      'Adult - XXL',
+      'Adult - 3XL',
+      'Adult - 4XL',
+      'Adult - 5XL',
+    ],
+
   childCareBlurb: "Childcare will be available during the Workshops and Clinics and is available for children 11 and under and for SOFT children of any age. Please refer to the brochure for the times of the Workshops and Clinics you plan to attend in which you might need childcare.",
   childCareSessions: [
     {
@@ -419,11 +433,13 @@ const customStylesDiagnosis = selectStyle(180, 122);
 function arrayToOptions(a) {
   let options = [];
 
-  a.forEach( (item) => {
-    options.push(
-      { label: item, value: item }
-    );
-  });
+  if (a) {
+    a.forEach( (item) => {
+      options.push(
+        { label: item, value: item }
+      );
+    });
+  }
 
   return options;
 }
@@ -432,10 +448,6 @@ function optFromOptions(options, value) {
   return options.find(opt => (opt.value === value));
 }
 
-// const optionsYesNo = [
-//   { label: "Yes", value: 1 },
-//   { label: "No",  value: 0 },  
-// ];
 
 const peopleTypes = {
   SOFTCHILD:    "SOFT Child",
@@ -537,7 +549,7 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     // Child
     age:         age,
     sibOuting:   false,
-    shirtSize:   '',
+    sibShirtSize:   '',
 
     // SOFT Child / Angel
     dateOfBirth: null,              //  Unspecified dates must be null or we crash (This is a Date object)
@@ -883,6 +895,7 @@ class App extends Component {
                   <YoungerSib
                     attendees={attendees}
                     onChange={this.onChangeSibOuting}
+                    optionsShirtSizes={arrayToOptions(eventInfo.sibShirtSizes)}
                     onChangeShirtSize={this.onChangeShirtSize} 
                     cost={eventInfo.youngerSibCost} 
                     blurb={eventInfo.youngerSibOutingBlurb}
@@ -892,6 +905,7 @@ class App extends Component {
                   <OlderSib 
                     attendees={attendees}
                     onChange={this.onChangeSibOuting}
+                    optionsShirtSizes={arrayToOptions(eventInfo.sibShirtSizes)}
                     onChangeShirtSize={this.onChangeShirtSize}
                     cost={eventInfo.olderSibCost}
                     blurb={eventInfo.olderSibOutingBlurb}
@@ -1516,12 +1530,12 @@ class App extends Component {
           {
             attendees = attendees.map(a => {
               if (!a.sibOuting) {
-                a.shirtSize = '';                        //  No shirts for people not attending
+                a.sibShirtSize = '';                        //  No shirts for people not attending
               }
               return a;
             });
 
-            let $missing_shirt = attendees.find( a => { return (a.peopleType === peopleTypes.CHILD  &&  a.age >= 5  &&  a.sibOuting  &&  a.shirtSize === '' ) });
+            let $missing_shirt = attendees.find( a => { return (a.peopleType === peopleTypes.CHILD  &&  a.age >= 5  &&  a.sibOuting  &&  a.sibShirtSize === '' ) });
             if ($missing_shirt) {
               alert("Oops! Please select a shirt for each person attending the outing.");
             }
@@ -1542,12 +1556,12 @@ class App extends Component {
           {
             attendees = attendees.map(a => {
               if (!a.sibOuting) {
-                a.shirtSize = '';                        //  No shirts for people not attending
+                a.sibShirtSize = '';                        //  No shirts for people not attending
               }
               return a;
             });
 
-            let missing_shirt = attendees.find( a => { return (a.peopleType === peopleTypes.TEEN  &&  a.sibOuting  &&  a.shirtSize === '') });
+            let missing_shirt = attendees.find( a => { return (a.peopleType === peopleTypes.TEEN  &&  a.sibOuting  &&  a.sibShirtSize === '') });
             if (missing_shirt) {
               alert("Oops! Please select a shirt for each person attending the outing.");
             }
@@ -2034,7 +2048,7 @@ class App extends Component {
     let { attendees } = this.state;
     let i = attendees.findIndex(a => a.id === id);
     console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
-    attendees[i].shirtSize = opt.value;
+    attendees[i].sibShirtSize = opt.value;
     this.setState ({
       attendees
     });
@@ -2613,7 +2627,7 @@ const Workshops = ({attendee, sessions, blurb, onChange}) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const YoungerSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
+const YoungerSib = ({attendees, optionsShirtSizes, onChange, onChangeShirtSize, cost, blurb}) =>
   <div>
     <h2>Younger Sibling Outing</h2>
     <p>{blurb}</p>
@@ -2625,7 +2639,7 @@ const YoungerSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
             <Checkbox defaultChecked={a.sibOuting} onChange={event => onChange(event, a.id)} />
             <span className="remb-name">{a.firstName} {a.lastName}{a.sibOuting ? " - $" + cost : ""}</span>
             <div className={a.sibOuting? "inline" : "inline invisible"}>
-              <ShirtSize value={a.shirtSize} onChange={(opt) => onChangeShirtSize(opt, a.id)} />
+              <ShirtSize value={a.sibShirtSize} optionsShirtSizes={optionsShirtSizes} onChange={(opt) => onChangeShirtSize(opt, a.id)} />
             </div>
           </div>
         })
@@ -2635,7 +2649,7 @@ const YoungerSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
   </div>
 
 
-const OlderSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) => 
+const OlderSib = ({attendees, optionsShirtSizes, onChange, onChangeShirtSize, cost, blurb}) => 
   <div>
     <h2>Older Sibling Outing</h2>
     <p>{blurb}</p>
@@ -2647,7 +2661,7 @@ const OlderSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
             <Checkbox defaultChecked={a.sibOuting} onChange={event => onChange(event, a.id)} />
             <span className="remb-name">{a.firstName} {a.lastName}{a.sibOuting ? " - $" + cost : ""}</span>
             <div className={a.sibOuting? "inline" : "inline invisible"}>
-              <ShirtSize value={a.shirtSize} onChange={(opt) => onChangeShirtSize(opt, a.id)} />
+              <ShirtSize value={a.sibShirtSize} optionsShirtSizes={optionsShirtSizes} onChange={(opt) => onChangeShirtSize(opt, a.id)} />
             </div>
           </div>
         })
@@ -3135,14 +3149,17 @@ const Summary = ({thisState}) => {
           if (attendee.sibOuting) {
             if (attendee.age < 5) console.log('Attendee too young for a sibling outing');
             output += add_line(2, "Attending younger-sibling outing");
+            output += add_line(2, "Shirt size: " + attendee.sibShirtSize);
           }
           else
             output += add_line(2, 'Attending Sibling outing: No');  
         }
         else if (attendee.peopleType === peopleTypes.TEEN) {
           output += add_line(2, 'Teen, age: ' + attendee.age);
-          if (attendee.sibOuting)
+          if (attendee.sibOuting) {
             output += add_line(2, "Attending older-sibling outing");
+            output += add_line(2, "Shirt size: " + attendee.sibShirtSize);
+          }
           else
             output += add_line(2, 'Attending Sibling outing: No');           
         }
@@ -3857,7 +3874,7 @@ const Country = ({value, onChange, className="edit-country"}) => {
     }
 
 
-const ShirtSize = ({value, isDisabled, onChange, className="edit-shirt-size"}) => {
+const ShirtSize = ({value, isDisabled, optionsShirtSizes, onChange, className="edit-shirt-size"}) => {
       let defaultOpt = optionsShirtSizes.find(opt => (opt.value === value));
       return (
         <div className={className}>
