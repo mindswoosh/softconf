@@ -331,37 +331,37 @@ const eventInfoDefault = {
   shirtTypes: [
       {
         id: "shirt1",
-        description: "Youth Short Sleeve T-shirt with Front & Back Logo. $12 each.",
-        cost: 12,
+        description: "Basic Unisex Tee. $20 each.",
+        cost: 20,
         sizes: [
-            'Small',
-            'Medium',
-            'Large',
-            'Extra Large',
+            'Youth - S',  
+            'Youth - M',
+            'Youth - L',
+            'Adult - S',
+            'Adult - M',
+            'Adult - L',
+            'Adult - XL',
+            'Adult - XXL',
+            'Adult - 3XL',
+            'Adult - 4XL',
+            'Adult - 5XL',
           ]
       },
       {
         id: "shirt2",
-        description: "Unisex ADULT Short Sleeve T-shirt with Front & Back Logo. $15 each.",
-        cost: 15,
+        description: "Hoodies in Adult sizes only. $35 each.",
+        cost: 35,
         sizes: [
-            'Small',
-            'Medium',
-            'Large',
-            'Extra Large',
+            'Adult - S',
+            'Adult - M',
+            'Adult - L',
+            'Adult - XL',
+            'Adult - XXL',
+            'Adult - 3XL',
+            'Adult - 4XL',
+            'Adult - 5XL',
           ]
       },
-      {
-        id: "shirt3",
-        description: "Unisex Pull-over hooded sweatshirt (ADULT ONLY) in Blue. $25 each.",
-        cost: 25,
-        sizes: [
-            'Small',
-            'Medium',
-            'Large',
-            'Extra Large',
-          ]
-      }
   ],
 
   directoryBlurb: "Each year we create a Conference Family directory. By including your contact information in the directory, families will be able keep in touch with each other after the Conference. By default, we include your phone number, email address, and the city that you live in (the street address is NOT included).",
@@ -425,7 +425,7 @@ const customStylesPeopleTypes = selectStyle(156, 110);
 
 const customStyles = selectStyle(325, 135);
 
-const customStylesNarrow = selectStyle(120, 110);
+const customStylesNarrow = selectStyle(130, 110);
 
 const customStylesDiagnosis = selectStyle(180, 122);
 
@@ -499,32 +499,32 @@ const optionsDiagnoses = arrayToOptions(Diagnoses);
 
 const optionsShirtQuantity = arrayToOptions([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
-const optionsShirtSizes = [
-  { label: "Select...",    value: ""     },
-  { label: "Youth - S",    value: "ys"   },
-  { label: "Youth - M",    value: "ym"   },  
-  { label: "Youth - L",    value: "yl"   },
-  { label: "Youth - XL",   value: "yxl"  },
-  { label: "Adult - S",    value: "s"    },
-  { label: "Adult - M",    value: "m"    },
-  { label: "Adult - L",    value: "l"    },
-  { label: "Adult - XL",   value: "xl"   },
-  { label: "Adult - XXL",  value: "xxl"  },
-  { label: "Adult - XXXL", value: "xxxl" },
-];
+// const optionsShirtSizes = [
+//   { label: "Select...",    value: ""     },
+//   { label: "Youth - S",    value: "ys"   },
+//   { label: "Youth - M",    value: "ym"   },  
+//   { label: "Youth - L",    value: "yl"   },
+//   { label: "Youth - XL",   value: "yxl"  },
+//   { label: "Adult - S",    value: "s"    },
+//   { label: "Adult - M",    value: "m"    },
+//   { label: "Adult - L",    value: "l"    },
+//   { label: "Adult - XL",   value: "xl"   },
+//   { label: "Adult - XXL",  value: "xxl"  },
+//   { label: "Adult - XXXL", value: "xxxl" },
+// ];
 
-const shirtDisplay = {
-  ys:   "Youth - S",
-  ym:   "Youth - M",
-  yl:   "Youth - L",
-  yxl:  "Youth - XL",
-  s:    "Adult - S",
-  m:    "Adult - M",
-  l:    "Adult - L",
-  xl:   "Adult - XL",
-  xxl:  "Adult - XXL",
-  xxxl: "Adult - XXXL",
-}
+// const shirtDisplay = {
+//   ys:   "Youth - S",
+//   ym:   "Youth - M",
+//   yl:   "Youth - L",
+//   yxl:  "Youth - XL",
+//   s:    "Adult - S",
+//   m:    "Adult - M",
+//   l:    "Adult - L",
+//   xl:   "Adult - XL",
+//   xxl:  "Adult - XXL",
+//   xxxl: "Adult - XXXL",
+// }
 
 
 
@@ -2954,7 +2954,7 @@ const SoftWear = ({blurb, shirtTypes, shirtsOrdered, shirtDropdowns, onChange, o
         {shirtsOrdered.map( (shirt) => {
             if (shirt.shirtID === shirtType.id) {
               return <div key={shirt.id} className="indent-twice">
-                  <div className="shirt-ordered">Ordered:</div>{shirt.quantity}<div className="shirt-size">{shirtDisplay[shirt.size]}</div><div className="shirt-total">${shirt.quantity*shirtType.cost}</div>
+                  <div className="shirt-ordered">Ordered:</div>{shirt.quantity}<div className="shirt-size">{shirt.size}</div><div className="shirt-total">${shirt.quantity*shirtType.cost}</div>
                   <Button onClick={() => onRemove(shirt.id)}>Remove from Order</Button>
                 </div>
             }
@@ -2965,8 +2965,8 @@ const SoftWear = ({blurb, shirtTypes, shirtsOrdered, shirtDropdowns, onChange, o
           Select Size:
           <div className="shirt-select">
             <Select
-              options={optionsShirtSizes}
-              value={ optFromOptions(optionsShirtSizes, shirtDropdowns[shirtType.id].size) }
+              options={arrayToOptions(shirtType.sizes)}
+              value={ optFromOptions(arrayToOptions(shirtType.sizes), shirtDropdowns[shirtType.id].size) }
               placeholder={"Select..."}
               onChange={(opt) => onDropdown(opt, shirtType.id, "size")}
               styles={customStylesNarrow}
@@ -3365,7 +3365,7 @@ const Summary = ({thisState}) => {
             let totalShirts = 0;
             for (let shirt of userData.shirtsOrdered) {
               if (shirt.shirtID === shirtType.id) {
-                output += add_line(2, 'Ordered: ' + shirt.quantity + ' x ' + shirtDisplay[shirt.size] + ', $' + shirt.quantity*shirtType.cost);
+                output += add_line(2, 'Ordered: ' + shirt.quantity + ' x ' + shirt.size + ', $' + shirt.quantity*shirtType.cost);
                 totalShirts++;
               }
             }
@@ -3561,7 +3561,7 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
           if (!shirtType) console.log("Unfound shirtType...");
 
           let cost = shirt.quantity*shirtType.cost;
-          output += add_line(1, sprintf("%-30s$%7.2f", "Type " + type + " => " + shirt.quantity + " x " + shirtDisplay[shirt.size], cost));
+          output += add_line(1, sprintf("%-30s$%7.2f", "Type " + type + " => " + shirt.quantity + " x " + shirt.size, cost));
           shirtCost += cost;
         }
 
