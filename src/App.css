@@ -455,6 +455,11 @@ code {
   text-align: right;
 }
 
+.special-needs-box {
+  width: 90%;
+  font-size: 1em;
+}
+
 .summary {
   /*font-family: monospace, monospace; */     /* Double monospace fixes Firefox browser bug */
 }

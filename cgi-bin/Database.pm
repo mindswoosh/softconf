@@ -175,6 +175,8 @@ our @contact_cols = qw(
     dir_email
     dir_city
 
+    specialNeeds
+
     conferenceTotal
     softDonation
     fundDonation

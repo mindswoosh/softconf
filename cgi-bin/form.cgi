@@ -96,6 +96,8 @@ if ($q->param)            #  fetches the names of the params as a list
       dir_email         => $directory{email},
       dir_city          => $directory{city},
 
+      specialNeeds      => $userData{specialNeeds},
+
       paid              => $userData{paid},
       payerID           => $userData{payerID},
       paymentID         => $userData{paymentID},

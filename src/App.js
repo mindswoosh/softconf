@@ -23,6 +23,7 @@ import Select from 'react-select';
 import {RadioGroup, Radio} from 'react-radio-group';
 import ReactHtmlParser from 'react-html-parser';
 import PaypalExpressBtn from 'react-paypal-express-checkout';
+import Textarea from 'react-textarea-autosize';
 import './App.css';
 
 // import FloatingLabelInput from 'react-floating-label-input';
@@ -77,6 +78,7 @@ const pages = {
   DIRECTORY:    pageNum++,
   PHOTOS:       pageNum++,
   SOFTWEAR:     pageNum++,
+  SPECIALNEEDS: pageNum++,
   SUMMARY:      pageNum++,
   CHECKOUT:     pageNum++,
   THANKYOU:     pageNum++,
@@ -349,6 +351,7 @@ const eventInfoDefault = {
   ],
 
   directoryBlurb: "Each year we create a Conference Family directory. By including your contact information in the directory, families will be able keep in touch with each other after the Conference. By default, we include your phone number, email address, and the city that you live in (the street address is NOT included).",
+  specialNeedsBlurb: "Are there any special needs that you need to tell us about in planning the Conference? For instance, are there any allergies, unique dietary needs, or transportation issues that haven't already been covered in the registration that we would need to be aware of on our end?",
 };
 
 
@@ -637,6 +640,8 @@ class App extends Component {
       numClinicMeals:    '',
 
       needsRembTrans: false,
+
+      specialNeeds: '',
 
       shirtsOrdered: [],              //  { shirtID, quantity, size, cost }
     };
@@ -931,7 +936,16 @@ class App extends Component {
                   />,
 
               [pages.SUMMARY]:
-                  <Summary thisState={this.state} />,
+                  <Summary
+                    thisState={this.state}
+                  />,
+
+              [pages.SPECIALNEEDS]:
+                  <SpecialNeeds 
+                    blurb={eventInfo.specialNeedsBlurb}
+                    specialNeeds={this.state.specialNeeds}
+                    onChange={this.onChangeFieldValue}
+                  />,
 
               [pages.CHECKOUT]:
                   <Checkout
@@ -1099,35 +1113,35 @@ class App extends Component {
           break;
 
         case pages.WORKSHOPS:
-          checkNext = (this.nextAdultPro(-1) === -1);     // Skip workshops if no adults
+          checkNext = (this.nextAdultPro(-1) === -1);                 // Skip workshops if no adults
           if (checkNext) {
             curPage = pages.YOUNGERSIB;
           }
           break;
 
         case pages.YOUNGERSIB:
-          checkNext = (this.nextYoungerSib(-1) === -1);   // Skip younger sibs if none
+          checkNext = (this.nextYoungerSib(-1) === -1);               // Skip younger sibs if none
           if (checkNext) {
             curPage = pages.OLDERSIB;
           }
           break;
 
         case pages.OLDERSIB:
-          checkNext = (this.nextOlderSib(-1) === -1);     // Skip older sibs if none
+          checkNext = (this.nextOlderSib(-1) === -1);                 // Skip older sibs if none
           if (checkNext) {
             curPage = pages.CHILDCARE;
           }
           break;
 
         case pages.CHILDCARE:
-          checkNext = (this.nextChildCare(-1) === -1);    // Skip childcare if none appropriate
+          checkNext = (this.nextChildCare(-1) === -1);                // Skip childcare if none appropriate
           if (checkNext) {
             curPage = pages.CHAPTERCHAIR;
           }
           break;
 
         case pages.CHAPTERCHAIR:
-          checkNext = !this.state.chapterChair;           // No one is a Chapter Chair?
+          checkNext = !this.state.chapterChair;                       // No one is a Chapter Chair?
           if (checkNext) {
             curPage = pages.REMEMBRANCE;
           }
@@ -1137,6 +1151,13 @@ class App extends Component {
           checkNext = (this.state.softAngels.length === 0);          // Skip Remembrance if no SOFT Angels
           if (checkNext) {
             curPage = pages.PICNIC;
+          }
+          break;
+
+        case pages.SPECIALNEEDS:                                    //  Don't ask about special needs unless attending the full conference
+          checkNext = (this.state.attendance !== 'full');
+          if (checkNext) {
+            curPage = pages.SUMMARY;
           }
           break;
 
@@ -1667,9 +1688,19 @@ class App extends Component {
 
             this.setState({
               pageHistory,
-              currentPage: pages.SUMMARY,
+              currentPage: this.nextPage(pages.SPECIALNEEDS),
             });
           }
+
+          break;
+
+      case pages.SPECIALNEEDS:
+          pageHistory.push(currentPage);
+
+          this.setState({
+            pageHistory,
+            currentPage: this.nextPage(pages.SUMMARY),
+          });
 
           break;
 
@@ -2221,6 +2252,7 @@ const PageBar = ({pageNum}) =>
       case pages.SOFTWEAR:
         title = 'SOFT Wear';
         break;      
+      case pages.SPECIALNEEDS:
       case pages.SUMMARY:
         title = 'Summary';
         break;
@@ -2945,6 +2977,18 @@ const SoftWear = ({blurb, shirtTypes, shirtsOrdered, shirtDropdowns, onChange, o
   </div>
 
 
+//----------------------------------------------------------------------------------------------------
+
+
+const SpecialNeeds = ({ blurb, specialNeeds, onChange }) =>
+  <div>
+    <h2>Special Needs</h2>
+    <p>{blurb}</p>
+    <p>If you don't have any special notes, please click NEXT.</p>
+    <div>
+      <Textarea autoFocus minRows={10} className="special-needs-box" defaultValue={specialNeeds} onChange={e => onChange("specialNeeds", e.target.value)}/>
+    </div>
+  </div>
 
 
 //----------------------------------------------------------------------------------------------------
@@ -2990,6 +3034,7 @@ const Summary = ({thisState}) => {
     childCareSessions:    thisState.childCareSessions,
     needsRembTrans:       thisState.needsRembTrans,
     numRembTrans:         0,
+    specialNeeds:         thisState.specialNeeds,
     conferenceTotal:      0,
     softDonation:         0,
     fundDonation:         0,
@@ -3276,6 +3321,17 @@ const Summary = ({thisState}) => {
                   }
                 }
                 output += '\n';
+
+
+                //----
+
+
+                if (userData.specialNeeds !== '') {
+                  output += add_line(0, '\nSpecial Needs:');
+                  output += '\n';
+                  output += userData.specialNeeds.replace(/^/mg, "   ");                  //  Indent this data
+                  output += '\n\n';
+                }
 
           }
 

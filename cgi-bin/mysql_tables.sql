@@ -84,6 +84,8 @@ CREATE TABLE contacts
     dir_email           TINYINT DEFAULT FALSE,
     dir_city            TINYINT DEFAULT FALSE,
 
+    specialNeeds        VARCHAR(1000),
+
     conferenceTotal     FLOAT DEFAULT 0,
     softDonation        FLOAT DEFAULT 0,
     fundDonation        FLOAT DEFAULT 0,
