@@ -87,6 +87,10 @@ if ($q->param)            #  fetches the names of the params as a list
       needsClinicsTrans => $userData{needsClinicsTrans},
       clinicBusSeats    => $userData{clinicBusSeats},
       clinicTieDowns    => $userData{clinicTieDowns},
+      numClinicMeals    => $userData{numClinicMeals},
+
+      needsRembTrans    => $userData{needsRembTrans},
+      numRembTrans      => $userData{numRembTrans},
 
       dir_phone         => $directory{phone},
       dir_email         => $directory{email},
@@ -112,6 +116,9 @@ if ($q->param)            #  fetches the names of the params as a list
       $contact{needsClinicsTrans} = $FALSE;
       $contact{clinicBusSeats} = 0;
       $contact{clinicTieDowns} = 0;
+
+      $contact{needsRembTrans} = $FALSE;
+      $contact{numRembTrans} = 0;
     }
 
     if ($userData{attendance} =~ /workshops|balloon/i) {
@@ -120,9 +127,26 @@ if ($q->param)            #  fetches the names of the params as a list
       $contact{dir_city} = $FALSE;
     }
 
-    if ($userData{attendance} =~ /full/i  &&  !$contact{attendingClinics}) {
-      $contact{clinicTieDowns} = 0;
+    if ($userData{attendance} =~ /full/i) {
+
+      if ($contact{attendingClinics}) {
+        #  If using transportation, deduce the number of clinic meals needed...
+        if ($contact{needsClinicsTrans}) {
+          my $numSoftNoneaters = grep { $_->{peopleType} eq "SOFT Child"  &&  not $_->{eatsMeals} }  @{$userData{attendees}};
+          $contact{numClinicMeals} = ($contact{clinicBusSeats} + $contact{clinicTieDowns}) - $numSoftNoneaters;
+        }
+      }
+      else {
+        #  Not attending clinics, so make sure db shows that
+        $contact{clinicBusSeats} = 0;
+        $contact{clinicTieDowns} = 0;
+        $contact{numClinicMeals} = 0;
+      }
     }
+
+    unless ($contact{needsRembTrans}) {
+      $contact{numRembTrans} = 0;           #  No transportation needed? Set bus seat count to 0
+    };
 
     %contact = InsertContact(%contact);
 

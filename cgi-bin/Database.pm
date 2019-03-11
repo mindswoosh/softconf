@@ -166,6 +166,10 @@ our @contact_cols = qw(
     needsClinicsTrans
     clinicBusSeats
     clinicTieDowns
+    numClinicMeals
+
+    needsRembTrans
+    numRembTrans
 
     dir_phone
     dir_email

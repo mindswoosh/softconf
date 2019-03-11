@@ -266,25 +266,25 @@ const eventInfoDefault = {
   childCareSessions: [
     {
       id: 'cc1',
-      title: "Thursday 8am-Noon",
-      pre5Only: true,
-      boardOnly: false,
+      title: "Wednesday 8am-5:30pm",
+      pre5Only: false,
+      boardOnly: true,
     },
     {
       id: 'cc2',
-      title: "Thursday 1pm-5pm",
+      title: "Thursday 8am-2pm",
       pre5Only: true,
       boardOnly: false,
     },
     {
       id: 'cc3',
-      title: "Friday 8am-Noon",
+      title: "Thursday 8am-2pm-4:30pm",
       pre5Only: false,
-      boardOnly: true,
+      boardOnly: false,
     },
     {
       id: 'cc4',
-      title: "Friday 1pm-5pm",
+      title: "Friday 11:45pm-5pm",
       pre5Only: false,
       boardOnly: false,
     },
@@ -298,9 +298,6 @@ const eventInfoDefault = {
     ],
   kidsMenu: [
       'Chicken Tenders',
-      'Mac \'n Cheese',
-      'Carrots',
-      'Celery',
     ],
 
   chapterChairBlurb: "The Chapter Chair Luncheon will be held on Thursday July 18th from 12:25–1:25. Please indicate below which adults in your party will attend.",
@@ -637,6 +634,9 @@ class App extends Component {
       needsClinicsTrans: true,
       clinicBusSeats:    '',
       clinicTieDowns:    '',
+      numClinicMeals:    '',
+
+      needsRembTrans: false,
 
       shirtsOrdered: [],              //  { shirtID, quantity, size, cost }
     };
@@ -810,7 +810,9 @@ class App extends Component {
 
               [pages.ATTENDEES]:
                   <Attendees
-                    attendees={attendees} 
+                    attendees={attendees}
+                    eventInfo={this.state.eventInfo}
+                    attendance={this.state.attendance}
                     onAdd={this.onAddAttendee}
                     onRemove={this.onRemoveAttendee}
                     onChange={this.onChangeAttendeeList}
@@ -830,6 +832,7 @@ class App extends Component {
                     needsClinicsTrans={this.state.needsClinicsTrans}
                     clinicBusSeats={this.state.clinicBusSeats}
                     clinicTieDowns={this.state.clinicTieDowns}
+                    numClinicMeals={this.state.numClinicMeals}
                     onChangeField={this.onChangeFieldValue}
                     onChangeSelection={this.onChangeFieldValue}
                   />,
@@ -837,7 +840,9 @@ class App extends Component {
               [pages.REMEMBRANCE]:
                   <Remembrance
                     attendees={attendees}
+                    needsRembTrans={this.state.needsRembTrans}
                     onChange={this.onChangeRembOuting}
+                    onChangeField={this.onChangeFieldValue}
                     menuInfo={eventInfo.remembranceMenu}
                     blurb={eventInfo.remembranceBlurb}
                     onChangeLunch={this.onChangeRembLunch}
@@ -1405,21 +1410,32 @@ class App extends Component {
 
       case pages.CLINICS:
 
-          let attendingClinics = this.state.attendingClinics;
+          let attendingClinics  = this.state.attendingClinics;
           let needsClinicsTrans = this.state.needsClinicsTrans;
-          let clinicBusSeats = '';
-          let clinicTieDowns = '';
-
-          //  Clean up data
-          if (!attendingClinics) needsClinicsTrans = false;
-
-          if (attendingClinics  &&  needsClinicsTrans) {
-            clinicBusSeats = this.state.clinicBusSeats.trim();
-            clinicTieDowns = this.state.clinicTieDowns.trim();
-          }
+          let numClinicMeals    = this.state.numClinicMeals;
+          let clinicBusSeats    = '';
+          let clinicTieDowns    = '';
 
           let numSoftChildren = attendees.filter(a => a.peopleType === peopleTypes.SOFTCHILD).length;
+          let numNonEaters    = attendees.filter(a => a.peopleType === peopleTypes.SOFTCHILD  &&  !a.eatsMeals).length;
           let numAttendees    = attendees.length;
+
+          //  Clean up data
+          if (attendingClinics) {
+            if (needsClinicsTrans) {
+              clinicBusSeats = this.state.clinicBusSeats.trim();
+              clinicTieDowns = this.state.clinicTieDowns.trim();
+              numClinicMeals = ((Number(clinicBusSeats) + Number(clinicTieDowns)) - numNonEaters).toString();     //  Assume all SOFT children are going
+            } else {
+              numClinicMeals = this.state.numClinicMeals.trim();
+            }
+          }
+          else {
+            needsClinicsTrans = false;
+            clinicBusSeats = '';
+            clinicTieDowns = '';
+            numClinicMeals = '';
+          }
 
           if (needsClinicsTrans  &&  (clinicBusSeats.match(/(^$)|\D/)  ||  clinicTieDowns.match(/(^$)|\D/)  ||  (Number(clinicBusSeats) + Number(clinicTieDowns)) === 0)) {
             alert("Please enter valid numbers for the number of bus seats and tie-downs needed.");
@@ -1430,6 +1446,12 @@ class App extends Component {
           else if (needsClinicsTrans  &&  (Number(clinicBusSeats) + Number(clinicTieDowns)) > numAttendees) {
             alert("You've got too many bus seats and tie-downs. Choose one or the other for each person.");
           }
+          else if (attendingClinics  &&  !needsClinicsTrans  &&  (numClinicMeals.match(/(^$)|\D/) ||  Number(numClinicMeals) === 0) ) {
+            alert("Please enter the number of lunches your family will need at the Clinics.");
+          }
+          else if (attendingClinics  &&  !needsClinicsTrans  &&  Number(numClinicMeals) > (numAttendees - numNonEaters)) {
+            alert("It looks like you've chosen too many meals. Choose only one meal per person attending. (Don't include meals for SOFT children who don't eat meals.)");
+          }
           else {
             pageHistory.push(currentPage);
 
@@ -1437,6 +1459,7 @@ class App extends Component {
               needsClinicsTrans,
               clinicBusSeats,
               clinicTieDowns,
+              numClinicMeals,
               pageHistory,
               currentPage: this.nextPage(pages.WORKSHOPS),
             });
@@ -1565,9 +1588,13 @@ class App extends Component {
             return a;
           });
 
+          let anyRembGoers = attendees.find(a => a.rembOuting);
           let missing_lunch = attendees.find( a => { return (a.rembOuting  &&  a.rembLunch === '' ) });
 
-          if (missing_lunch) {
+          if (this.state.needsRembTrans  &&  !anyRembGoers) {
+            alert("Oops! You've said you need transportation, but you haven't selected anybody to go. Please put a checkmark next to everyone attending.");
+          }
+          else if (missing_lunch) {
             alert("Oops! Please select a lunch for each person attending.");
           }
           else {
@@ -2392,16 +2419,36 @@ const ContactInfo = ({contact, onChangeContactInfo, onChangeCountry}) =>
 
 
 
-const Attendees = ({attendees, onRemove, onAdd, onChange, onChangeSelection, onChangeMeals, onChangeDate}) =>
+const Attendees = ({eventInfo, attendance, attendees, onRemove, onAdd, onChange, onChangeSelection, onChangeMeals, onChangeDate}) =>
   <div>
     <h2>Conference Attendees</h2>
     <p>Please list everybody in your party who will be attending any part of the Conference. Be sure to include
-       the Contact Person here if he or she will be attending.<br />
-       <br />
-       Full Conference rates:<br />
-       Adults: $145  (Ages 12 and above are charged as adults)<br />
-       Children: $95 (Ages 11 and under)
-    </p>
+       the Contact Person here if he or she will be attending.</p>
+    {attendance === 'full'  &&
+     <div>
+       <p>
+         Full Conference rates:<br />
+         Adults: ${eventInfo.costAdult}  (Ages 12 and above are charged as adults)<br />
+         Children: ${eventInfo.costChild} (Ages 11 and under)
+       </p>
+     </div>
+    }
+    {attendance === 'workshops'  &&
+     <div>
+       <p>
+        All workshop conference rates: ${eventInfo.costWorkshopsOnly}
+       </p>
+     </div>
+    }
+    {attendance === 'picnic'  &&
+     <div>
+       <p>
+         Picnic-only rates:<br />
+         Adults: ${eventInfo.costAdultPicnic}  (Ages 12 and above are charged as adults)<br />
+         Children: ${eventInfo.costChildPicnic} (Ages 11 and under)
+       </p>
+     </div>
+    }
 
     {attendees.length > 0  &&
       <div>
@@ -2581,7 +2628,7 @@ const OlderSib = ({attendees, onChange, onChangeShirtSize, cost, blurb}) =>
 //----------------------------------------------------------------------------------------------------
 
 
-const Clinics = ({attendees, clinics, attendingClinics, needsClinicsTrans, clinicBusSeats, clinicTieDowns, onSortEnd, blurb, onChangeField, onChangeSelection}) => {
+const Clinics = ({attendees, clinics, attendingClinics, needsClinicsTrans, clinicBusSeats, clinicTieDowns, numClinicMeals, onSortEnd, blurb, onChangeField, onChangeSelection}) => {
 
   return (
     <div>
@@ -2611,8 +2658,14 @@ const Clinics = ({attendees, clinics, attendingClinics, needsClinicsTrans, clini
           </div>
           {needsClinicsTrans  &&
             <div className="indent">
-              How many bus seats will you need? <Input value={clinicBusSeats} className="donation-box" onChange={event => onChangeField("clinicBusSeats", event.target.value)} />
-              <span className="inline-info">How many tie-downs will you need? <Input value={clinicTieDowns} className="donation-box" onChange={event => onChangeField("clinicTieDowns", event.target.value)} /></span>
+              <div className="inline v-indent">(Don't include people in the bus seat count if you're reserving a tie-down for them.)</div><br />
+              How many tie-downs will you need? <Input value={clinicTieDowns} className="donation-box" onChange={event => onChangeField("clinicTieDowns", event.target.value)} />
+              <span className="inline-info">How many bus seats will you need? <Input value={clinicBusSeats} className="donation-box" onChange={event => onChangeField("clinicBusSeats", event.target.value)} /></span>
+            </div>
+          }
+          {!needsClinicsTrans  &&
+            <div>
+              How many people will need lunch meals while at the clinics? <Input value={numClinicMeals} className="donation-box" onChange={event => onChangeField("numClinicMeals", event.target.value)} />
             </div>
           }
           <p className="v-indent">Rearrange the names of the clinics below from Most Interested to Least Interested by simultaneously clicking and dragging on the <span className="thumb-color"><FontAwesomeIcon icon="bars" /></span> character and moving
@@ -2630,11 +2683,20 @@ const Clinics = ({attendees, clinics, attendingClinics, needsClinicsTrans, clini
 
 
 
-const Remembrance = ({ attendees, blurb, menuInfo, onChange, onChangeLunch }) =>
+const Remembrance = ({ attendees, needsRembTrans, blurb, menuInfo, onChange, onChangeField, onChangeLunch }) =>
   <div>
     <h2>Remembrance Outing</h2>
     <p>{blurb}</p>
     <div className="remembrance">
+      <div className="v-indent">
+        Will you need transportation to the Remembrance Outing?
+        <div className="inline">
+          <RadioGroup name="needsRembTrans" selectedValue={needsRembTrans} onChange={(val) => onChangeField("needsRembTrans", val)}>
+            <span className="radio-yes"><Radio value={true} /> Yes</span>
+            <Radio value={false} /> No
+          </RadioGroup>
+        </div>
+      </div>
       {attendees.map( (a,i) => 
         {return (a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL)  && 
           <div key={a.id} className="indent">
@@ -2922,10 +2984,12 @@ const Summary = ({thisState}) => {
     needsClinicsTrans:    thisState.needsClinicsTrans,
     clinicBusSeats:       thisState.clinicBusSeats,
     clinicTieDowns:       thisState.clinicTieDowns,
+    numClinicMeals:       thisState.numClinicMeals,
     clinics:              thisState.eventInfo.clinics,
     workshops:            thisState.workshops,
     childCareSessions:    thisState.childCareSessions,
-    summary:              '',
+    needsRembTrans:       thisState.needsRembTrans,
+    numRembTrans:         0,
     conferenceTotal:      0,
     softDonation:         0,
     fundDonation:         0,
@@ -2934,6 +2998,8 @@ const Summary = ({thisState}) => {
     payerID:              '',
     paymentID:            '',
     paymentToken:         '',
+
+    summary:              '',
   }
 
   let output = '';
@@ -3176,10 +3242,18 @@ const Summary = ({thisState}) => {
                 if (userData.softAngels.length !== 0) {
                   output += add_line(0, '\nAttending Remembrance Outing:');
                   output += '\n';
+                  output += add_line(1, 'Needs transportation: ' + boolToYN(userData.needsRembTrans));
+                  output += add_line(1, 'People Attending:');
+                  output += '\n';
+
+                  userData.numRembTrans = 0;
 
                   for (let attendee of userData.attendees) {
                     if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL) {
                       output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.rembOuting) + (attendee.rembOuting ? ' — meal: ' + attendee.rembLunch : ''));
+                      if (attendee.rembOuting) {
+                        userData.numRembTrans++;
+                      }
                     }
                   }
                   output += '\n';
@@ -3438,7 +3512,7 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
         }
         
         if (userData.joeyWatson) {
-          output += add_line(1, "Joey Watson discount");
+          output += add_line(1, "Joey Watson discount: " + userData.joeyWatsonCode);
           let adult = Number(userData.joeyWatsonCode.match(/(?<=A)\d/i));
           let teen  = Number(userData.joeyWatsonCode.match(/(?<=T)\d/i));
           let child = Number(userData.joeyWatsonCode.match(/(?<=C)\d/i));

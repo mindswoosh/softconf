@@ -75,6 +75,10 @@ CREATE TABLE contacts
     needsClinicsTrans   TINYINT DEFAULT FALSE,
     clinicBusSeats      TINYINT DEFAULT 0,
     clinicTieDowns      TINYINT DEFAULT 0,
+    numClinicMeals      TINYINT DEFAULT 0,
+
+    needsRembTrans      TINYINT DEFAULT FALSE,
+    numRembTrans        TINYINT DEFAULT 0,
 
     dir_phone           TINYINT DEFAULT FALSE,      #  Directory
     dir_email           TINYINT DEFAULT FALSE,
