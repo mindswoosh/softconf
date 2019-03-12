@@ -51,7 +51,7 @@ library.add(faRibbon);
 
 var sprintf = require('sprintf-js').sprintf;
 
-const DEBUG = true;  //  Set to false for production
+const DEBUG = false;  //  Set to false for production
 
 const JSONversion = '1.0';
 
@@ -294,7 +294,7 @@ const eventInfoDefault = {
     },
     {
       id: 'cc3',
-      title: "Thursday 8am-2pm-4:30pm",
+      title: "Thursday 2pm-4:30pm",
       pre5Only: false,
       boardOnly: false,
     },
@@ -498,35 +498,6 @@ const Diagnoses = [
 const optionsDiagnoses = arrayToOptions(Diagnoses);
 
 const optionsShirtQuantity = arrayToOptions([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
-
-// const optionsShirtSizes = [
-//   { label: "Select...",    value: ""     },
-//   { label: "Youth - S",    value: "ys"   },
-//   { label: "Youth - M",    value: "ym"   },  
-//   { label: "Youth - L",    value: "yl"   },
-//   { label: "Youth - XL",   value: "yxl"  },
-//   { label: "Adult - S",    value: "s"    },
-//   { label: "Adult - M",    value: "m"    },
-//   { label: "Adult - L",    value: "l"    },
-//   { label: "Adult - XL",   value: "xl"   },
-//   { label: "Adult - XXL",  value: "xxl"  },
-//   { label: "Adult - XXXL", value: "xxxl" },
-// ];
-
-// const shirtDisplay = {
-//   ys:   "Youth - S",
-//   ym:   "Youth - M",
-//   yl:   "Youth - L",
-//   yxl:  "Youth - XL",
-//   s:    "Adult - S",
-//   m:    "Adult - M",
-//   l:    "Adult - L",
-//   xl:   "Adult - XL",
-//   xxl:  "Adult - XXL",
-//   xxxl: "Adult - XXXL",
-// }
-
-
 
 
 function attendee(firstName, lastName, peopleType, age, eventInfo) {
@@ -1394,22 +1365,38 @@ class App extends Component {
             alert("Oops! Something is incorrect in the information for one or more of the people listed. Please double-check the information.");
           }
           else {
-            pageHistory.push(currentPage);
 
-            let newPage = pages.DINNER;
+            //  Double-check Joey Watson code for obvious mistakes
+            let tooMuchJoeyWatson = false;
 
-            if (this.state.attendance === 'picnic') {
-              newPage = pages.DIRECTORY;
+            if (this.state.joeyWatson) {
+              let adult = Number(this.state.joeyWatsonCode.match(/(?<=A)\d/i));
+              let teen  = Number(this.state.joeyWatsonCode.match(/(?<=T)\d/i));
+              let child = Number(this.state.joeyWatsonCode.match(/(?<=C)\d/i));
+
+              let numPayingAttendees = attendees.filter(a => a.peopleType !== peopleTypes.SOFTCHILD).length;
+              tooMuchJoeyWatson = (numPayingAttendees < (adult + teen + child));
             }
-            else if (this.state.attendance === 'workshops') {
-              newPage = pages.WORKSHOPS;
-            }
 
-            this.setState({
-              attendees,
-              pageHistory,
-              currentPage: newPage,     //  Can't call newPage(pages.DINNER) because attendees isn't in state yet
-            });
+
+            if (!tooMuchJoeyWatson  ||  window.confirm('It looks like you might have mis-entered your Joey Watson Code. You entered "' + this.state.joeyWatsonCode + '". If that looks okay, click on the OK button, otherwise click Cancel, and go "<<BACK" and correct it.') ) {
+              pageHistory.push(currentPage);
+
+              let newPage = pages.DINNER;
+
+              if (this.state.attendance === 'picnic') {
+                newPage = pages.DIRECTORY;
+              }
+              else if (this.state.attendance === 'workshops') {
+                newPage = pages.WORKSHOPS;
+              }
+
+              this.setState({
+                attendees,
+                pageHistory,
+                currentPage: newPage,     //  Can't call newPage(pages.DINNER) because attendees isn't in state yet
+              });
+            }
           }
           break;
 
@@ -3647,7 +3634,7 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
     }
 
 
-    let total = Number(grandTotal);
+    let total = Math.max(0, Number(grandTotal));
     let currency = 'USD'; // or you can set this value from your props or state
     let env = 'sandbox'; // you can set here to 'production' for production
 
@@ -3682,11 +3669,17 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
           <span className="indent"></span><div className="cost-descr-right">Grand Total:</div>$<span className="cost">{grandTotal}</span>
         </div>
         <div className="indent">
-          <div className="checkout-btn">
-            <PaypalExpressBtn env={env} client={client} currency={currency} total={total} onError={onError} onSuccess={onPaymentSuccess} onCancel={onCancel} />
-            <br />
-            <span className="pay-by-check">(or... <a href="" onClick={onClickByCheck}>Pay by Check</a>)</span>
-          </div>
+          {total === 0 ?
+                <div className="checkout-btn">
+                <a className="welcome-button" onClick={onClickByCheck}>Submit Registration</a>
+                </div>
+            :
+              <div className="checkout-btn v-indent">
+                <PaypalExpressBtn env={env} client={client} currency={currency} total={total} onError={onError} onSuccess={onPaymentSuccess} onCancel={onCancel} />
+                <br />
+                <span className="pay-by-check">(or... <a href="" onClick={onClickByCheck}>Pay by Check</a>)</span>
+              </div>
+          }
         </div>
       </div>
     );
@@ -3707,7 +3700,8 @@ const ThankYou = ({thisState, setUserData}) => {
   userDataJSON = JSON.stringify(userData);
 
   var proxyUrl  = 'https://cors-anywhere.herokuapp.com/',
-      targetUrl = 'http://softconf.org/cgi-bin/form.cgi';
+      targetUrl = 'http://greatday.biz/cgi-bin/form.cgi';
+      // targetUrl = 'http://softconf.org/cgi-bin/form.cgi';
 
   if (!thisState.userDataSaved) {
     fetch(proxyUrl + targetUrl, {
@@ -3723,7 +3717,7 @@ const ThankYou = ({thisState, setUserData}) => {
       return response.json();
     })
     .then(data => {
-        console.log('Data stored successfully: ' + data);
+        console.log(data.message);
         setUserData(true);
         return data;
     })
@@ -3741,7 +3735,7 @@ const ThankYou = ({thisState, setUserData}) => {
       <p>Thank you for registering for the Conference. You should be receiving an email message with a summary
          page and invoice. If you don't see the email, please check your Junk folder.
       </p>
-      {userData.paid ?
+      {(userData.paid  ||  Number(userData.grandTotal) <= 0) ?
           <div>
           <p>That's it, you're all set for the Conference! Oh, one last thing...</p>
           </div>

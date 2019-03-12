@@ -70,6 +70,7 @@ our $sendmail             =  "/usr/sbin/sendmail";
 #  panel where you can create a new MySQL database
 #
 
+# our $mysql_database = "terre_softconf";
 our $mysql_database = "softconf";
 #our $mysql_host     = "www.softconf.org";     # This works if the DB is on another server
 our $mysql_host     = "localhost";
