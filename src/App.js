@@ -369,6 +369,13 @@ const eventInfoDefault = {
 };
 
 
+//  Take a match array that's either null, or the first element is "A#", 
+//  "T#", or "C#", and it returns the number.
+function numPeopleFromJWCODE(ma) {
+  if (!ma) return 0;
+  return Number(ma[0].substr(1));
+} 
+
 
 function selectStyle(width, height) {
   return {
@@ -1370,9 +1377,9 @@ class App extends Component {
             let tooMuchJoeyWatson = false;
 
             if (this.state.joeyWatson) {
-              let adult = Number(this.state.joeyWatsonCode.match(/(?<=A)\d/i));
-              let teen  = Number(this.state.joeyWatsonCode.match(/(?<=T)\d/i));
-              let child = Number(this.state.joeyWatsonCode.match(/(?<=C)\d/i));
+              let adult = numPeopleFromJWCODE(this.state.joeyWatsonCode.match(/A\d/i));
+              let teen  = numPeopleFromJWCODE(this.state.joeyWatsonCode.match(/T\d/i));
+              let child = numPeopleFromJWCODE(this.state.joeyWatsonCode.match(/C\d/i));
 
               let numPayingAttendees = attendees.filter(a => a.peopleType !== peopleTypes.SOFTCHILD).length;
               tooMuchJoeyWatson = (numPayingAttendees < (adult + teen + child));
@@ -3573,9 +3580,9 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
         
         if (userData.joeyWatson) {
           output += add_line(1, "Joey Watson discount: " + userData.joeyWatsonCode);
-          let adult = Number(userData.joeyWatsonCode.match(/(?<=A)\d/i));
-          let teen  = Number(userData.joeyWatsonCode.match(/(?<=T)\d/i));
-          let child = Number(userData.joeyWatsonCode.match(/(?<=C)\d/i));
+          let adult = numPeopleFromJWCODE(userData.joeyWatsonCode.match(/A\d/i));
+          let teen  = numPeopleFromJWCODE(userData.joeyWatsonCode.match(/T\d/i));
+          let child = numPeopleFromJWCODE(userData.joeyWatsonCode.match(/C\d/i));
 
           if (adult) {
             output += add_line(1, sprintf("%-30s$%8.2f", adult + " Adult" + pluralize(adult), -(adult * costPerAdult)));
