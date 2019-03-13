@@ -258,10 +258,10 @@ const eventInfoDefault = {
       'Pulmonology',
     ],
 
-  youngerSibOutingBlurb: "This year the Younger Sibling outing will be combined with the Older Sib Outing. They will be going to the Detroit Zoo on Friday, July 19th from 9am–2pm. Lunch is included as well as a SOFT Sibs T-shirt! Price for the outing is $42.",
+  youngerSibOutingBlurb: "This year the Younger Sibling outing will be combined with the Older Sib Outing. They will be going to the Detroit Zoo on Thursday, July 18th from 9am–2pm. Lunch is included as well as a SOFT Sibs T-shirt! Price for the outing is $42.",
   youngerSibCost: 35,
 
-  olderSibOutingBlurb: "This year the Older Sibling outing will be combined with the Younger Sib Outing. They will be going to the Detroit Zoo on Friday, July 19th from 9am–2pm. Lunch is included as well as a SOFT Sibs T-shirt! Price for the outing is $42.",
+  olderSibOutingBlurb: "This year the Older Sibling outing will be combined with the Younger Sib Outing. They will be going to the Detroit Zoo on Thursday, July 18th from 9am–2pm. Lunch is included as well as a SOFT Sibs T-shirt! Price for the outing is $42.",
   olderSibCost: 35,
 
   sibShirtSizes: [
