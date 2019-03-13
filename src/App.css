@@ -117,6 +117,17 @@ p {
   cursor: pointer;
 }
 
+.btn:hover {
+  background-color: lightblue;
+  border-width: 1px;
+  color: blue;
+  text-align: inherit;
+  -webkit-font-smoothing: inherit;
+  padding: 5px 5px 5px 5px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
 /*.remb-row {
   margin-left: 20px;
 }*/

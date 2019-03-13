@@ -259,10 +259,10 @@ const eventInfoDefault = {
     ],
 
   youngerSibOutingBlurb: "This year the Younger Sibling outing will be combined with the Older Sib Outing. They will be going to the Detroit Zoo on Thursday, July 18th from 9am–2pm. Lunch is included as well as a SOFT Sibs T-shirt! Price for the outing is $42.",
-  youngerSibCost: 35,
+  youngerSibCost: 42,
 
   olderSibOutingBlurb: "This year the Older Sibling outing will be combined with the Younger Sib Outing. They will be going to the Detroit Zoo on Thursday, July 18th from 9am–2pm. Lunch is included as well as a SOFT Sibs T-shirt! Price for the outing is $42.",
-  olderSibCost: 35,
+  olderSibCost: 42,
 
   sibShirtSizes: [
       'Youth - S',  
@@ -2941,10 +2941,11 @@ const SoftWear = ({blurb, shirtTypes, shirtsOrdered, shirtDropdowns, onChange, o
   <div>
     <h2>SOFT Wear</h2>
     <p>{blurb}</p>
-    <p>To order shirts, select the size and quantity and click the "Add Shirts to Order" button for each shirt size that you want.</p>
+    <p>To order shirts, select the size and quantity and click the "Add Shirt Size and Quantity to Order" button for each shirt size that you want.</p>
+    <p><FontAwesomeIcon icon="hand-point-right" /> <b>If you want more than one size of the same shirt, simply make another choice and click the "Add Shirt Size and Quantity to Order" button a second or third time to add the different sizes.</b></p><br />
     {shirtTypes.map( (shirtType, i) =>
       <div key={shirtType.id}>
-        <p className="indent"><b>{i+1}. {shirtType.description}</b></p>
+        <p className="indent">{i+1}. {shirtType.description}</p>
         {shirtsOrdered.map( (shirt) => {
             if (shirt.shirtID === shirtType.id) {
               return <div key={shirt.id} className="indent-twice">
@@ -2976,7 +2977,7 @@ const SoftWear = ({blurb, shirtTypes, shirtsOrdered, shirtDropdowns, onChange, o
             />
           </div>
           <div className="v-indent">
-            <Button onClick={() => onAdd(shirtType.id)}>Add Shirts to Order</Button>
+            <Button onClick={() => onAdd(shirtType.id)}>Add Shirt Size and Quantity to Order</Button>
           </div>
         </div>
         <br />
