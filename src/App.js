@@ -3617,8 +3617,8 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
     userData.invoice = output;
 
     let html = output;
-    html = html.replace(/^(\x20+?)([^:]+?)(\s+\$\s+)([\d.-]+)/mg,'<span class="indent"></span><span class="cost-descr">$2</span>$<span class="cost">$4</span>');     //  In first capture, don't use \s -- it sucks up '\n's
-    html = html.replace(/^(\x20+?)(.+?)(\s+\$\s+)([\d.-]+)/mg,'<span class="indent"></span><div class="cost-descr-right">$2</div>$<span class="cost">$4</span>');    //  In first capture, don't use \s -- it sucks up '\n's
+    html = html.replace(/^( +)([^:]+?)(\s+\$\s+)([\d.-]+)/mg,'<span class="indent"></span><span class="cost-descr">$2</span>&#36;<span class="cost">$4</span>');     //  In first capture, don't use \s -- it sucks up '\n's
+    html = html.replace(/^( +)(.+?)(\s+\$\s+)([\d.-]+)/mg,'<span class="indent"></span><div class="cost-descr-right">$2</div>&#36;<span class="cost">$4</span>');    //  In first capture, don't use \s -- it sucks up '\n's
     html = html.replace(/\n/g, "<br>");
 
     

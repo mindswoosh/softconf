@@ -107,6 +107,7 @@ p {
 }
 
 .btn {
+  background-color: lightgray;
   border-width: 1px;
   color: blue;
   text-align: inherit;
