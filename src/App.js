@@ -106,6 +106,7 @@ const eventInfoDefault = {
   costRembOuting:        25,
   costAdultPicnic:       35,
   costChildPicnic:       20,          // child <= 11
+  minChildAgePaying:      5,
 
   workshopBlurb: "Workshops will be held on Thursday July 18 from 9am–4pm.",
   workshopSessions: [
@@ -1370,6 +1371,14 @@ class App extends Component {
             if (a.dateOfBirth) {
               a.birthDate = slashDateFormat(a.dateOfBirth);
             }
+            if (a.peopleType !== peopleTypes.SOFTCHILD) {
+              a.diagnosis = '';
+              a.otherDiagnosis = '';
+              a.dateOfBirth = null;
+            }
+            if (a.peopleType !== peopleTypes.CHILD  &&  a.peopleType !== peopleTypes.TEEN) {
+              a.age = '';
+            }
             return a;
           });
 
@@ -1378,8 +1387,8 @@ class App extends Component {
 
           let bad_attendee = attendees.find( a => { 
             return (  a.firstName === ''  ||  a.lastName === ''  ||  a.peopleType === ''  || 
-                     (a.peopleType === peopleTypes.CHILD  &&  (a.age === null || a.age > 11)) ||
-                     (a.peopleType === peopleTypes.TEEN   &&  (a.age === null || a.age < 12)) ||
+                     (a.peopleType === peopleTypes.CHILD  &&  (a.age === null || a.age === '' || a.age > 11)) ||
+                     (a.peopleType === peopleTypes.TEEN   &&  (a.age === null || a.age === '' || a.age < 12)) ||
                      (a.peopleType === peopleTypes.SOFTCHILD  &&  (a.dateOfBirth === null  ||  a.diagnosis === null  ||  (a.diagnosis === otherDiagnosisTitle && a.otherDiagnosis === "")) )
                    ) 
           });
@@ -1393,19 +1402,24 @@ class App extends Component {
           else {
 
             //  Double-check Joey Watson code for obvious mistakes
-            let tooMuchJoeyWatson = false;
+            let badJoeyWatsonCode = false;
 
             if (this.state.joeyWatson) {
-              let adult = numPeopleFromJWCODE(this.state.joeyWatsonCode.match(/A\d/i));
-              let teen  = numPeopleFromJWCODE(this.state.joeyWatsonCode.match(/T\d/i));
-              let child = numPeopleFromJWCODE(this.state.joeyWatsonCode.match(/C\d/i));
+              let adults = numPeopleFromJWCODE(this.state.joeyWatsonCode.match(/A\d/i));
+              let teens  = numPeopleFromJWCODE(this.state.joeyWatsonCode.match(/T\d/i));
+              let children = numPeopleFromJWCODE(this.state.joeyWatsonCode.match(/C\d/i));
 
-              let numPayingAttendees = attendees.filter(a => a.peopleType !== peopleTypes.SOFTCHILD).length;
-              tooMuchJoeyWatson = (numPayingAttendees < (adult + teen + child));
+              let numAdultProAttendees = attendees.filter(a => a.peopleType  === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL).length;
+              let numTeenAttendees     = attendees.filter(a => a.peopleType  === peopleTypes.TEEN).length;
+              let numChildAttendees    = attendees.filter(a => (a.peopleType === peopleTypes.CHILD && a.age >= this.state.eventInfo.minChildAgePaying)).length;
+
+              badJoeyWatsonCode = (adults > numAdultProAttendees  ||  teens > numTeenAttendees  ||  children > numChildAttendees);
             }
 
-
-            if (!tooMuchJoeyWatson  ||  window.confirm('It looks like you might have mis-entered your Joey Watson Code. You entered "' + this.state.joeyWatsonCode + '". If that looks okay, click on the OK button, otherwise click Cancel, and go "<<BACK" and correct it.') ) {
+            if (badJoeyWatsonCode) {
+              alert('It looks like you have entered an invalid Joey Watson Code. Please double-check your attendee information, or use the "<<BACK" button at the bottom of the page to go back and correct or remove the Joey Watson code.');
+            }
+            else {
               pageHistory.push(currentPage);
 
               let newPage = pages.DINNER;
@@ -1722,9 +1736,12 @@ class App extends Component {
           break;
 
       case pages.SPECIALNEEDS:
+          let specialNeeds = this.state.specialNeeds.trim();
+
           pageHistory.push(currentPage);
 
           this.setState({
+            specialNeeds,
             pageHistory,
             currentPage: this.nextPage(pages.SUMMARY),
           });
@@ -3014,7 +3031,7 @@ const SpecialNeeds = ({ blurb, specialNeeds, onChange }) =>
     <p>{blurb}</p>
     <p>If you don't have any special notes, please click NEXT.</p>
     <div>
-      <Textarea autoFocus minRows={10} className="special-needs-box" defaultValue={specialNeeds} onChange={e => onChange("specialNeeds", e.target.value)}/>
+      <Textarea autoFocus minRows={4} className="special-needs-box" defaultValue={specialNeeds} onChange={e => onChange("specialNeeds", e.target.value)}/>
     </div>
   </div>
 
@@ -3276,13 +3293,15 @@ const Summary = ({thisState}) => {
 
                       output += add_line(1, child.firstName + ' ' + child.lastName + ':');
 
+                      let numSessions = 0;
                       for (let sess of thisState.eventInfo.childCareSessions) {
-
                         // child.childCareSessions:  { ccID1: bool, ccID2: bool, ccID3:bool... }
                         if (child.childCareSessions.hasOwnProperty(sess.id) && qualifiesChildCare(child.age, sess, thisState.boardMember)) {
                           output += add_line(2, sess.title + ': ' + boolToYN(child.childCareSessions[sess.id]));
+                          numSessions++;
                         }
                       }
+                      if (numSessions === 0) output += add_line(2, "None");
 
                       output += '\n';
                     }
@@ -3487,7 +3506,7 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
       if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL  ||  attendee.peopleType === peopleTypes.TEEN) {
         costThisPerson = costPerAdult;
       }
-      else if (attendee.peopleType === peopleTypes.CHILD  &&  attendee.age >= 2) {
+      else if (attendee.peopleType === peopleTypes.CHILD  &&  attendee.age >= thisState.eventInfo.minChildAgePaying) {
         costThisPerson = costPerChild;
       }
 
