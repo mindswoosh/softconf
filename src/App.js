@@ -102,9 +102,7 @@ const eventInfoDefault = {
   costChild:             95,         // Children under 2 are free
   costSoftChild:          0,
   costProfessional:     135,
-  costWorkshopsOnly:     62,
-  costYoungerSibOuting:  42,
-  costOlderSibOuting:    42,
+  costWorkshopsOnly:     45,
   costRembOuting:        25,
   costAdultPicnic:       35,
   costChildPicnic:       20,          // child <= 11
@@ -300,7 +298,7 @@ const eventInfoDefault = {
     },
     {
       id: 'cc4',
-      title: "Friday 11:45pm-5pm",
+      title: "Friday 11:45am-5pm",
       pre5Only: false,
       boardOnly: false,
     },
@@ -491,7 +489,12 @@ const optionsChildAges = [
 
 const optionsTeenAges = arrayToOptions([12, 13, 14, 15, 16, 17]);
 
-const Diagnoses = [
+
+//  SOFT children and angels
+
+let otherDiagnosisTitle = 'Other Diagnosis';    //  Used in several tests in the code
+
+const AngelDiagnoses = [
   "Full Trisomy 18",
   "Full Trisomy 13",
   "Trisomy 9 Mosaic",
@@ -499,10 +502,26 @@ const Diagnoses = [
   "Trisomy 18 Mosaic",
   "Partial Trisomy 13",
   "Partial Trisomy 18",
-  "Other",
+  otherDiagnosisTitle,
+  "Other Loved One",
+];
+
+const optionsAngelsDiagnoses = arrayToOptions(AngelDiagnoses);
+
+
+const Diagnoses = [
+  "Full Trisomy 18",
+  "Full Trisomy 13",
+  "Trisomy 9 Mosaic",
+  "Trisomy 13 Mosaic",
+  "Trisomy 18 Mosaic",
+  "Partial Trisomy 13",
+  otherDiagnosisTitle,
 ];
 
 const optionsDiagnoses = arrayToOptions(Diagnoses);
+
+
 
 const optionsShirtQuantity = arrayToOptions([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
@@ -1316,7 +1335,7 @@ class App extends Component {
           let bad_softAngel = softAngels.find( a => { 
             return (  a.firstName === ''  ||  a.lastName === ''  ||  a.peopleType === '' ||
                       a.dateOfBirth === null  ||  a.dateOfDeath === null  ||  a.diagnosis === null  ||  
-                      (a.diagnosis === 'Other'  &&  a.otherDiagnosis === '')
+                      (a.diagnosis === otherDiagnosisTitle  &&  a.otherDiagnosis === '')
                    )
           });
 
@@ -1361,7 +1380,7 @@ class App extends Component {
             return (  a.firstName === ''  ||  a.lastName === ''  ||  a.peopleType === ''  || 
                      (a.peopleType === peopleTypes.CHILD  &&  (a.age === null || a.age > 11)) ||
                      (a.peopleType === peopleTypes.TEEN   &&  (a.age === null || a.age < 12)) ||
-                     (a.peopleType === peopleTypes.SOFTCHILD  &&  (a.dateOfBirth === null  ||  a.diagnosis === null  ||  (a.diagnosis === "Other" && a.otherDiagnosis === "")) )
+                     (a.peopleType === peopleTypes.SOFTCHILD  &&  (a.dateOfBirth === null  ||  a.diagnosis === null  ||  (a.diagnosis === otherDiagnosisTitle && a.otherDiagnosis === "")) )
                    ) 
           });
 
@@ -1861,7 +1880,7 @@ class App extends Component {
     let i = attendees.findIndex(a => a.id === id);
     console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
     attendees[i][field] = opt.value;
-    if (field === "diagnosis"  &&  opt.value !== "Other") {
+    if (field === "diagnosis"  &&  opt.value !== otherDiagnosisTitle) {
       attendees[i].otherDiagnosis = "";
     }
     if (field === "age") {
@@ -2129,7 +2148,7 @@ class App extends Component {
 
       shirtsOrdered.push(newOrder);
 
-      choices.size = '';
+      choices.size = null;
       choices.quantity = 0;
 
       this.setState({
@@ -2507,13 +2526,13 @@ const Attendees = ({eventInfo, attendance, attendees, onRemove, onAdd, onChange,
             {a.peopleType === peopleTypes.SOFTCHILD  &&
               <div>
                 <p className="row-num"></p>
-                Diagnosis: <Diagnosis label="Diagnosis" value={a.diagnosis} id={"attendee-diagnosis-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "diagnosis")} /><span className="small-gap"></span>
+                Diagnosis: <Diagnosis label="Diagnosis" value={a.diagnosis} options={optionsDiagnoses} id={"attendee-diagnosis-" + a.id}  onChange={opt => onChangeSelection(opt, a.id, "diagnosis")} /><span className="small-gap"></span>
                 Birthdate (M/D/Y): <DatePicker
                   selected={a.dateOfBirth}
                   onChange={date => onChangeDate(date, a.id)}
                 /><span className="small-gap"></span>
                 <Checkbox defaultChecked={a.eatsMeals} onChange={opt => onChangeMeals(opt, a.id)} /> Eats meals?
-                {a.diagnosis === "Other" &&
+                {a.diagnosis === otherDiagnosisTitle  &&
                   <div>
                     <p className="row-num"></p>
                     Enter other Diagnosis: <Input value={a.otherDiagnosis} id={"attendee-diag-" + a.id} className="other-diag" onChange={event => onChange(event, a.id, "otherDiagnosis")} />
@@ -2553,9 +2572,9 @@ const SoftAngels = ({softAngels, onRemove, onAdd, onChange, onChangeDiagnosis, o
             <p className="row-num">{i+1}.</p>
             <Input label="FIRST Name" value={a.firstName} id={"softangel-firstname-" + a.id} onChange={event => onChange(event, a.id, "firstName")} />
             <Input label="LAST Name"  value={a.lastName}  id={"softangel-lastname-" + a.id}  onChange={event => onChange(event, a.id, "lastName")} />
-            <Diagnosis label="Diagnosis" value={a.diagnosis} id={"softangel-diagnosis-" + a.id}  onChange={opt => onChangeDiagnosis(opt, a.id, "diagnosis")} />
+            <Diagnosis label="Diagnosis" value={a.diagnosis} options={optionsAngelsDiagnoses} id={"softangel-diagnosis-" + a.id}  onChange={opt => onChangeDiagnosis(opt, a.id, "diagnosis")} />
             <br />
-            {a.diagnosis === "Other" &&
+            {a.diagnosis === otherDiagnosisTitle  &&
               <div>
                 <p className="row-num"></p>
                 Enter Diagnosis: <Input value={a.otherDiagnosis} id={"softangel-diag-" + a.id} className="other-diag" onChange={event => onChange(event, a.id, "otherDiagnosis")} />
@@ -3009,7 +3028,6 @@ function boolToYN(f) {
 }
 
 var userData = {};
-var userDataJSON = '';
 
 function add_line(indent, str) {
   return ' '.repeat(indent*3) + str + '\n';
@@ -3120,7 +3138,7 @@ const Summary = ({thisState}) => {
         output += add_line(1, softAngel.firstName + ' ' + softAngel.lastName);
         output += add_line(1, 'Date of birth: ' + softAngel.birthDate);
         output += add_line(1, 'Date of death: ' + softAngel.deathDate);
-        output += add_line(1, 'Diagnosis: ' + (softAngel.diagnosis === "Other" ? softAngel.otherDiagnosis : softAngel.diagnosis));
+        output += add_line(1, 'Diagnosis: ' + (softAngel.diagnosis === otherDiagnosisTitle ? softAngel.otherDiagnosis : softAngel.diagnosis));
         output += '\n';
       }
     }
@@ -3161,7 +3179,7 @@ const Summary = ({thisState}) => {
         else if (attendee.peopleType === peopleTypes.SOFTCHILD) {
           output += add_line(2, attendee.peopleType);
           output += add_line(2, 'Date of birth: ' + attendee.birthDate);
-          output += add_line(2, 'Diagnosis: ' + (attendee.diagnosis === "Other" ? attendee.otherDiagnosis : attendee.diagnosis));
+          output += add_line(2, 'Diagnosis: ' + (attendee.diagnosis === otherDiagnosisTitle ? attendee.otherDiagnosis : attendee.diagnosis));
           output += add_line(2, 'Eats meals: ' + boolToYN(attendee.eatsMeals));
         }
         else {
@@ -3439,8 +3457,8 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
         reg = 'Attending the full conference';
         costPerAdult = thisState.eventInfo.costAdult;
         costPerChild = thisState.eventInfo.costChild;
-        costYoungSib = thisState.eventInfo.costYoungerSibOuting;
-        costOlderSib = thisState.eventInfo.costOlderSibOuting;
+        costYoungSib = thisState.eventInfo.youngerSibCost;
+        costOlderSib = thisState.eventInfo.olderSibCost;
         costRembOuting = thisState.eventInfo.costRembOuting;
         break;
       case 'workshops':
@@ -3705,8 +3723,7 @@ const ThankYou = ({thisState, setUserData}) => {
   // Create a unique "invoice" ID
   userData.formID =  userData.contactInfo.lastName.replace(/[^A-Za-z]/g, '').toUpperCase().substring(0,3) + new Date().getTime();
 
-  userDataJSON = JSON.stringify(userData);
-
+  // See documentation for fetch here: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
   var proxyUrl  = 'https://cors-anywhere.herokuapp.com/',
       targetUrl = 'http://greatday.biz/cgi-bin/form.cgi';
       // targetUrl = 'http://softconf.org/cgi-bin/form.cgi';
@@ -3714,11 +3731,12 @@ const ThankYou = ({thisState, setUserData}) => {
   if (!thisState.userDataSaved) {
     fetch(proxyUrl + targetUrl, {
       method: 'POST',
+      mode: 'cors',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
-      body: userDataJSON,
+      body: JSON.stringify(userData),
     })
     .then(response => {
       //console.log(response);
@@ -3826,12 +3844,12 @@ const Age = ({value, optionsAges, onChange, className="edit-age"}) => {
     }
 
 
-const Diagnosis = ({value, onChange, className="edit-diagnosis"}) => {
-      const defaultOpt = optionsDiagnoses.find(opt => (opt.value === value));
+const Diagnosis = ({value, options, onChange, className="edit-diagnosis"}) => {
+      const defaultOpt = options.find(opt => (opt.value === value));
       return (
         <div className={className}>
           <Select
-            options={optionsDiagnoses}
+            options={options}
             defaultValue={defaultOpt}
             placeholder={"Diagnosis"}
             onChange={onChange}
