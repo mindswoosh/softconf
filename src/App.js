@@ -716,6 +716,7 @@ class App extends Component {
     this.componentDidMount    = this.componentDidMount.bind(this);
 
     this.onPaymentSuccess     = this.onPaymentSuccess.bind(this);
+    this.onPaymentFailure     = this.onPaymentFailure.bind(this);
   }
 
 
@@ -968,6 +969,7 @@ class App extends Component {
                     onChange={this.onChangeFieldValue}
                     onClickByCheck={this.onClickByCheck}
                     onPaymentSuccess={this.onPaymentSuccess}
+                    onPaymentFailure={this.onPaymentFailure}
                   />,
 
               [pages.THANKYOU]:
@@ -2192,6 +2194,15 @@ class App extends Component {
     });
   }
 
+  onPaymentFailure(payment) {
+    // Congratulation, it came here means everything's fine!
+    console.log("The payment failed..", payment);
+    userData.paid = false;
+    this.setState ({
+      currentPage: pages.THANKYOU,
+    });
+  }
+
 }
 
 
@@ -2440,7 +2451,7 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
                 </div>
                 {joeyWatson &&
                   <div>
-                  Please enter the Joe Watson confirmation code: <Input value={joeyWatsonCode} field="joeyWatsonCode" id="joeyWatsonCode" onChange={(evt) => onChangeField("joeyWatsonCode", evt.target.value)} />
+                  Please enter the Joey Watson confirmation code: <Input value={joeyWatsonCode} field="joeyWatsonCode" id="joeyWatsonCode" onChange={(evt) => onChangeField("joeyWatsonCode", evt.target.value)} />
                   </div>
                 }
               </div>
@@ -3456,7 +3467,7 @@ function pluralize(n) {
   return n !== 1 ? 's' : '';
 }
 
-const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByCheck, onPaymentSuccess}) => {
+const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByCheck, onPaymentSuccess, onPaymentFailure}) => {
 
     let costPerAdult = 0;
     let costPerChild = 0;
@@ -3671,12 +3682,12 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
         // You can bind the "data" object's value to your state or props or whatever here, please see below for sample returned data
     }
 
-    const onError = (err) => {
-        // The main Paypal's script cannot be loaded or somethings block the loading of that script!
-        console.log("Error!", err);
-        // Because the Paypal's main script is loaded asynchronously from "https://www.paypalobjects.com/api/checkout.js"
-        // => sometimes it may take about 0.5 second for everything to get set, or for the button to appear
-    }
+    // const onError = (err) => {
+    //     // The main Paypal's script cannot be loaded or somethings block the loading of that script!
+    //     console.log("Error!", err);
+    //     // Because the Paypal's main script is loaded asynchronously from "https://www.paypalobjects.com/api/checkout.js"
+    //     // => sometimes it may take about 0.5 second for everything to get set, or for the button to appear
+    // }
 
 
     let total = Math.max(0, Number(grandTotal));
@@ -3720,7 +3731,7 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
                 </div>
             :
               <div className="checkout-btn v-indent">
-                <PaypalExpressBtn env={env} client={client} currency={currency} total={total} onError={onError} onSuccess={onPaymentSuccess} onCancel={onCancel} />
+                <PaypalExpressBtn env={env} client={client} currency={currency} total={total} onError={onPaymentFailure} onSuccess={onPaymentSuccess} onCancel={onCancel} />
                 <br />
                 <span className="pay-by-check">(or... <a href="" onClick={onClickByCheck}>Pay by Check</a>)</span>
               </div>
