@@ -71,12 +71,12 @@ our $sendmail             =  "/usr/sbin/sendmail";
 #
 
 # our $mysql_database = "terre_softconf";
-our $mysql_database = "softconf_registration";
+our $mysql_database = "softconf";
 #our $mysql_host     = "www.softconf.org";     # This works if the DB is on another server
 our $mysql_host     = "localhost";
 #our $mysql_host     = "74.53.157.98";
-our $mysql_username = "softconf_reg";
-our $mysql_password = "Trisomy18!";
+our $mysql_username = "softconf";
+our $mysql_password = "Trisomy2019!";
 
 
 

@@ -51,7 +51,7 @@ library.add(faRibbon);
 
 var sprintf = require('sprintf-js').sprintf;
 
-const DEBUG = false;  //  Set to false for production
+const DEBUG = true;  //  Set to false for production
 
 const JSONversion = '1.0';
 
@@ -112,7 +112,7 @@ const eventInfoDefault = {
   workshopSessions: [
       {
         id: 1,
-        name:   "Session 1: 9am—10am",
+        name:   "Session 1: 9am-10am",
         workshops: [
           {
             id:           "1n",
@@ -149,7 +149,7 @@ const eventInfoDefault = {
       },
       {
         id: 2,
-        name:   "Session 2: 10:10am—11:10am",
+        name:   "Session 2: 10:10am-11:10am",
         workshops: [
           {
             id:           "2n",
@@ -221,7 +221,7 @@ const eventInfoDefault = {
       },
       {
         id: 5,
-        name:   "Session 4: 2:30pm—4:15pm",
+        name:   "Session 4: 2:30pm-4:15pm",
         workshops: [
           {
             id:           "4n",
@@ -231,13 +231,13 @@ const eventInfoDefault = {
           },
           {
             id:           "4a",
-            title:        "Moms Only — Sharing Workshop",
+            title:        "Moms Only - Sharing Workshop",
             moderator:    "",
             description:  ""
           },
           {
             id:           "4b",
-            title:        "Dads Only — Sharing Workshop",
+            title:        "Dads Only - Sharing Workshop",
             moderator:    "",
             description:  ""
           },
@@ -590,7 +590,7 @@ class App extends Component {
     this.state = {
       currentPage: pages.WELCOME,
       pageHistory: [],                //  Keep a history of the pages visited for use by the Back button
-      formID: new Date().getTime(),
+      formID: '',
       workshopAttendee: 0,
       userDataSaved: false,
       shirtDropdowns: {},             //  { id1: { size, quantity }, id2: {...} }
@@ -2655,7 +2655,7 @@ const Workshops = ({attendee, sessions, blurb, onChange}) =>
             <RadioGroup selectedValue={attendee.workshops[sess.id]} onChange={(val) => onChange(val, attendee.id, sess.id)}>
             {
               sess.workshops.map( (ws,i) =>
-                <div key={ws.id} className="indent"><Radio value={ws.id} /> {ws.title}{ws.moderator === '' ? '' : " — " + ws.moderator}</div>
+                <div key={ws.id} className="indent"><Radio value={ws.id} /> {ws.title}{ws.moderator === '' ? '' : " - " + ws.moderator}</div>
               )
             }
             </RadioGroup><br />
@@ -3119,13 +3119,15 @@ const Summary = ({thisState}) => {
   //  General questions
 
   if (userData.attendance === 'full') {
-    output += add_line(0, 'Attending Wednesday reception: ' + boolToYN(userData.reception)); 
-    output += add_line(0, 'Attending Sunday brunch: ' + boolToYN(userData.sundayBreakfast)); 
-    output += add_line(0, 'Board member: ' + boolToYN(userData.boardMember));
-    output += add_line(0, 'Chapter Chair: ' + boolToYN(userData.chapterChair));
-    output += add_line(0, 'Joey Watson Fund: ' + boolToYN(userData.joeyWatson));
+    output += add_line(0, sprintf("%-32s%s", 'Attending Wednesday reception: ', boolToYN(userData.reception))); 
+    output += add_line(0, sprintf("%-32s%s", 'Attending Sunday brunch: ', boolToYN(userData.sundayBreakfast)));
+    output += '\n';
+
+    output += add_line(0, sprintf("%-19s%s", 'Board member:', boolToYN(userData.boardMember)));
+    output += add_line(0, sprintf("%-19s%s", 'Chapter Chair:', boolToYN(userData.chapterChair)));
+    output += add_line(0, sprintf("%-19s%s", 'Joey Watson Fund:', boolToYN(userData.joeyWatson)));
     if (userData.joeyWatson) {
-      output += add_line(0, 'Joey Watson Code: ' + userData.joeyWatsonCode);
+      output += add_line(0, sprintf("%-19s%s",'Joey Watson Code: ', userData.joeyWatsonCode));
     }
     output += '\n';
   }
@@ -3143,9 +3145,9 @@ const Summary = ({thisState}) => {
   output += add_line(1, userData.contactInfo.country);
   output += '\n';
 
-  output += add_line(1, 'Mobile phone: ' + userData.contactInfo.phoneMobile);
-  output += add_line(1, 'Home phone:   ' + userData.contactInfo.phoneHome);
-  output += add_line(1, 'Work phone:   ' + userData.contactInfo.phoneWork);
+  output += add_line(1, sprintf("%-15s%s", 'Mobile phone:', userData.contactInfo.phoneMobile));
+  output += add_line(1, sprintf("%-15s%s", 'Home phone:',   userData.contactInfo.phoneHome));
+  output += add_line(1, sprintf("%-15s%s", 'Work phone:',   userData.contactInfo.phoneWork));
   output += '\n';
 
   output += add_line(1, 'Email: ' + userData.contactInfo.email);
@@ -3232,7 +3234,13 @@ const Summary = ({thisState}) => {
               if (userData.attendingClinics) {
                 output += add_line(0, '\nClinics:');
                 output += '\n';
-                output += add_line(1, 'Transportation tie-downs needed: ' + userData.clinicTieDowns);
+                if (userData.needsClinicsTrans) {
+                  output += add_line(1, 'Transportation tie-downs needed:  ' + userData.clinicTieDowns);
+                  output += add_line(1, 'Transportation bus seats needed:  ' + userData.clinicBusSeats);
+                }
+                else {
+                  output += add_line(1, 'Needs transportation to clinics:  No');
+                }
                 output += '\n';
 
                 let clinicOrder = 1;
@@ -3246,7 +3254,7 @@ const Summary = ({thisState}) => {
                 }
               }
               else {
-                output += add_line(0, '\nAttending clinics: No');
+                output += add_line(0, '\nAttending clinics:  No');
               }
 
               output += '\n';
@@ -3276,7 +3284,14 @@ const Summary = ({thisState}) => {
 
                 for (let sess of thisState.eventInfo.workshopSessions) {
                   let workshop = sess.workshops.find( ws => ws.id === adult.workshops[sess.id]);
-                  output += add_line(2, sess.name + ': ' + workshop.title + (workshop.moderator !== '' ? ' - ' + workshop.moderator : ''));
+                  let wholeTitle = workshop.title + (workshop.moderator !== '' ? ' - ' + workshop.moderator : '')
+                  if (wholeTitle.length > 90) {
+                    wholeTitle = wholeTitle.substring(0, 90) + "...";
+                  }
+                  output += add_line(2, sess.name + ': ');
+                  output += add_line(2, wholeTitle);
+                  output += '\n';
+                  // output += add_line(2, sess.name + ': ' + workshop.title + (workshop.moderator !== '' ? ' - ' + workshop.moderator : ''));
                 }
                 output += '\n';
               }
@@ -3308,7 +3323,7 @@ const Summary = ({thisState}) => {
                       for (let sess of thisState.eventInfo.childCareSessions) {
                         // child.childCareSessions:  { ccID1: bool, ccID2: bool, ccID3:bool... }
                         if (child.childCareSessions.hasOwnProperty(sess.id) && qualifiesChildCare(child.age, sess, thisState.boardMember)) {
-                          output += add_line(2, sess.title + ': ' + boolToYN(child.childCareSessions[sess.id]));
+                          output += add_line(2, sprintf("%-25s%s", sess.title + ': ', boolToYN(child.childCareSessions[sess.id])));
                           numSessions++;
                         }
                       }
@@ -3329,7 +3344,7 @@ const Summary = ({thisState}) => {
 
                   for (let attendee of userData.attendees) {
                     if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL) {
-                      output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.chapterChairLunch));
+                      output += add_line(1, sprintf("%-28s%s", attendee.firstName + ' ' + attendee.lastName + ": ", boolToYN(attendee.chapterChairLunch)));
                     }
                     else {
                       attendee.chapterChairLunch = false;           //  Enforce proper state for non-adults
@@ -3355,7 +3370,7 @@ const Summary = ({thisState}) => {
 
                   for (let attendee of userData.attendees) {
                     if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL) {
-                      output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.rembOuting) + (attendee.rembOuting ? ' — meal: ' + attendee.rembLunch : ''));
+                      output += add_line(1, sprintf("%-28s%-4s%s",attendee.firstName + ' ' + attendee.lastName + ": ", boolToYN(attendee.rembOuting), (attendee.rembOuting ? ' - meal: ' + attendee.rembLunch : '')));
                       if (attendee.rembOuting) {
                         userData.numRembTrans++;
                       }
@@ -3373,11 +3388,10 @@ const Summary = ({thisState}) => {
 
                 for (let attendee of userData.attendees) {
                   if (attendee.peopleType === peopleTypes.SOFTCHILD) {
-                    output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnicTrans) + 
-                              (attendee.picnicTrans ? ' — Needs tie-down: ' + boolToYN(attendee.picnicTiedown) : ''));
+                    output += add_line(1, sprintf("%-28s%-5s%s", attendee.firstName + ' ' + attendee.lastName + ": ", boolToYN(attendee.picnicTrans), (attendee.picnicTrans ? ' - Needs tie-down: ' + boolToYN(attendee.picnicTiedown) : '')));
                   }
                   else {
-                    output += add_line(1, attendee.firstName + ' ' + attendee.lastName + ": " + boolToYN(attendee.picnicTrans));
+                    output += add_line(1, sprintf("%-28s%s", attendee.firstName + ' ' + attendee.lastName + ": ", boolToYN(attendee.picnicTrans)));
                   }
                 }
                 output += '\n';
@@ -3430,9 +3444,9 @@ const Summary = ({thisState}) => {
 
     output += add_line(0, '\nFamily Directory:');
     output += '\n';
-    output += add_line(1, 'Include phone: ' + (userData.directory.phone ? 'Yes' : 'No'));
-    output += add_line(1, 'Include email: ' + (userData.directory.email ? 'Yes' : 'No'));
-    output += add_line(1, 'Include city: ' + (userData.directory.city ? 'Yes' : 'No'));
+    output += add_line(1, sprintf("%-16s%s", 'Include phone: ', boolToYN(userData.directory.phone)));
+    output += add_line(1, sprintf("%-16s%s", 'Include email: ', boolToYN(userData.directory.email)));
+    output += add_line(1, sprintf("%-16s%s", 'Include city: ', boolToYN(userData.directory.city)));
     output += '\n';
 
 }
@@ -3442,8 +3456,9 @@ const Summary = ({thisState}) => {
 
   userData.summary = output;
 
-  let html = output.replace(/\n/g, "<br />");
-  html = html.replace(/\s{3}/g,'<span class="indent"></span>')
+  let html = output.replace(/ /g,'&nbsp;');
+  html = html.replace(/\n/g, "<br />");
+  // html = html.replace(/\s{3}/g,'<span class="indent"></span>')
 
   return (
     <div>
@@ -3452,7 +3467,7 @@ const Summary = ({thisState}) => {
          below and confirm that everything looks correct.
       </p>
       <p>If you find something that needs correcting, click on the BACK button below, otherwise click NEXT</p>
-      <div>{ ReactHtmlParser(html) }</div>
+      <div className="summary">{ ReactHtmlParser(html) }</div>
     </div>
   );
 
@@ -3521,7 +3536,7 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
         costThisPerson = costPerChild;
       }
 
-      output += add_line(1, sprintf("%-30s$%7.2f", attendee.firstName + ' ' + attendee.lastName, costThisPerson));
+      output += add_line(1, sprintf("%-30s$%8.2f", attendee.firstName + ' ' + attendee.lastName, costThisPerson));
       regCost += costThisPerson;
     }
     output += '\n';
@@ -3547,7 +3562,7 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
           if ((attendee.peopleType === peopleTypes.CHILD  ||  attendee.peopleType === peopleTypes.TEEN)  &&  attendee.sibOuting) {
 
             let costThisPerson = (attendee.peopleType === peopleTypes.TEEN) ? costOlderSib : costYoungSib;
-            output += add_line(1, sprintf("%-30s$%7.2f", attendee.firstName + ' ' + attendee.lastName, costThisPerson));
+            output += add_line(1, sprintf("%-30s$%8.2f", attendee.firstName + ' ' + attendee.lastName, costThisPerson));
             sibCost += costThisPerson;
           }
         }
@@ -3571,7 +3586,7 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
 
         for (let attendee of userData.attendees) {
           if ((attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL)  &&  attendee.rembOuting) {
-            output += add_line(1, sprintf("%-30s$%7.2f", attendee.firstName + ' ' + attendee.lastName, costRembOuting));
+            output += add_line(1, sprintf("%-30s$%8.2f", attendee.firstName + ' ' + attendee.lastName, costRembOuting));
             rembCost += costRembOuting;
           }
         }
@@ -3604,7 +3619,7 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
           if (!shirtType) console.log("Unfound shirtType...");
 
           let cost = shirt.quantity*shirtType.cost;
-          output += add_line(1, sprintf("%-30s$%7.2f", "Type " + type + " => " + shirt.quantity + " x " + shirt.size, cost));
+          output += add_line(1, sprintf("%-30s$%8.2f", "Type " + type + " => " + shirt.quantity + " x " + shirt.size, cost));
           shirtCost += cost;
         }
 
@@ -3705,7 +3720,7 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
         <p>Please double-check the registration fees below and then click either the "Pay By Check" button
            or the PayPal button. The PayPal option will let you pay by credit card.</p>
 
-        <div className="summary">{ ReactHtmlParser(html) }</div>
+        <div>{ ReactHtmlParser(html) }</div>
 
         {userData.attendance !== 'workshops'  &&
           <div>
@@ -3751,12 +3766,12 @@ const ThankYou = ({thisState, setUserData}) => {
   //  Save everything in the database...
 
   // Create a unique "invoice" ID
-  userData.formID =  userData.contactInfo.lastName.replace(/[^A-Za-z]/g, '').toUpperCase().substring(0,3) + new Date().getTime();
+  userData.formID =  userData.contactInfo.lastName.replace(/[^A-Za-z]/g, '').toUpperCase().substring(0,3) + (new Date().getTime())%1000000;
 
   // See documentation for fetch here: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
   var proxyUrl  = 'https://cors-anywhere.herokuapp.com/',
-      targetUrl = 'http://greatday.biz/cgi-bin/form.cgi';
-      // targetUrl = 'http://softconf.org/cgi-bin/form.cgi';
+      // targetUrl = 'http://greatday.biz/cgi-bin/form.cgi';
+      targetUrl = 'http://softconf.org/cgi-bin/form.cgi';
 
   if (!thisState.userDataSaved) {
     fetch(proxyUrl + targetUrl, {
@@ -3779,7 +3794,7 @@ const ThankYou = ({thisState, setUserData}) => {
     })
     .catch(e => {
       console.log('Data store failed');
-      console.log(e);
+      console.log(e); 
       return e;
     });
   }
@@ -3793,7 +3808,7 @@ const ThankYou = ({thisState, setUserData}) => {
       </p>
       {(userData.paid  ||  Number(userData.grandTotal) <= 0) ?
           <div>
-          <p>That's it, you're all set for the Conference! Oh, one last thing...</p>
+          <p>That's it. You're all set for the Conference!</p><p>Oh, one last thing...</p>
           </div>
         :
           <div>
@@ -3810,7 +3825,7 @@ const ThankYou = ({thisState, setUserData}) => {
       }
       <p className="v-indent">We would love to include photos of your family in the Conference Directory. Please email any photos that you would like to share with everyone to:</p>
       <div className="indent">
-        <a href="mailto:webmaster@example.com"><code>photos@softregistration.com</code></a>
+        <a href="mailto:webmaster@example.com"><code>photos@softconf.org</code></a>
       </div>
       <br />
       <p className="v-indent">Thanks again!</p>

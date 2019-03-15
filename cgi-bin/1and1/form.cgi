@@ -314,19 +314,21 @@ if ($q->param)            #  fetches the names of the params as a list
 
     # warn("Contact email is '" . $contactInfo{email} . "'");
 
-    my $from = '"SOFT Registration" <invoices@softconf.org>';
-    my $to = "\"$contact{firstName} $contact{lastName}\" <$contact{email}>";
-    my $subject = 'SOFT Conference Invoice';
+    # my $to = 'stormdevelopment@gmail.com';
+    # # my $from = 'invoice@softconf.org';
+    # my $from = 'invoice@greatday.biz';
+    # my $subject = 'Registered for SOFT Conference';
      
-    # open(MAIL, "|/usr/sbin/sendmail -t");
+    # open(MAIL, "|/usr/sbin/sendmail -t -oi -oem");
      
     # # Email Header
     # print MAIL "From: $from\n";
     # print MAIL "To: $to\n";
+    # print MAIL "From: $from\n";
     # print MAIL "Subject: $subject\n\n";
-    # print MAIL $userData{summary} . '\n' . $userData{invoice};
+    # print MAIL "Test message";
 
-    # close(MAIL);
+    # warn(close(MAIL));
     # warn "Email Sent Successfully\n";
 
 
@@ -343,137 +345,17 @@ if ($q->param)            #  fetches the names of the params as a list
     #     ~;
 
 
-    $contact{grandTotal} = trim($contact{grandTotal});
 
-    my $message;
+    my $from = "SOFT Registration <invoice\@greatday.biz>";
+    # my $from = "SOFT Registration <invoices\@softconf.org>";
 
-    if ($contact{paid}){
-
-        $message = qq~
-
-Hello $contact{firstName},
-
-Thank you for registering for this year's SOFT conference!
-
-Below is a summary of exactly what you signed up for, along with the paid
-invoice for \$$contact{grandTotal}.
-
-Your payment confirmation ID is: $contact{paymentID}
-
-That's it, you're all set for the Conference!
-
-Oh, one last thing...
-
-We would love to include photos of your family in the Conference Directory.
-Please email any photos that you would like to share with everyone to:
-
-     <a href="mailto:photos\@softconf.org">photos\@softconf.org</a>
-
-Please include names with the photos.
-
-Thanks!
-
-
-----------
-
-$userData{summary}
-
-
-Invoice:
-
-$userData{invoice}
-
-Invoice #: $contact{form_id}
-Payment Confirmation ID: $contact{paymentID}
-~;
-    }
-    elsif ($contact{grandTotal} <= 0 ) {           #  Fully Joey Watson
-
-        $message = qq~
-
-Hello $contact{firstName},
-
-Thank you for registering for this year's SOFT conference! Below is a 
-summary of exactly what you signed up for.
-
-That's it, you're all set for the Conference!
-
-Oh, one last thing...
-
-We would love to include photos of your family in the Conference Directory.
-Please email any photos that you would like to share with everyone to:
-
-     <a href="mailto:photos\@softconf.org">photos\@softconf.org</a>
-
-Please include names with the photos.
-
-Thanks!
-
-
-----------
-
-$userData{summary}
-
-
-Invoice:
-
-$userData{invoice}
-
-Invoice #: $contact{form_id}
-~;
-    }
-    else {          #  Must be by check
-
-        $message = qq~
-
-Hello $contact{firstName},
-
-Thank you for registering for this year's SOFT conference!
-
-Below is a summary of exactly what you signed up for, along with an
-invoice for check payment. To finish your registration, please send
-a check for \$$contact{grandTotal} to:
-
-    Support Organization for Trisomy
-    2982 Sound Union St.
-    Rochester, NY  14624
-
-Please include your invoice number with your check:  $contact{form_id}
-
-
-Also, we would love to include photos of your family in the Conference Directory.
-Please email any photos that you would like to share with everyone to:
-
-     <a href="mailto:photos\@softconf.org">photos\@softconf.org</a>
-
-Please include names with the photos.
-
-Thanks!
-
-
-----------
-
-$userData{summary}
-
-
-Invoice:
-  
-$userData{invoice}
-
-Invoice #: $contact{form_id}
-~;
-    }
-
-
-
-    $message =~ s/\n\n+/\n\n/g;
+    my $message = $userData{summary} . "\n". $userData{invoice};
     $message =~ s/\n/<br>/g;
-    $message =~ s/ /&nbsp;/g;
 
     my $htmlEmail = qq~
     <!DOCTYPE html>
     <html>
-        <body style="font-family: monospace, monospace; font-size: 14px;">
+        <body>
             $message
         </body>
     </html>
@@ -488,11 +370,11 @@ Invoice #: $contact{form_id}
      
       my $message = MIME::Lite->new(
         From     => $from,
-        To       => $to,
-        Cc       => 'support@softconf.org',
-        Subject  => 'Thank you for Registering for the SOFT Conference',
-        Type     => 'text/html',
-        Encoding => 'quoted-printable',
+        To       => $contactInfo{email},
+        Cc       => "stormdevelopment\@gmail.com",
+        Subject  => "Registered for SOFT Conference",
+        Type     => "text/html",
+        Encoding => "quoted-printable",
         Data     => $htmlEmail
       );
       
@@ -502,8 +384,9 @@ Invoice #: $contact{form_id}
     else {
       my $message = MIME::Lite->new(
         From     => $from,
-        To       => 'support@softconf.org',
-        Subject  => "Failed: Not registered for SOFT Conference",
+        To       => $contactInfo{email},
+        Cc       => "stormdevelopment\@gmail.com",
+        Subject  => "Failed: Registered for SOFT Conference",
         Type     => "text/html",
         Encoding => "quoted-printable",
         Data     => $htmlEmail
@@ -528,18 +411,6 @@ Invoice #: $contact{form_id}
 else {
     print "Content-type: text/html\n\n";
     print "No params...";
-}
-
-
-sub trim {
-    my $text = shift;
-
-    $text = ""  if (!defined($text));
-
-    $text =~ s/^\s+//;
-    $text =~ s/\s+$//;
-
-    return $text;
 }
 
 1;

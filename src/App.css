@@ -472,7 +472,8 @@ code {
 }
 
 .summary {
-  /*font-family: monospace, monospace; */     /* Double monospace fixes Firefox browser bug */
+  font-family: monospace, monospace;      /* Double monospace fixes Firefox browser bug */
+  font-size: 14px;
 }
 
 .button-bar {

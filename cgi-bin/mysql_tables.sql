@@ -1,15 +1,8 @@
 #
 #  To create these tables, use the following MySQL commands:
 #
-#  shell> mysql -u softconf -pTrisomy2019!
+#  shell> mysql -u user -pPassword database
 #
-#
-#  mysql> show databases;               #  View existing databases
-#  mysql>
-#  mysql> use softconf;                 #  Switch to our database
-#  mysql>
-#  mysql> source mysql_tables.sql;      #  Load this file, destroying existing data
-#  mysql>
 #  mysql> show tables;                  #  You should see the tables below
 #  mysql>
 #  mysql> describe accounts;            #  View format of each one
@@ -21,10 +14,12 @@
 #
 #  To add these tables, issue this command from the mysql prompt:
 #
-#  mysql> source /var/www/vhosts/softconf.org/httpdocs/cgi-bin/mysql_tables.sql
-
 #  shell> mysql -u softconf -p softconf < mysql_tables.sql
-
+#
+#  In Hostgator:
+#
+#   shell> mysql -u softconf_reg -p softconf_registration < mysql_tables.sql
+#   
 
 
 DROP TABLE IF EXISTS posts;
