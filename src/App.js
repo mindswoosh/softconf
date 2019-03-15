@@ -51,7 +51,7 @@ library.add(faRibbon);
 
 var sprintf = require('sprintf-js').sprintf;
 
-const DEBUG = true;  //  Set to false for production
+const DEBUG = false;  //  Set to false for production
 
 const JSONversion = '1.0';
 
@@ -159,8 +159,8 @@ const eventInfoDefault = {
           },
           {
             id:           "2a",
-            title:        "Trisomy 18, 13. Preventing Seizures, Light Sensitivity and Headaches",
-            moderator:    "Dr. Steve Cantrell",
+            title:        "The TRIS Project",
+            moderator:    "Debbie Bruns",
             description:  ""
           },
           {
@@ -201,8 +201,8 @@ const eventInfoDefault = {
           },
           {
             id:           "3b",
-            title:        "The TRIS Project",
-            moderator:    "Debbie Bruns",
+            title:        "Trisomy 18, 13. Preventing Seizures, Light Sensitivity and Headaches",
+            moderator:    "Dr. Steve Cantrell",
             description:  ""
           },
           {
@@ -221,7 +221,7 @@ const eventInfoDefault = {
       },
       {
         id: 5,
-        name:   "Session 4: 2:30pm-4:15pm",
+        name:   "Session 4: 1:40pm-3:25pm",
         workshops: [
           {
             id:           "4n",
