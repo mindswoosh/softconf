@@ -79,7 +79,11 @@ p {
 }
 
 .v-indent {
-  margin-top: 1.25em;
+  margin-top: 1.5em;
+}
+
+.v-indent-twice {
+  margin-top: 2em;
 }
 
 .v-indent-below {

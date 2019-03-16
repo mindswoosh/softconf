@@ -345,6 +345,9 @@ if ($q->param)            #  fetches the names of the params as a list
 
     $contact{grandTotal} = trim($contact{grandTotal});
 
+    $userData{summary} =~ s/ /&nbsp;/g;
+    $userData{invoice} =~ s/ /&nbsp;/g;
+
     my $message;
 
     if ($contact{paid}){
@@ -360,18 +363,46 @@ invoice for \$$contact{grandTotal}.
 
 Your payment confirmation ID is: $contact{paymentID}
 
-That's it, you're all set for the Conference!
+Here are a few more suggestions to help you get ready for the conference...
 
-Oh, one last thing...
+1) Submit family and "SOFT" child photos. We invite you to share a family 
+   photo and a photo of your SOFT Child for the conference directory or
+   to be displayed during the conference. Submit photos to:
 
-We would love to include photos of your family in the Conference Directory.
-Please email any photos that you would like to share with everyone to:
+        <a href="mailto:trisomyawareness\@gmail.com">trisomyawareness\@gmail.com</a>
 
-     <a href="mailto:photos\@softconf.org">photos\@softconf.org</a>
+2) Submit your photos or short video for the Annual "SOFT Friends" Video.
+   Choose your favorite photo of your SOFT Child and submit for the Annual
+   "SOFT Friends" video created in memory of Kari Holladay. Photos can be
+   submitted here:
 
-Please include names with the photos.
+        <a href="https://trisomy.org/kris-holladay-soft-video/" target="_blank" rel="noopener noreferrer">Submit to "SOFT Friends"</a>
 
-Thanks!
+3) Reserve your hotel room at the conference hotel:
+
+        Ann Arbor Marriott Ypsilanti at Eagle Creek
+        1275 South Huron St.
+        Ypsilanti, MI, 48197
+        Phone: 734-487-2000
+
+   The room rate is \$140 per night. Click here to book a room using the special SOFT rate:
+
+        <a target="_blank" rel="noopener noreferrer" href="https://www.marriott.com/meeting-event-hotels/group-corporate-travel/groupCorp.mi?resLinkData=Support%20Organization%20for%20Trisomy%5Edtwys%60sotsota%7Csotsotd%60140.00%60USD%60false%604%607/16/19%607/21/19%606/24/19&app=resvlink&stop_mobi=yes">Book Hotel Room</a>
+
+   Our rate code is "SOFT".
+
+4) Donate items for the auction. SOFT's Annual Auction will be held Saturday.
+   There will be both a silent and live auction. Your auction donation items
+   can be sent to:
+
+        Kayse Whitaker
+        619 William St.
+        Kalamazoo, MI 49007
+
+
+Thanks again!
+
+We'll see you at the Conference!
 
 
 ----------
@@ -398,16 +429,46 @@ summary of exactly what you signed up for.
 
 That's it, you're all set for the Conference!
 
-Oh, one last thing...
+Here are a few more suggestions to help you get ready for the conference...
 
-We would love to include photos of your family in the Conference Directory.
-Please email any photos that you would like to share with everyone to:
+1) Submit family and "SOFT" child photos. We invite you to share a family 
+   photo and a photo of your SOFT Child for the conference directory or
+   to be displayed during the conference. Submit photos to:
 
-     <a href="mailto:photos\@softconf.org">photos\@softconf.org</a>
+        <a href="mailto:trisomyawareness\@gmail.com">trisomyawareness\@gmail.com</a>
 
-Please include names with the photos.
+2) Submit your photos or short video for the Annual "SOFT Friends" Video.
+   Choose your favorite photo of your SOFT Child and submit for the Annual
+   "SOFT Friends" video created in memory of Kari Holladay. Photos can be
+   submitted here:
 
-Thanks!
+        <a href="https://trisomy.org/kris-holladay-soft-video/" target="_blank" rel="noopener noreferrer">Submit to "SOFT Friends"</a>
+
+3) Reserve your hotel room at the conference hotel:
+
+        Ann Arbor Marriott Ypsilanti at Eagle Creek
+        1275 South Huron St.
+        Ypsilanti, MI, 48197
+        Phone: 734-487-2000
+
+   The room rate is \$140 per night. Click here to book a room using the special SOFT rate:
+
+        <a target="_blank" rel="noopener noreferrer" href="https://www.marriott.com/meeting-event-hotels/group-corporate-travel/groupCorp.mi?resLinkData=Support%20Organization%20for%20Trisomy%5Edtwys%60sotsota%7Csotsotd%60140.00%60USD%60false%604%607/16/19%607/21/19%606/24/19&app=resvlink&stop_mobi=yes">Book Hotel Room</a>
+
+   Our rate code is "SOFT".
+
+4) Donate items for the auction. SOFT's Annual Auction will be held Saturday.
+   There will be both a silent and live auction. Your auction donation items
+   can be sent to:
+
+        Kayse Whitaker
+        619 William St.
+        Kalamazoo, MI 49007
+
+
+Thanks again!
+
+We'll see you at the Conference!
 
 
 ----------
@@ -431,7 +492,7 @@ Hello $contact{firstName},
 Thank you for registering for this year's SOFT conference!
 
 Below is a summary of exactly what you signed up for, along with an
-invoice for check payment. To finish your registration, please send
+invoice for your check payment. To finish your registration, please send
 a check for \$$contact{grandTotal} to:
 
     Support Organization for Trisomy
@@ -441,14 +502,46 @@ a check for \$$contact{grandTotal} to:
 Please include your invoice number with your check:  $contact{form_id}
 
 
-Also, we would love to include photos of your family in the Conference Directory.
-Please email any photos that you would like to share with everyone to:
+Here are a few more suggestions to help you get ready for the conference...
 
-     <a href="mailto:photos\@softconf.org">photos\@softconf.org</a>
+1) Submit family and "SOFT" child photos. We invite you to share a family 
+   photo and a photo of your SOFT Child for the conference directory or
+   to be displayed during the conference. Submit photos to:
 
-Please include names with the photos.
+        <a href="mailto:trisomyawareness\@gmail.com">trisomyawareness\@gmail.com</a>
 
-Thanks!
+2) Submit your photos or short video for the Annual "SOFT Friends" Video.
+   Choose your favorite photo of your SOFT Child and submit for the Annual
+   "SOFT Friends" video created in memory of Kari Holladay. Photos can be
+   submitted here:
+
+        <a href="https://trisomy.org/kris-holladay-soft-video/" target="_blank" rel="noopener noreferrer">Submit to "SOFT Friends"</a>
+
+3) Reserve your hotel room at the conference hotel:
+
+        Ann Arbor Marriott Ypsilanti at Eagle Creek
+        1275 South Huron St.
+        Ypsilanti, MI, 48197
+        Phone: 734-487-2000
+
+   The room rate is \$140 per night. Click here to book a room using the special SOFT rate:
+
+        <a target="_blank" rel="noopener noreferrer" href="https://www.marriott.com/meeting-event-hotels/group-corporate-travel/groupCorp.mi?resLinkData=Support%20Organization%20for%20Trisomy%5Edtwys%60sotsota%7Csotsotd%60140.00%60USD%60false%604%607/16/19%607/21/19%606/24/19&app=resvlink&stop_mobi=yes">Book Hotel Room</a>
+
+   Our rate code is "SOFT".
+
+4) Donate items for the auction. SOFT's Annual Auction will be held Saturday.
+   There will be both a silent and live auction. Your auction donation items
+   can be sent to:
+
+        Kayse Whitaker
+        619 William St.
+        Kalamazoo, MI 49007
+
+
+Thanks again!
+
+We'll see you at the Conference!
 
 
 ----------
@@ -466,9 +559,8 @@ Invoice #: $contact{form_id}
 
 
 
-    $message =~ s/\n\n+/\n\n/g;
+    $message =~ s/\n\n\n+/\n\n/g;
     $message =~ s/\n/<br>/g;
-    $message =~ s/ /&nbsp;/g;
 
     my $htmlEmail = qq~
     <!DOCTYPE html>
