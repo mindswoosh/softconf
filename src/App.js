@@ -3769,18 +3769,19 @@ const ThankYou = ({thisState, setUserData}) => {
   userData.formID =  userData.contactInfo.lastName.replace(/[^A-Za-z]/g, '').toUpperCase().substring(0,3) + (new Date().getTime())%1000000;
 
   // See documentation for fetch here: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
-  var proxyUrl  = 'https://cors-anywhere.herokuapp.com/',
-      // targetUrl = 'http://greatday.biz/cgi-bin/form.cgi';
-      targetUrl = 'http://softconf.org/cgi-bin/form.cgi';
+  let targetUrl = 'http://greatday.biz/cgi-bin/form.cgi';
+  // let targetUrl = 'http://softconf.org/cgi-bin/form.cgi';
+  // let proxyUrl  = 'https://cors-anywhere.herokuapp.com/' + targetUrl;
 
   if (!thisState.userDataSaved) {
-    fetch(proxyUrl + targetUrl, {
+    // fetch(proxyUrl + targetUrl, {
+    fetch(targetUrl, {
       method: 'POST',
-      mode: 'cors',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      //mode: 'no-cors',
+      // headers: {
+      //   'Accept': 'application/json',
+      //   'Content-Type': 'application/json',
+      // },
       body: JSON.stringify(userData),
     })
     .then(response => {

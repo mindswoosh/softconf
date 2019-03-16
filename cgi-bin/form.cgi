@@ -15,6 +15,23 @@ use MIME::Lite;
 my $json = JSON::PP->new->ascii->pretty->allow_nonref;
 
 my $q = CGI->new;
+
+warn("fetch made it here");
+
+
+# Handle CORS request.  Allow cross-origin
+if (defined($ENV{REQUEST_METHOD})  &&  $ENV{REQUEST_METHOD} eq "OPTIONS") {
+  warn("Made it to CORS request");
+  print "Access-Control-Allow-Origin: *\n";
+  print "Access-Control-Allow-Methods: GET,POST,OPTIONS\n";
+  # print "Access-Control-Allow-Headers: X-Requested-With\n";
+  print "Access-Control-Allow-Credentials: false\n";
+  print "Content-type: text/html\n\n";
+  exit;
+}
+
+warn("fetch made it past CORS test");
+
 my $hash;
 
 my $successful = 0;
@@ -614,10 +631,18 @@ Invoice #: $contact{form_id}
     message  => $successful ? "Contact inserted" : "Contact NOT inserted!",
   );
 
+warn("Returning data");
+  print "Access-Control-Allow-Origin: *\n";
+  print "Access-Control-Allow-Methods: GET,POST,OPTIONS\n";
+  print "Access-Control-Allow-Headers: X-Requested-With\n";
   print "Content-type: text/html\n\n";
   print $json->encode(\%msg);
 }
 else {
+  warn("NOT returning data");
+    print "Access-Control-Allow-Origin: *\n";
+    print "Access-Control-Allow-Methods: GET,POST,OPTIONS\n";
+    print "Access-Control-Allow-Headers: X-Requested-With\n";
     print "Content-type: text/html\n\n";
     print "No params...";
 }
