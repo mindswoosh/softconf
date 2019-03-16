@@ -16,21 +16,16 @@ my $json = JSON::PP->new->ascii->pretty->allow_nonref;
 
 my $q = CGI->new;
 
-warn("fetch made it here");
 
-
-# Handle CORS request.  Allow cross-origin
+#  Handle CORS request.  Allow cross-origin.
+#  Eventually, we want to get the front end and back end on the same server
 if (defined($ENV{REQUEST_METHOD})  &&  $ENV{REQUEST_METHOD} eq "OPTIONS") {
-  warn("Made it to CORS request");
   print "Access-Control-Allow-Origin: *\n";
   print "Access-Control-Allow-Methods: GET,POST,OPTIONS\n";
-  # print "Access-Control-Allow-Headers: X-Requested-With\n";
   print "Access-Control-Allow-Credentials: false\n";
   print "Content-type: text/html\n\n";
   exit;
 }
-
-warn("fetch made it past CORS test");
 
 my $hash;
 
@@ -50,6 +45,11 @@ if ($q->param)            #  fetches the names of the params as a list
   if (%post) {
 
     my %userData        = %{$json->decode($data)};
+    
+    if ($userData{formID} eq "") {        #  bot trying to post something. Bail
+      exit;
+    }
+
     my %contactInfo     = %{$userData{contactInfo}};
    
     #  Did they back up, edit their form, and resubmit before paying?
@@ -631,7 +631,6 @@ Invoice #: $contact{form_id}
     message  => $successful ? "Contact inserted" : "Contact NOT inserted!",
   );
 
-warn("Returning data");
   print "Access-Control-Allow-Origin: *\n";
   print "Access-Control-Allow-Methods: GET,POST,OPTIONS\n";
   print "Access-Control-Allow-Headers: X-Requested-With\n";
@@ -639,7 +638,6 @@ warn("Returning data");
   print $json->encode(\%msg);
 }
 else {
-  warn("NOT returning data");
     print "Access-Control-Allow-Origin: *\n";
     print "Access-Control-Allow-Methods: GET,POST,OPTIONS\n";
     print "Access-Control-Allow-Headers: X-Requested-With\n";
