@@ -2184,7 +2184,7 @@ class App extends Component {
 
   onPaymentSuccess(payment) {
     // Congratulation, it came here means everything's fine!
-    console.log("The payment was successful!", payment);
+    console.log("The payment was successful!");
     userData.paid = true;
     userData.payerID = payment.payerID;
     userData.paymentID = payment.paymentID;
