@@ -333,7 +333,7 @@ if ($q->param)            #  fetches the names of the params as a list
 
     my $from = '"SOFT Registration" <invoices@softconf.org>';
     my $to = "\"$contact{firstName} $contact{lastName}\" <$contact{email}>";
-    my $subject = 'SOFT Conference Invoice';
+    my $subject = "SOFT Conference Invoice for $contact{firstName} $contact{lastName}";
      
     # open(MAIL, "|/usr/sbin/sendmail -t");
      
@@ -513,7 +513,7 @@ invoice for your check payment. To finish your registration, please send
 a check for \$$contact{grandTotal} to:
 
     Support Organization for Trisomy
-    2982 Sound Union St.
+    2982 South Union St.
     Rochester, NY  14624
 
 Please include your invoice number with your check:  $contact{form_id}
@@ -599,7 +599,7 @@ Invoice #: $contact{form_id}
         From     => $from,
         To       => $to,
         Cc       => 'support@softconf.org',
-        Subject  => 'Thank you for Registering for the SOFT Conference',
+        Subject  => $subject,
         Type     => 'text/html',
         Encoding => 'quoted-printable',
         Data     => $htmlEmail

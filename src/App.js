@@ -3679,14 +3679,29 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
     userData.softDonation = softDonation;
     userData.fundDonation = fundDonation;
     userData.grandTotal = grandTotal;
+
+
+    //  Add donations to email invoice
     userData.invoice = output;
+
+    let donationTotal = Number(softDonation) + Number(fundDonation);
+
+    if (donationTotal > 0) {
+      userData.invoice += add_line(0, '\nDonations:\n');
+      if (softDonation)  userData.invoice += add_line(1, sprintf("%-30s$%8.2f", "SOFT Conference:", Number(softDonation)));
+      if (fundDonation)  userData.invoice += add_line(1, sprintf("%-30s$%8.2f", "General Fund:", Number(fundDonation)));
+      userData.invoice += '\n';
+      userData.invoice += add_line(1, sprintf("%30s$%8.2f", "Sub-total:  ", donationTotal));
+      userData.invoice += '\n';
+      userData.invoice += add_line(1, sprintf("%30s$%8.2f", "Grand Total:  ", conferenceTotal + donationTotal));
+      userData.invoice += '\n';
+    }
 
     let html = output;
     html = html.replace(/^( +)([^:]+?)(\s+\$\s+)([\d.-]+)/mg,'<span class="indent"></span><span class="cost-descr">$2</span>&#36;<span class="cost">$4</span>');     //  In first capture, don't use \s -- it sucks up '\n's
     html = html.replace(/^( +)(.+?)(\s+\$\s+)([\d.-]+)/mg,'<span class="indent"></span><div class="cost-descr-right">$2</div>&#36;<span class="cost">$4</span>');    //  In first capture, don't use \s -- it sucks up '\n's
     html = html.replace(/\n/g, "<br>");
 
-    
 
 
     //  Finally, display everything...
@@ -3813,7 +3828,7 @@ const ThankYou = ({thisState, setUserData}) => {
             <p>To finish your registration, send your check for ${Number(userData.grandTotal)} to:</p>
             <div className="indent">
               Support Organization for Trisomy<br />
-              2982 Sound Union St.<br />
+              2982 South Union St.<br />
               Rochester, NY  14624<br />
               <br />
               Please include your invoice number with the check:<br />
