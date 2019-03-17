@@ -3770,7 +3770,7 @@ const ThankYou = ({thisState, setUserData}) => {
 
   // See documentation for fetch here: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
   // let targetUrl = 'http://greatday.biz/cgi-bin/form.cgi';
-  let targetUrl = 'http://softconf.org/cgi-bin/form.cgi';
+  let targetUrl = 'https://softconf.org/cgi-bin/form.cgi';
   // let proxyUrl  = 'https://cors-anywhere.herokuapp.com/' + targetUrl;
 
   if (!thisState.userDataSaved) {
