@@ -24,6 +24,7 @@ import {RadioGroup, Radio} from 'react-radio-group';
 import ReactHtmlParser from 'react-html-parser';
 import PaypalExpressBtn from 'react-paypal-express-checkout';
 import Textarea from 'react-textarea-autosize';
+import logo from './softlogo.png';                      //  Must be in directory as the App.js that uses it
 import './App.css';
 
 // import FloatingLabelInput from 'react-floating-label-input';
@@ -2259,8 +2260,8 @@ const SortableList = SortableContainer(({items, i}) => {
 const SoftHeader = ({eventInfo}) =>
   <div className="logo-header">
     <div>
-      <img 
-        src="https://trisomy.wpengine.com/wp-content/uploads/2017/07/softlogo.png"
+      <img
+        src={logo}
         height="75px"
         alt="Soft Logo"
       />
