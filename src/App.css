@@ -599,4 +599,8 @@ code {
     padding-left: 5px;
   }
 
+  .pagebar {
+    display: none;
+  }
+
 }

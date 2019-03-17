@@ -11,11 +11,16 @@
 
 
 //  Update Notes:
-//  For event handlers, if we always pass the value and not the event|opt|whatever, then
-//  a lot of the existing handlers could be cut to a much smaller number since they
-//  would all simply take values and ids, and sometimes property names.
+//  * For event handlers, if we always pass the value and not the event|opt|whatever, then
+//    a lot of the existing handlers could be cut to a much smaller number since they
+//    would all simply take values and ids, and sometimes property names.
 //
-//  Use optFromOptions() instead of "find"ing on the fly
+//  * Use optFromOptions() instead of "find"ing it hardcoded each time on the fly
+//  * Add flag whether workshops get dinner or not
+//  * Put check address in eventInfo
+//  * Or, put entire Thank You page and outgoing emails in eventInfo
+//  * If they enter the same shirt size a second time, confirm()
+//  * Add history to browser's back button
 
 
 import React, { Component } from 'react';
@@ -3177,7 +3182,7 @@ const Summary = ({thisState}) => {
 
   //  If 'balloon'-only, then we're done summarizing
 
-  if (userData.attendance !== 'balloon') {
+  if (userData.attendance !== 'balloon') {        //  if (full|workshops|picnic)
 
     output += add_line(0, '\nAttendees:');
     output += '\n';
@@ -3195,8 +3200,10 @@ const Summary = ({thisState}) => {
             output += add_line(2, "Attending younger-sibling outing");
             output += add_line(2, "Shirt size: " + attendee.sibShirtSize);
           }
-          else
-            output += add_line(2, 'Attending Sibling outing: No');  
+          else {
+            if (userData.attendance === 'full')
+              output += add_line(2, 'Attending Sibling outing:  No');
+          }
         }
         else if (attendee.peopleType === peopleTypes.TEEN) {
           output += add_line(2, 'Teen, age: ' + attendee.age);
@@ -3204,8 +3211,10 @@ const Summary = ({thisState}) => {
             output += add_line(2, "Attending older-sibling outing");
             output += add_line(2, "Shirt size: " + attendee.sibShirtSize);
           }
-          else
-            output += add_line(2, 'Attending Sibling outing: No');           
+          else {
+            if (userData.attendance === 'full')
+              output += add_line(2, 'Attending Sibling outing:  No');
+          }          
         }
         else if (attendee.peopleType === peopleTypes.SOFTCHILD) {
           output += add_line(2, attendee.peopleType);
@@ -3216,7 +3225,10 @@ const Summary = ({thisState}) => {
         else {
           output += add_line(2, attendee.peopleType);         //  Adult and Professional
         }
-        output += add_line(2, 'Welcome dinner meal: ' + (attendee.welcomeDinner !== '' ? attendee.welcomeDinner : 'N/A'));
+
+        if (userData.attendance === 'full') {
+          output += add_line(2, 'Welcome dinner meal: ' + (attendee.welcomeDinner !== '' ? attendee.welcomeDinner : 'N/A'));
+        }
         output += '\n';
       }
     }
