@@ -581,6 +581,10 @@ code {
 }
 
 @media screen and (max-width: 500px) {
+
+  body, p {
+    font-size: 14px;
+  }
   .row-num {
     display: block;
     margin-top: 25px;

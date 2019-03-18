@@ -21,6 +21,7 @@
 //  * Or, put entire Thank You page and outgoing emails in eventInfo
 //  * If they enter the same shirt size a second time, confirm()
 //  * Add history to browser's back button
+//  * Redirect http: and non-www. version to https://www....
 
 
 import React, { Component } from 'react';
@@ -57,7 +58,7 @@ library.add(faRibbon);
 
 var sprintf = require('sprintf-js').sprintf;
 
-const DEBUG = false;  //  Set to false for production
+const DEBUG = true;  //  Set to false for production
 
 const JSONversion = '1.0';
 
@@ -101,8 +102,9 @@ const optionsCountries = countries.map(opt => ({ label: opt, value: opt }));
 
 const eventInfoDefault = {
 
-  eventTitle: '2019 Conference Registration',
-  brochureURL: 'https://trisomy.org/conference-brochure-ann-arbor-2019/',
+  conferenceID:         'JUL2019',
+  eventTitle:           '2019 Conference Registration',
+  brochureURL:          'https://trisomy.org/conference-brochure-ann-arbor-2019/',
 
   costAdult:            145,         // One free registration for board members
   costChild:             95,         // Children under 2 are free
@@ -294,7 +296,7 @@ const eventInfoDefault = {
     {
       id: 'cc2',
       title: "Thursday 8am-2pm",
-      pre5Only: true,
+      pre5Only: false,
       boardOnly: false,
     },
     {
@@ -319,6 +321,7 @@ const eventInfoDefault = {
     ],
   kidsMenu: [
       'Chicken Tenders',
+      'No Meal Needed',
     ],
 
   chapterChairBlurb: "The Chapter Chair Luncheon will be held on Thursday July 18th from 12:25–1:25. Please indicate below which adults in your party will attend.",
@@ -523,6 +526,7 @@ const Diagnoses = [
   "Trisomy 13 Mosaic",
   "Trisomy 18 Mosaic",
   "Partial Trisomy 13",
+  "Partial Trisomy 18",
   otherDiagnosisTitle,
 ];
 
@@ -551,18 +555,18 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     childCareSessions: {},          //  { ccID1: bool, ccID2: bool, ccID3:bool, ... }
 
     // Child
-    age:         age,
-    sibOuting:   false,
+    age:            age,
+    sibOuting:      false,
     sibShirtSize:   '',
 
     // SOFT Child / Angel
-    dateOfBirth: null,              //  Unspecified dates must be null or we crash (This is a Date object)
-    birthDate: '',                  //  Textual version
-    dateOfDeath: null,              //  SOFT angels only
-    deathDate: '',
-    diagnosis:   '',
+    dateOfBirth:    null,           //  Unspecified dates must be null or we crash (This is a Date object)
+    birthDate:      '',             //  Textual version
+    dateOfDeath:    null,           //  SOFT angels only
+    deathDate:      '',
+    diagnosis:      '',
     otherDiagnosis: '',
-    eatsMeals:   false,
+    eatsMeals:      false,
 
     // Picnic
     picnicTrans:    false,                //  Needs transportation to the picnic?
@@ -632,6 +636,7 @@ class App extends Component {
       attendance:       'full',     //  "full", "workshops" (only), picnic" (only), "balloon" celebration - not attending 
       reception:        false,
       sundayBreakfast:  false,
+      softMember:       false,
       boardMember:      false,
       chapterChair:     false,
       joeyWatson:       false,
@@ -2762,7 +2767,7 @@ const Clinics = ({attendees, clinics, attendingClinics, needsClinicsTrans, clini
             </div>
           }
           <p className="v-indent">Rearrange the names of the clinics below from Most Interested to Least Interested by simultaneously clicking and dragging on the <span className="thumb-color"><FontAwesomeIcon icon="bars" /></span> character and moving
-          the name of the clinic up or down.</p>
+          the name of the clinic up or down. <i>(If you're planning to attend only one or two clinics, please mention that in the Notes section later in the form.)</i></p>
           <p>Move <strong>MOST Interested</strong> Clinic to the top, and the <strong>LEAST Interested</strong> Clinic to the bottom:</p>
           <SortableList items={clinics} onSortEnd={onSortEnd} />
         </div>
@@ -3071,6 +3076,7 @@ const Summary = ({thisState}) => {
 
   userData = {
     version:              JSONversion,
+    conferenceID:         thisState.eventInfo.conferenceID,
     formID:               thisState.formID,
     contactInfo:          thisState.contactInfo,
     attendees:            thisState.attendees,
@@ -3081,6 +3087,7 @@ const Summary = ({thisState}) => {
     attendance:           thisState.attendance,
     reception:            thisState.reception,
     sundayBreakfast:      thisState.sundayBreakfast,
+    softMember:           thisState.softMember,
     boardMember:          thisState.boardMember,
     chapterChair:         thisState.chapterChair,
     joeyWatson:           thisState.joeyWatson,
@@ -3126,7 +3133,7 @@ const Summary = ({thisState}) => {
 
   if (userData.attendance === 'full') {
     output += add_line(0, sprintf("%-32s%s", 'Attending Wednesday reception: ', boolToYN(userData.reception))); 
-    output += add_line(0, sprintf("%-32s%s", 'Attending Sunday brunch: ', boolToYN(userData.sundayBreakfast)));
+    output += add_line(0, sprintf("%-32s%s", 'Attending Sunday breakfast: ', boolToYN(userData.sundayBreakfast)));
     output += '\n';
 
     output += add_line(0, sprintf("%-19s%s", 'Board member:', boolToYN(userData.boardMember)));
@@ -3191,42 +3198,56 @@ const Summary = ({thisState}) => {
     }
     else {
       for (var attendee of userData.attendees) {
+
         output += add_line(1, attendee.firstName + ' ' + attendee.lastName);
 
-        if (attendee.peopleType === peopleTypes.CHILD) {
-          output += add_line(2, 'Child, age: ' + attendee.age);
-          if (attendee.sibOuting) {
-            if (attendee.age < 5) console.log('Attendee too young for a sibling outing');
-            output += add_line(2, "Attending younger-sibling outing");
-            output += add_line(2, "Shirt size: " + attendee.sibShirtSize);
-          }
-          else {
-            if (userData.attendance === 'full')
-              output += add_line(2, 'Attending Sibling outing:  No');
-          }
-        }
-        else if (attendee.peopleType === peopleTypes.TEEN) {
-          output += add_line(2, 'Teen, age: ' + attendee.age);
-          if (attendee.sibOuting) {
-            output += add_line(2, "Attending older-sibling outing");
-            output += add_line(2, "Shirt size: " + attendee.sibShirtSize);
-          }
-          else {
-            if (userData.attendance === 'full')
-              output += add_line(2, 'Attending Sibling outing:  No');
-          }          
-        }
-        else if (attendee.peopleType === peopleTypes.SOFTCHILD) {
-          output += add_line(2, attendee.peopleType);
-          output += add_line(2, 'Date of birth: ' + attendee.birthDate);
-          output += add_line(2, 'Diagnosis: ' + (attendee.diagnosis === otherDiagnosisTitle ? attendee.otherDiagnosis : attendee.diagnosis));
-          output += add_line(2, 'Eats meals: ' + boolToYN(attendee.eatsMeals));
-        }
-        else {
-          output += add_line(2, attendee.peopleType);         //  Adult and Professional
+        switch (attendee.peopleType) {
+
+          case peopleTypes.CHILD: 
+
+            output += add_line(2, 'Child, age: ' + attendee.age);
+
+            if (attendee.sibOuting) {
+              if (attendee.age < 5) console.log('Attendee too young for a sibling outing');
+              output += add_line(2, "Attending younger-sibling outing");
+              output += add_line(2, "Shirt size: " + attendee.sibShirtSize);
+            }
+            else {
+              if (userData.attendance === 'full')
+                output += add_line(2, 'Attending Sibling outing:  No');
+            }
+            break;
+
+
+          case peopleTypes.TEEN:
+
+            output += add_line(2, 'Teen, age: ' + attendee.age);
+
+            if (attendee.sibOuting) {
+              output += add_line(2, "Attending older-sibling outing");
+              output += add_line(2, "Shirt size: " + attendee.sibShirtSize);
+            }
+            else if (userData.attendance === 'full') {
+                output += add_line(2, 'Attending Sibling outing:  No');
+            }
+            break;     
+
+
+          case peopleTypes.SOFTCHILD:
+
+            output += add_line(2, attendee.peopleType);
+            output += add_line(2, 'Date of birth: ' + attendee.birthDate);
+            output += add_line(2, 'Diagnosis: ' + (attendee.diagnosis === otherDiagnosisTitle ? attendee.otherDiagnosis : attendee.diagnosis));
+            output += add_line(2, 'Eats meals: ' + boolToYN(attendee.eatsMeals));
+            break;
+
+
+          default:
+            output += add_line(2, attendee.peopleType);         //  Adult and Professional
+            break;
         }
 
-        if (userData.attendance === 'full') {
+        if (userData.attendance === 'full'  &&  (attendee.peopleType !== peopleTypes.SOFTCHILD  ||  attendee.eatsMeals)) {
           output += add_line(2, 'Welcome dinner meal: ' + (attendee.welcomeDinner !== '' ? attendee.welcomeDinner : 'N/A'));
         }
         output += '\n';
@@ -3375,19 +3396,28 @@ const Summary = ({thisState}) => {
                 if (userData.softAngels.length !== 0) {
                   output += add_line(0, '\nAttending Remembrance Outing:');
                   output += '\n';
-                  output += add_line(1, 'Needs transportation: ' + boolToYN(userData.needsRembTrans));
-                  output += add_line(1, 'People Attending:');
-                  output += '\n';
 
-                  userData.numRembTrans = 0;
+                  let numAttending = userData.attendees.filter(a => (a.peopleType === peopleTypes.ADULT  ||  a.peopleType === peopleTypes.PROFESSIONAL)  &&  a.rembOuting);
 
-                  for (let attendee of userData.attendees) {
-                    if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL) {
-                      output += add_line(1, sprintf("%-28s%-4s%s",attendee.firstName + ' ' + attendee.lastName + ": ", boolToYN(attendee.rembOuting), (attendee.rembOuting ? ' - meal: ' + attendee.rembLunch : '')));
-                      if (attendee.rembOuting) {
-                        userData.numRembTrans++;
+                  if (numAttending.length) {
+                    output += add_line(1, sprintf("%-28s%s", 'Needs transportation: ', boolToYN(userData.needsRembTrans)));
+                    output += '\n';
+                    output += add_line(1, 'People Attending:');
+                    output += '\n';
+
+                    userData.numRembTrans = 0;
+
+                    for (let attendee of userData.attendees) {
+                      if (attendee.peopleType === peopleTypes.ADULT  ||  attendee.peopleType === peopleTypes.PROFESSIONAL) {
+                        output += add_line(1, sprintf("%-28s%-4s%s",attendee.firstName + ' ' + attendee.lastName + ": ", boolToYN(attendee.rembOuting), (attendee.rembOuting ? ' - meal: ' + attendee.rembLunch : '')));
+                        if (attendee.rembOuting) {
+                          userData.numRembTrans++;
+                        }
                       }
                     }
+                  }
+                  else {
+                    output += add_line(1, 'No one is attending');
                   }
                   output += '\n';
                 }

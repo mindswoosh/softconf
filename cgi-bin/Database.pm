@@ -157,6 +157,7 @@ our @contact_cols = qw(
     photoWaiver
     reception
     sundayBreakfast
+    softMember
     boardMember
     chapterChair
     joeyWatson

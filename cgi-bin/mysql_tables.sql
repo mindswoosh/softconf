@@ -33,7 +33,6 @@ CREATE TABLE posts
 
 
 
-
 DROP TABLE IF EXISTS contacts;
 CREATE TABLE contacts
 (
@@ -61,6 +60,7 @@ CREATE TABLE contacts
     photoWaiver         TINYINT DEFAULT FALSE,
     reception           TINYINT DEFAULT FALSE,
     sundayBreakfast     TINYINT DEFAULT FALSE,
+    softMember          TINYINT DEFAULT FALSE,
     boardMember         TINYINT DEFAULT FALSE,
     chapterChair        TINYINT DEFAULT FALSE,
     joeyWatson          TINYINT DEFAULT FALSE,

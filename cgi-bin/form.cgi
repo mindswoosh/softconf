@@ -33,23 +33,24 @@ my $successful = 0;
 
 if ($q->param)            #  fetches the names of the params as a list
 {
-  my $data = $q->param('POSTDATA');
+  my $jsonData = $q->param('POSTDATA');
+  my %userData = %{$json->decode($jsonData)};
+
+  if ($userData{formID} eq "") {        #  bot trying to post something. Bail
+    exit;
+  }
+
 
   my %post = (
-    conference_id => $CONFERENCE_ID,
-    json => $data
+    conference_id => $userData{conferenceID},
+    json => $jsonData
   );
-
+  
   %post = InsertPost(%post);
 
+
   if (%post) {
-
-    my %userData        = %{$json->decode($data)};
-    
-    if ($userData{formID} eq "") {        #  bot trying to post something. Bail
-      exit;
-    }
-
+  
     my %contactInfo     = %{$userData{contactInfo}};
    
     #  Did they back up, edit their form, and resubmit before paying?
@@ -68,7 +69,7 @@ if ($q->param)            #  fetches the names of the params as a list
     my %directory       = %{$userData{directory}};
 
     %contact = (
-      conference_id     => $CONFERENCE_ID,
+      conference_id     => $userData{conferenceID},
       post_id           => $post{id},
       form_id           => $userData{formID},
 
@@ -90,6 +91,7 @@ if ($q->param)            #  fetches the names of the params as a list
       photoWaiver       => $userData{photoWaiver},
       reception         => $userData{reception},
       sundayBreakfast   => $userData{sundayBreakfast},
+      softMember        => $userData{softMember},
       boardMember       => $userData{boardMember},
       chapterChair      => $userData{chapterChair},
       joeyWatson        => $userData{joeyWatson},
