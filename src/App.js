@@ -58,7 +58,7 @@ library.add(faRibbon);
 
 var sprintf = require('sprintf-js').sprintf;
 
-const DEBUG = true;  //  Set to false for production
+const DEBUG = false;  //  Set to false for production
 
 const JSONversion = '1.0';
 
