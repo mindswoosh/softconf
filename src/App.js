@@ -3879,7 +3879,7 @@ const ThankYou = ({thisState, setUserData}) => {
     <div>
       <h2>Thank You!</h2>
       <p>Thank you for registering for the Conference. You should be receiving an email message with a summary
-         page and invoice. If you don't see the email, please check your Junk or Spam folder.
+         page and invoice. If you don't see the email, please check your <b>Junk</b> or <b>Spam</b> folder.
       </p>
       {(!userData.paid  &&  Number(userData.grandTotal) > 0)  &&
           <div>
@@ -3894,31 +3894,43 @@ const ThankYou = ({thisState, setUserData}) => {
             </div>
           </div>
       }
-      <p>Here are a few more suggestions to help you get ready for the conference...</p>
-      <p className="v-indent">1) <b>Submit family and “SOFT” child photos.</b> We invite you to share a family photo and a photo of your SOFT Child for the conference directory or to be displayed during the conference.
-Submit photos to:</p>
+      <p className="v-indent">Here are a few more suggestions to help you get ready for the conference...</p>
+      {!userData.softMember  &&
+        <div>
+          <p>&#9679; <b>Please consider becoming a SOFT member.</b> Registration is free. For more information, click on this link:</p>
+          <div className="indent">
+            <a target="_blank" rel="noopener noreferrer" href="https://trisomy.org/soft-membership-information/">Become a Member of SOFT</a>
+          </div>
+        </div>
+      }
+      <p className="v-indent">&#9679; <b>Submit family and “SOFT” child photos.</b> We invite you to share a family photo and a photo of your SOFT Child for the conference directory or to be displayed during the conference.
+Submit photos by July 1st to:</p>
       <div className="indent">
         <a href="mailto:trisomyawareness@gmail.com">trisomyawareness@gmail.com</a>
       </div>
       <br />
-      <p>2) <b>Submit your photos or short video for the Annual “SOFT Friends” Video.</b> Choose your favorite photo of your SOFT Child and submit for the Annual “SOFT Friends” video created in memory of Kari Holladay. Photos can be submitted here:</p>
+      <p>&#9679; <b>Submit your photos or short video for the Annual “SOFT Friends” Video.</b> Choose your favorite photo of your SOFT Child and submit for the Annual “SOFT Friends” video created in memory of Kari Holladay. Photos can be submitted up to June 1st here:</p>
       <div className="indent">
         <a href="https://trisomy.org/kris-holladay-soft-video/" target="_blank" rel="noopener noreferrer">Submit to "SOFT Friends"</a>
       </div>      
       <br />
-      <p>3) <b>Reserve your hotel room at the conference hotel:</b></p>
-      <div className="indent">
-        Ann Arbor Marriott Ypsilanti at Eagle Creek<br />
-        1275 South Huron St.<br />
-        Ypsilanti, MI, 48197<br />
-        Phone:  734-487-2000
-      </div>
-      <p>The room rate is $140 per night.  Click here to book a room using the special SOFT rate:</p>
-      <div className="indent">
-        <a target="_blank" rel="noopener noreferrer" href="https://www.marriott.com/meeting-event-hotels/group-corporate-travel/groupCorp.mi?resLinkData=Support%20Organization%20for%20Trisomy%5Edtwys%60sotsota%7Csotsotd%60140.00%60USD%60false%604%607/16/19%607/21/19%606/24/19&app=resvlink&stop_mobi=yes">Book Hotel Room</a>
-      </div>
-      <p>Our rate code is “SOFT”.</p>
-      <p className="v-indent-twice">4) <b>Donate items for the auction.</b> SOFT’s Annual Auction will be held Saturday. There will be both a silent and live auction. Your auction donation items can be sent to:</p>
+      {(userData.attendance === 'full'  ||  userData.attendance === 'workshops')  &&
+        <div>
+          <p>&#9679; <b>Reserve your hotel room at the conference hotel:</b></p>
+          <div className="indent">
+            Ann Arbor Marriott Ypsilanti at Eagle Creek<br />
+            1275 South Huron St.<br />
+            Ypsilanti, MI, 48197<br />
+            Phone:  734-487-2000
+          </div>
+          <p>The room rate is $140 per night.  Click here to book a room using the special SOFT rate:</p>
+          <div className="indent">
+            <a target="_blank" rel="noopener noreferrer" href="https://www.marriott.com/meeting-event-hotels/group-corporate-travel/groupCorp.mi?resLinkData=Support%20Organization%20for%20Trisomy%5Edtwys%60sotsota%7Csotsotd%60140.00%60USD%60false%604%607/16/19%607/21/19%606/24/19&app=resvlink&stop_mobi=yes">Book Hotel Room</a>
+          </div>
+          <p>Our rate code is “SOFT”.</p>
+        </div>
+      }
+      <p className="v-indent-twice">&#9679; <b>Donate items for the auction.</b> SOFT’s Annual Auction will be held Saturday. There will be both a silent and live auction. Your auction donation items can be sent to:</p>
       <div className="indent">
         Kayse Whitaker<br />
         619 William St.<br />
@@ -3926,7 +3938,6 @@ Submit photos to:</p>
       </div>
       <br />
       <p className="v-indent">Thanks again!</p>
-      <p className="v-indent">We'll see you at the Conference!</p>
       <div className="footer-balloons"></div>
       {!thisState.userDataSaved &&
         <Loading />
