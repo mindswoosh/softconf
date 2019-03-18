@@ -811,6 +811,7 @@ class App extends Component {
                     attendance={this.state.attendance}
                     reception={this.state.reception}
                     sundayBreakfast={this.state.sundayBreakfast}
+                    softMember={this.state.softMember}
                     boardMember={this.state.boardMember}
                     chapterChair={this.state.chapterChair}
                     joeyWatson={this.state.joeyWatson}
@@ -2375,7 +2376,7 @@ const Welcome = ({brochureURL}) =>
 
 
 
-const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMember, chapterChair, joeyWatson, joeyWatsonCode, onChangeField}) =>
+const Basics = ({attendance, reception, photoWaiver, softMember, sundayBreakfast, boardMember, chapterChair, joeyWatson, joeyWatsonCode, onChangeField}) =>
   <div>
     <h2>Getting Started</h2>
     <p>In the next few pages, you'll be asked a series of questions so that we can tailor this year's
@@ -2384,16 +2385,28 @@ const Basics = ({attendance, reception, photoWaiver, sundayBreakfast, boardMembe
        answer the following questions:
     </p>
     <div className="indent">
-      How much, if any, of the Conference are you planning to attend?
-
-      <div className="v-indent indent">
-        <RadioGroup name="attendance" selectedValue={attendance} onChange={(val) => onChangeField("attendance", val)}>
-          <Radio value="full" /> Full Conference<br />
-          <Radio value="workshops" /> Only attending the workshops (for Professionals)<br />
-          <Radio value="picnic" /> Only attending the picnic<br />
-          <Radio value="balloon" /> Requesting a Balloon (not attending the Conference)
-        </RadioGroup>
+      <div className="v-indent">
+        Are you a SOFT member?
+        <div className="inline">
+          <RadioGroup name="softMember" selectedValue={softMember} onChange={(val) => onChangeField("softMember", val)}>
+            <span className="radio-yes"><Radio value={true} /> Yes</span>
+            <Radio value={false} /> No
+          </RadioGroup>
+        </div>
       </div>
+
+      <div className="v-indent">
+        How much, if any, of the Conference are you planning to attend?
+        <div className="v-indent indent">
+          <RadioGroup name="attendance" selectedValue={attendance} onChange={(val) => onChangeField("attendance", val)}>
+            <Radio value="full" /> Full Conference<br />
+            <Radio value="workshops" /> Only attending the workshops (for Professionals)<br />
+            <Radio value="picnic" /> Only attending the picnic<br />
+            <Radio value="balloon" /> Requesting a Balloon (not attending the Conference)
+          </RadioGroup>
+        </div>
+      </div>
+
       {attendance !== 'balloon' &&
         <div>
           <div className="v-indent">
@@ -3129,6 +3142,7 @@ const Summary = ({thisState}) => {
   output += '\n';
 
 
+
   //  General questions
 
   if (userData.attendance === 'full') {
@@ -3142,8 +3156,10 @@ const Summary = ({thisState}) => {
     if (userData.joeyWatson) {
       output += add_line(0, sprintf("%-19s%s",'Joey Watson Code: ', userData.joeyWatsonCode));
     }
-    output += '\n';
   }
+
+  output += add_line(0, sprintf("%-19s%s", 'SOFT member:', boolToYN(userData.softMember)));
+  output += '\n';
 
 
   output += add_line(0, '\nContact Information:');
