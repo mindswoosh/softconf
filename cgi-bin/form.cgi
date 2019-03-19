@@ -411,6 +411,14 @@ $hotel_info
         619 William St.
         Kalamazoo, MI 49007
 
+* Set up your fund-raising page for the Stroll for Hope.
+
+        <a href="http://www.firstgiving.com/softstrollforhope/2019-SOFT-Stroll-for-Hope" target="_blank" rel="noopener noreferrer">Stroll for Hope"</a>
+
+* Consider sponsoring an event/item for the conference:
+
+        <a href="https://trisomy.org/conference-wish-list-2019-ann-arbor-2/" target="_blank" rel="noopener noreferrer">Sponsor an Event/Item"</a>
+
 
 Thanks again!
 
@@ -461,6 +469,14 @@ $hotel_info
         Kayse Whitaker
         619 William St.
         Kalamazoo, MI 49007
+
+* Set up your fund-raising page for the Stroll for Hope.
+
+        <a href="http://www.firstgiving.com/softstrollforhope/2019-SOFT-Stroll-for-Hope" target="_blank" rel="noopener noreferrer">Stroll for Hope"</a>
+
+* Consider sponsoring an event/item for the conference:
+
+        <a href="https://trisomy.org/conference-wish-list-2019-ann-arbor-2/" target="_blank" rel="noopener noreferrer">Sponsor an Event/Item"</a>
 
 
 Thanks again!
@@ -519,6 +535,14 @@ $hotel_info
         Kayse Whitaker
         619 William St.
         Kalamazoo, MI 49007
+
+* Set up your fund-raising page for the Stroll for Hope.
+
+        <a href="http://www.firstgiving.com/softstrollforhope/2019-SOFT-Stroll-for-Hope" target="_blank" rel="noopener noreferrer">Stroll for Hope"</a>
+
+* Consider sponsoring an event/item for the conference:
+
+        <a href="https://trisomy.org/conference-wish-list-2019-ann-arbor-2/" target="_blank" rel="noopener noreferrer">Sponsor an Event/Item"</a>
 
 
 Thanks again!

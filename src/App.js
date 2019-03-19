@@ -373,7 +373,7 @@ const eventInfoDefault = {
   ],
 
   directoryBlurb: "Each year we create a Conference Family directory. By including your contact information in the directory, families will be able keep in touch with each other after the Conference. By default, we include your phone number, email address, and the city that you live in (the street address is NOT included).",
-  specialNeedsBlurb: "Are there any special needs that you need to tell us about in planning the Conference? For instance, are there any allergies, unique dietary needs, or transportation issues that haven't already been covered in the registration that we would need to be aware of on our end?",
+  specialNeedsBlurb: "Are there any special needs that you need to tell us about in planning the Conference? For instance, are there any allergies, unique dietary needs, or transportation issues for conference events such as tie down's for attendees other than SOFT children that haven't already been covered in the registration that we would need to be aware of on our end? (Note: SOFT does not provide transportation between airport and hotel.)",
 };
 
 
@@ -3935,6 +3935,14 @@ Submit photos by July 1st to:</p>
         Kayse Whitaker<br />
         619 William St.<br />
         Kalamazoo, MI 49007
+      </div>
+      <p className="v-indent-twice">&#9679; <b>Set up your fund-raising page for the Stroll for Hope:</b></p>
+      <div className="indent">
+        <a href="http://www.firstgiving.com/softstrollforhope/2019-SOFT-Stroll-for-Hope" target="_blank" rel="noopener noreferrer">Stroll for Hope</a>
+      </div>
+      <p className="v-indent-twice">&#9679; <b>Consider sponsoring an event/item for the conference:</b></p>
+      <div className="indent">
+        <a href="https://trisomy.org/conference-wish-list-2019-ann-arbor-2/" target="_blank" rel="noopener noreferrer">Sponsor an Event/Item</a>
       </div>
       <br />
       <p className="v-indent">Thanks again!</p>
