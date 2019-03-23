@@ -1434,6 +1434,21 @@ class App extends Component {
               alert('It looks like you have entered an invalid Joey Watson Code. Please double-check your attendee information, or use the "<<BACK" button at the bottom of the page to go back and correct or remove the Joey Watson code.');
             }
             else {
+              let attendingClinics  = this.state.attendingClinics;
+              let needsClinicsTrans = this.state.needsClinicsTrans;
+              let numClinicMeals    = this.state.numClinicMeals;
+              let clinicBusSeats    = this.state.clinicBusSeats;
+              let clinicTieDowns    = this.state.clinicTieDowns;
+
+              let anySoftChildren = attendees.find(a =>  a.peopleType === peopleTypes.SOFTCHILD);
+              if (!anySoftChildren) {
+                attendingClinics  = false;
+                needsClinicsTrans = false;
+                clinicBusSeats    = '';
+                clinicTieDowns    = '';
+                numClinicMeals    = '';
+              }
+
               pageHistory.push(currentPage);
 
               let newPage = pages.DINNER;
@@ -1446,6 +1461,11 @@ class App extends Component {
               }
 
               this.setState({
+                attendingClinics,
+                needsClinicsTrans,
+                clinicBusSeats,
+                clinicTieDowns,
+                numClinicMeals,
                 attendees,
                 pageHistory,
                 currentPage: newPage,     //  Can't call newPage(pages.DINNER) because attendees isn't in state yet
