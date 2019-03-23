@@ -1045,7 +1045,7 @@ class App extends Component {
     let { attendees } = this.state;
 
     for (let i = currentSib+1; i < attendees.length; i++) {
-      if (attendees[i].peopleType === peopleTypes.CHILD) {
+      if (attendees[i].peopleType === peopleTypes.CHILD  ||  attendees[i].peopleType === peopleTypes.SOFTCHILD) {
         return i;
       }
     }
