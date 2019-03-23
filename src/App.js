@@ -228,7 +228,7 @@ const eventInfoDefault = {
         ]
       },
       {
-        id: 5,
+        id: 4,
         name:   "Session 4: 1:40pm-3:25pm",
         workshops: [
           {
@@ -2368,6 +2368,7 @@ const Welcome = ({brochureURL}) =>
     <div className="welcome-button-pos">
       <a className="welcome-button" href={brochureURL} target="_blank">View Online Brochure</a>
     </div>
+    <p>If you need any help filling out the form, send an email to <b>help@softconf.org</b>.</p>
     <p>To get started, click on the NEXT button.</p>
   </div>
 
