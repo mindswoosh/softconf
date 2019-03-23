@@ -2379,7 +2379,7 @@ const Welcome = ({brochureURL}) =>
 const Basics = ({attendance, reception, photoWaiver, softMember, sundayBreakfast, boardMember, chapterChair, joeyWatson, joeyWatsonCode, onChangeField}) =>
   <div>
     <h2>Getting Started</h2>
-    <p>In the next few pages, you'll be asked a series of questions so that we can tailor this year's
+    <p>In the next few pages you'll be asked a series of questions so that we can tailor this year's
        SOFT Conference specifically for you and your family. If you're only requesting a balloon
        in memory of a SOFT Angel, you will only be asked about that. To get started, please 
        answer the following questions:
