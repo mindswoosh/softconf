@@ -2376,7 +2376,7 @@ const PageBar = ({pageNum}) =>
 
 const Welcome = ({brochureURL}) =>
   <div className="welcome">
-    <h2>Welcome!</h2>
+    <h2>Welcome</h2>
     <p>Welcome to the SOFT Conference Registration form!</p>
     <p>The 2019 SOFT Conference is going to be held on July 17-21, 2019 in Ann Arbor Michigan at the Marriott Ypsilanti at Eagle Creek, 1275 South Huron St., Ypsilanti, MI, 48197.
     </p>
@@ -3804,7 +3804,7 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
     let currency = 'USD'; // or you can set this value from your props or state
     // let env = 'production'; // you can set here to 'production' for production, or 'sandbox' for the sandbox
     let env = 'sandbox'; // you can set here to 'production' for production, or 'sandbox' for the sandbox
-    
+
     const client = {
         sandbox:    'AfxDPuLCwqEXQXi-J-TmoqC9IEIl4UA9d6L84_Sp-xKuebeDaRyanklLx23mUeoVskOvKNGyfpHcWS9U',
         // sandbox:    'AXtGSZ2ooq-9eHmPsThjFwah94wWEeRqy3IzPROc5PwpJsaFsavJAYXyrPhd8vVuCQroMd44oeNHCX-P',        //  Barb's
