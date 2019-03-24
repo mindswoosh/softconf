@@ -585,7 +585,8 @@ Invoice #: $contact{form_id}
       my $message = MIME::Lite->new(
         From     => $from,
         To       => $to,
-        Cc       => 'support@softconf.org',
+        #Cc       => 'support@softconf.org',
+        Cc       => 'stormdevelopment@gmail.com',
         Subject  => $subject,
         Type     => 'text/html',
         Encoding => 'quoted-printable',
