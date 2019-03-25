@@ -121,6 +121,7 @@ if ($q->param)            #  fetches the names of the params as a list
       payerID           => $userData{payerID},
       paymentID         => $userData{paymentID},
       paymentToken      => $userData{paymentToken},
+      paymentEmail      => $userData{paymentEmail},
     );
 
 

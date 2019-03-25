@@ -60,7 +60,7 @@ var sprintf = require('sprintf-js').sprintf;
 
 const DEBUG = false;  //  Set to false for production
 
-const JSONversion = '1.0';
+const JSONversion = '1.1';            //  Added paymentEmail to contacts
 
 var nextID = 10000;
 
@@ -2215,11 +2215,12 @@ class App extends Component {
 
   onPaymentSuccess(payment) {
     // Congratulation, it came here means everything's fine!
-    console.log("The payment was successful!");
+    console.log("The payment was successful!", payment);
     userData.paid = true;
     userData.payerID = payment.payerID;
     userData.paymentID = payment.paymentID;
     userData.paymentToken = payment.paymentToken;
+    userData.paymentEmail = payment.email;
 
     this.setState ({
       currentPage: pages.THANKYOU,

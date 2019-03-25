@@ -89,7 +89,8 @@ CREATE TABLE contacts
     paid                FLOAT DEFAULT 0,
     payerID             VARCHAR(255),
     paymentID           VARCHAR(255),
-    paymentToken        VARCHAR(255)
+    paymentToken        VARCHAR(255),
+    paymentEmail        VARCHAR(255)
 );
 
 
