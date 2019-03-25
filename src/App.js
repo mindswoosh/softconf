@@ -1816,19 +1816,6 @@ class App extends Component {
   }
 
 
-  onClickByCheck(e) {
-    e.preventDefault();
-    this.setState ({
-      currentPage: pages.THANKYOU,
-    });
-  }
-
-  setUserData(saved) {
-    this.setState ({
-      userDataSaved: saved,
-    });
-  }
-
 
   //-------------------------------------------------------------------------------------------
   //  Generic handlers
@@ -2213,6 +2200,9 @@ class App extends Component {
   //-------------------------------------------------------------------------------------------
   //  SOFT Wear page
 
+
+  //  This assumes that userData already has the data initialized. We just filling in a few
+  //  extra pieces before sending it to the db.
   onPaymentSuccess(payment) {
     // Congratulation, it came here means everything's fine!
     console.log("The payment was successful!", payment);
@@ -2220,12 +2210,37 @@ class App extends Component {
     userData.payerID = payment.payerID;
     userData.paymentID = payment.paymentID;
     userData.paymentToken = payment.paymentToken;
+    userData.paymentName  = payment.address.recipient_name;
     userData.paymentEmail = payment.email;
+
+    userData.formID =  userData.contactInfo.lastName.replace(/[^A-Za-z]/g, '').toUpperCase().substring(0,3) + (new Date().getTime())%1000000;
+
+    let targetUrl = 'https://softconf.org/cgi-bin/form.cgi';
+
+    fetch(targetUrl, {
+      method: 'POST',
+      body:   JSON.stringify(userData),
+    })
+    .then(response => {
+      //console.log(response);
+      return response.json();
+    })
+    .then(data => {
+        console.log("Success", data.message);
+        this.setUserData(true);
+        return data;
+    })
+    .catch(e => {
+      console.log('Data store failed');
+      console.log(e); 
+      return e;
+    });
 
     this.setState ({
       currentPage: pages.THANKYOU,
     });
   }
+
 
   onPaymentFailure(payment) {
     // Congratulation, it came here means everything's fine!
@@ -2233,6 +2248,20 @@ class App extends Component {
     userData.paid = false;
     this.setState ({
       currentPage: pages.THANKYOU,
+    });
+  }
+
+
+  onClickByCheck(e) {
+    e.preventDefault();
+    this.setState ({
+      currentPage: pages.THANKYOU,
+    });
+  }
+
+  setUserData(saved) {
+    this.setState ({
+      userDataSaved: saved,
     });
   }
 
@@ -2377,7 +2406,7 @@ const PageBar = ({pageNum}) =>
 
 const Welcome = ({brochureURL}) =>
   <div className="welcome">
-    <h2>Welcome</h2>
+    <h2>Welcome!</h2>
     <p>Welcome to the SOFT Conference Registration form!</p>
     <p>The 2019 SOFT Conference is going to be held on July 17-21, 2019 in Ann Arbor Michigan at the Marriott Ypsilanti at Eagle Creek, 1275 South Huron St., Ypsilanti, MI, 48197.
     </p>
@@ -3864,40 +3893,40 @@ const ThankYou = ({thisState, setUserData}) => {
 
   //  Save everything in the database...
 
-  // Create a unique "invoice" ID
-  userData.formID =  userData.contactInfo.lastName.replace(/[^A-Za-z]/g, '').toUpperCase().substring(0,3) + (new Date().getTime())%1000000;
+  // // Create a unique "invoice" ID
+  // userData.formID =  userData.contactInfo.lastName.replace(/[^A-Za-z]/g, '').toUpperCase().substring(0,3) + (new Date().getTime())%1000000;
 
-  // See documentation for fetch here: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
-  // let targetUrl = 'http://greatday.biz/cgi-bin/form.cgi';
-  let targetUrl = 'https://softconf.org/cgi-bin/form.cgi';
-  // let proxyUrl  = 'https://cors-anywhere.herokuapp.com/' + targetUrl;
+  // // See documentation for fetch here: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+  // // let targetUrl = 'http://greatday.biz/cgi-bin/form.cgi';
+  // let targetUrl = 'https://softconf.org/cgi-bin/form.cgi';
+  // // let proxyUrl  = 'https://cors-anywhere.herokuapp.com/' + targetUrl;
 
-  if (!thisState.userDataSaved) {
-    // fetch(proxyUrl + targetUrl, {
-    fetch(targetUrl, {
-      method: 'POST',
-      //mode: 'no-cors',
-      // headers: {
-      //   'Accept': 'application/json',
-      //   'Content-Type': 'application/json',
-      // },
-      body: JSON.stringify(userData),
-    })
-    .then(response => {
-      //console.log(response);
-      return response.json();
-    })
-    .then(data => {
-        console.log(data.message);
-        setUserData(true);
-        return data;
-    })
-    .catch(e => {
-      console.log('Data store failed');
-      console.log(e); 
-      return e;
-    });
-  }
+  // if (!thisState.userDataSaved) {
+  //   // fetch(proxyUrl + targetUrl, {
+  //   fetch(targetUrl, {
+  //     method: 'POST',
+  //     //mode: 'no-cors',
+  //     // headers: {
+  //     //   'Accept': 'application/json',
+  //     //   'Content-Type': 'application/json',
+  //     // },
+  //     body: JSON.stringify(userData),
+  //   })
+  //   .then(response => {
+  //     //console.log(response);
+  //     return response.json();
+  //   })
+  //   .then(data => {
+  //       console.log(data.message);
+  //       setUserData(true);
+  //       return data;
+  //   })
+  //   .catch(e => {
+  //     console.log('Data store failed');
+  //     console.log(e); 
+  //     return e;
+  //   });
+  // }
 
 
   return (

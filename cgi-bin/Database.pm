@@ -188,6 +188,7 @@ our @contact_cols = qw(
     paymentID
     paymentToken
     paymentEmail
+    paymentName
 );
 
 
