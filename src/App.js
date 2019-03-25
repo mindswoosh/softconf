@@ -600,7 +600,7 @@ class App extends Component {
     this.state = {
       currentPage: pages.WELCOME,
       pageHistory: [],                //  Keep a history of the pages visited for use by the Back button
-      formID: '',
+      // formID: '',
       workshopAttendee: 0,
       userDataSaved: false,
       shirtDropdowns: {},             //  { id1: { size, quantity }, id2: {...} }
@@ -975,7 +975,7 @@ class App extends Component {
               [pages.CHECKOUT]:
                   <Checkout
                     thisState={this.state}
-                    // setUserData={this.setUserData}
+                    setUserData={this.setUserData}
                     softDonation={this.state.softDonation}
                     fundDonation={this.state.fundDonation}
                     onChange={this.onChangeFieldValue}
@@ -2213,7 +2213,7 @@ class App extends Component {
     userData.paymentName  = payment.address.recipient_name;
     userData.paymentEmail = payment.email;
 
-    userData.formID =  userData.contactInfo.lastName.replace(/[^A-Za-z]/g, '').toUpperCase().substring(0,3) + (new Date().getTime())%1000000;
+    userData.paymentPage = true;
 
     let targetUrl = 'https://softconf.org/cgi-bin/form.cgi';
 
@@ -2245,6 +2245,7 @@ class App extends Component {
   onPaymentFailure(payment) {
     // Congratulation, it came here means everything's fine!
     console.log("The payment failed..", payment);
+
     userData.paid = false;
     this.setState ({
       currentPage: pages.THANKYOU,
@@ -2253,11 +2254,38 @@ class App extends Component {
 
 
   onClickByCheck(e) {
+
+    //  We need to re-save in order to include donation amounts
+
+    userData.paymentPage = true;            //  Consolate with other places where saving...
+
+    let targetUrl = 'https://softconf.org/cgi-bin/form.cgi';
+
+    fetch(targetUrl, {
+      method: 'POST',
+      body:   JSON.stringify(userData),
+    })
+    .then(response => {
+      //console.log(response);
+      return response.json();
+    })
+    .then(data => {
+        console.log("Success", data.message);
+        this.setUserData(true);
+        return data;
+    })
+    .catch(e => {
+      console.log('Data store failed');
+      console.log(e); 
+      return e;
+    });
+
     e.preventDefault();
     this.setState ({
       currentPage: pages.THANKYOU,
     });
   }
+
 
   setUserData(saved) {
     this.setState ({
@@ -3130,6 +3158,7 @@ function boolToYN(f) {
   return "No";
 }
 
+var formID = '';
 var userData = {};
 
 function add_line(indent, str) {
@@ -3138,10 +3167,14 @@ function add_line(indent, str) {
 
 const Summary = ({thisState}) => {
 
+  if (formID === '') {
+    formID =  thisState.contactInfo.lastName.replace(/[^A-Za-z]/g, '').toUpperCase().substring(0,3) + (new Date().getTime())%1000000;
+  }
+
   userData = {
+    formID:               formID, 
     version:              JSONversion,
     conferenceID:         thisState.eventInfo.conferenceID,
-    formID:               thisState.formID,
     contactInfo:          thisState.contactInfo,
     attendees:            thisState.attendees,
     softAngels:           thisState.softAngels,
@@ -3171,10 +3204,13 @@ const Summary = ({thisState}) => {
     softDonation:         0,
     fundDonation:         0,
     grandTotal:           0,
-    paid:                 0,
+    paid:                 false,
     payerID:              '',
     paymentID:            '',
     paymentToken:         '',
+    paymentEmail:         '',
+    paymentName:          '',
+    paymentPage:          false,
 
     summary:              '',
   }
@@ -3592,7 +3628,7 @@ function pluralize(n) {
   return n !== 1 ? 's' : '';
 }
 
-const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByCheck, onPaymentSuccess, onPaymentFailure}) => {
+const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByCheck, onPaymentSuccess, onPaymentFailure, setUserData}) => {
 
     let costPerAdult = 0;
     let costPerChild = 0;
@@ -3604,7 +3640,7 @@ const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByChe
     let conferenceTotal = 0;
     let grandTotal = 0;
 
-if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
+    if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
 
     let reg = '';
     switch (userData.attendance) {
@@ -3812,6 +3848,34 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
     html = html.replace(/\n/g, "<br>");
 
 
+    //  Save what we've got so far to the database...
+
+console.log("userDataSave = " + thisState.userDataSaved);
+    if (!thisState.userDataSaved) {
+
+      userData.paymentPage = false;
+
+      let targetUrl = 'https://softconf.org/cgi-bin/form.cgi';
+
+      fetch(targetUrl, {
+        method: 'POST',
+        body: JSON.stringify(userData),
+      })
+      .then(response => {
+        //console.log(response);
+        return response.json();
+      })
+      .then(data => {
+          console.log("Saved in checkout", data.message);
+          setUserData(true);
+          return data;
+      })
+      .catch(e => {
+        console.log('Data store failed in checkout');
+        console.log(e); 
+        return e;
+      });
+    }
 
     //  Finally, display everything...
 
@@ -3874,12 +3938,17 @@ if (!onPaymentSuccess) console.log("onPaymentSuccess is not set");
                 </div>
             :
               <div className="checkout-btn v-indent">
-                <PaypalExpressBtn env={env} client={client} currency={currency} total={total} onError={onPaymentFailure} onSuccess={onPaymentSuccess} onCancel={onCancel} />
+                {thisState.userDataSaved &&
+                  <PaypalExpressBtn env={env} client={client} currency={currency} total={total} onError={onPaymentFailure} onSuccess={onPaymentSuccess} onCancel={onCancel} />
+                }
                 <br />
                 <span className="pay-by-check">(or... <a href="" onClick={onClickByCheck}>Pay by Check</a>)</span>
               </div>
           }
         </div>
+        {!thisState.userDataSaved &&
+          <Loading />
+        }
       </div>
     );
   }
@@ -4001,9 +4070,6 @@ Submit photos by July 1st to:</p>
       <br />
       <p className="v-indent">Thanks again!</p>
       <div className="footer-balloons"></div>
-      {!thisState.userDataSaved &&
-        <Loading />
-      }
     </div>
   );
 }

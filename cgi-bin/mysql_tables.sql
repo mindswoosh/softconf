@@ -90,7 +90,9 @@ CREATE TABLE contacts
     payerID             VARCHAR(255),
     paymentID           VARCHAR(255),
     paymentToken        VARCHAR(255),
-    paymentEmail        VARCHAR(255)
+    paymentEmail        VARCHAR(255),
+    paymentName         VARCHAR(255),
+    paymentPage         TINYINT DEFAULT FALSE
 );
 
 
