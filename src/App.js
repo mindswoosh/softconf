@@ -2205,7 +2205,7 @@ class App extends Component {
   //  extra pieces before sending it to the db.
   onPaymentSuccess(payment) {
     // Congratulation, it came here means everything's fine!
-    console.log("The payment was successful!", payment);
+    console.log("Paid!");
     userData.paid = true;
     userData.payerID = payment.payerID;
     userData.paymentID = payment.paymentID;
@@ -2226,7 +2226,7 @@ class App extends Component {
       return response.json();
     })
     .then(data => {
-        console.log("Success", data.message);
+        console.log("Stored", data.message);
         this.setUserData(true);
         return data;
     })
@@ -2244,7 +2244,7 @@ class App extends Component {
 
   onPaymentFailure(payment) {
     // Congratulation, it came here means everything's fine!
-    console.log("The payment failed..", payment);
+    console.log("The payment failed.");
 
     userData.paid = false;
     this.setState ({
@@ -2270,7 +2270,7 @@ class App extends Component {
       return response.json();
     })
     .then(data => {
-        console.log("Success", data.message);
+        console.log("Stored");
         this.setUserData(true);
         return data;
     })
@@ -3850,7 +3850,6 @@ const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByChe
 
     //  Save what we've got so far to the database...
 
-console.log("userDataSave = " + thisState.userDataSaved);
     if (!thisState.userDataSaved) {
 
       userData.paymentPage = false;
@@ -3866,7 +3865,7 @@ console.log("userDataSave = " + thisState.userDataSaved);
         return response.json();
       })
       .then(data => {
-          console.log("Saved in checkout", data.message);
+          console.log("Saved in checkout");
           setUserData(true);
           return data;
       })

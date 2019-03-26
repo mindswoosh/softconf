@@ -336,9 +336,9 @@ if ($q->param)            #  fetches the names of the params as a list
 
     # warn("Contact email is '" . $contactInfo{email} . "'");
 
-    my $from = '"SOFT Registration" <invoices@softconf.org>';
-    my $to = "\"$contact{firstName} $contact{lastName}\" <$contact{email}>";
-    my $subject = "SOFT Conference Invoice for $contact{firstName} $contact{lastName}";
+
+    #---------------------------
+
      
     $contact{grandTotal} = trim($contact{grandTotal});
 
@@ -352,9 +352,8 @@ if ($q->param)            #  fetches the names of the params as a list
    more information, click on this link:
 
         <a target="_blank" rel="noopener noreferrer" href="https://trisomy.org/soft-membership-information/">Become a Member of SOFT</a>
-   ~;
-
-   $soft_info = ""  if ($userData{softMember});
+    ~;
+    $soft_info = ""  if ($userData{softMember});
 
 
 
@@ -372,24 +371,14 @@ if ($q->param)            #  fetches the names of the params as a list
         <a target="_blank" rel="noopener noreferrer" href="https://www.marriott.com/meeting-event-hotels/group-corporate-travel/groupCorp.mi?resLinkData=Support%20Organization%20for%20Trisomy%5Edtwys%60sotsota%7Csotsotd%60140.00%60USD%60false%604%607/16/19%607/21/19%606/24/19&app=resvlink&stop_mobi=yes">Book Hotel Room</a>
 
    Our rate code is "SOFT".
-   ~;
+    ~;
+    $hotel_info = ""  if ($userData{attendance} =~ /picnic|balloon/i);
 
-   $hotel_info = ""  if ($userData{attendance} =~ /picnic|balloon/i);
 
-    my $message;
 
-    if ($contact{paid}){
-
-        $message = qq~
+    my $summary_message = qq~
 
 Hello $contact{firstName},
-
-Thank you for registering for this year's SOFT conference!
-
-Below is a summary of exactly what you signed up for, along with the paid
-invoice for \$$contact{grandTotal}.
-
-Your payment confirmation ID is: $contact{paymentID}
 
 Here are a few more suggestions to help you get ready for the conference...
 $soft_info
@@ -425,191 +414,149 @@ $hotel_info
 
 Thanks again!
 
+    ~;
 
-----------
+    $summary_message =~ s/\n\n\n+/\n\n/g;
+    $summary_message =~ s/\n/<br>/g;
 
-$userData{summary}
+    my $htmlSummary = qq~
+    <!DOCTYPE html>
+    <html>
+        <body style="font-family: monospace, monospace; font-size: 14px;">
+            $summary_message
+        </body>
+    </html>
+    ~;
 
 
-Invoice:
+    #----------------
+   
 
-$userData{invoice}
+    my $invoice_message;
 
-Invoice #: $contact{form_id}
-Payment Confirmation ID: $contact{paymentID}
-~;
+    if ($contact{paid}){
+
+        $invoice_message = qq~
+
+Hello $contact{firstName},
+
+Thank you for registering for this year's SOFT conference!
+
+Here is a copy of your invoice for \$$contact{grandTotal}.
+
+Your payment confirmation ID is: $contact{paymentID}
+        ~;
     }
     elsif ($contact{grandTotal} <= 0 ) {           #  Fully Joey Watson
 
-        $message = qq~
+        $invoice_message = qq~
 
 Hello $contact{firstName},
 
 Thank you for registering for this year's SOFT conference! Below is a 
-summary of exactly what you signed up for.
+copy of your invoice.
 
 That's it, you're all set for the Conference!
-
-Here are a few more suggestions to help you get ready for the conference...
-$soft_info
-*  Submit family and "SOFT" child photos. We invite you to share a family 
-   photo and a photo of your SOFT Child for the conference directory or
-   to be displayed during the conference. Submit photos to:
-
-        <a href="mailto:trisomyawareness\@gmail.com">trisomyawareness\@gmail.com</a>
-
-*  Submit your photos or short video for the Annual "SOFT Friends" Video.
-   Choose your favorite photo of your SOFT Child and submit for the Annual
-   "SOFT Friends" video created in memory of Kari Holladay. Photos can be
-   submitted here:
-
-        <a href="https://trisomy.org/kris-holladay-soft-video/" target="_blank" rel="noopener noreferrer">Submit to "SOFT Friends"</a>
-$hotel_info
-*  Donate items for the auction. SOFT's Annual Auction will be held Saturday.
-   There will be both a silent and live auction. Your auction donation items
-   can be sent to:
-
-        Kayse Whitaker
-        619 William St.
-        Kalamazoo, MI 49007
-
-* Set up your fund-raising page for the Stroll for Hope.
-
-        <a href="http://www.firstgiving.com/softstrollforhope/2019-SOFT-Stroll-for-Hope" target="_blank" rel="noopener noreferrer">Stroll for Hope"</a>
-
-* Consider sponsoring an event/item for the conference:
-
-        <a href="https://trisomy.org/conference-wish-list-2019-ann-arbor-2/" target="_blank" rel="noopener noreferrer">Sponsor an Event/Item"</a>
-
-
-Thanks again!
-
-
-----------
-
-$userData{summary}
-
-
-Invoice:
-
-$userData{invoice}
-
-Invoice #: $contact{form_id}
-~;
+        ~;
     }
     else {          #  Must be by check
 
-        $message = qq~
+        $invoice_message = qq~
 
 Hello $contact{firstName},
 
 Thank you for registering for this year's SOFT conference!
 
-Below is a summary of exactly what you signed up for, along with an
-invoice for your check payment. To finish your registration, please send
-a check for \$$contact{grandTotal} to:
+Below is an invoice for your check payment.
+
+To finish your registration, please send a check for \$$contact{grandTotal} to:
 
     Support Organization for Trisomy
     2982 South Union St.
     Rochester, NY  14624
 
 Please include your invoice number with your check:  $contact{form_id}
+      ~;
+    }
 
 
-Here are a few more suggestions to help you get ready for the conference...
-$soft_info
-*  Submit family and "SOFT" child photos. We invite you to share a family 
-   photo and a photo of your SOFT Child for the conference directory or
-   to be displayed during the conference. Submit photos to:
+    $invoice_message .= qq~
+Invoice:
+$userData{invoice}
 
-        <a href="mailto:trisomyawareness\@gmail.com">trisomyawareness\@gmail.com</a>
-
-*  Submit your photos or short video for the Annual "SOFT Friends" Video.
-   Choose your favorite photo of your SOFT Child and submit for the Annual
-   "SOFT Friends" video created in memory of Kari Holladay. Photos can be
-   submitted here:
-
-        <a href="https://trisomy.org/kris-holladay-soft-video/" target="_blank" rel="noopener noreferrer">Submit to "SOFT Friends"</a>
-$hotel_info
-*  Donate items for the auction. SOFT's Annual Auction will be held Saturday.
-   There will be both a silent and live auction. Your auction donation items
-   can be sent to:
-
-        Kayse Whitaker
-        619 William St.
-        Kalamazoo, MI 49007
-
-* Set up your fund-raising page for the Stroll for Hope.
-
-        <a href="http://www.firstgiving.com/softstrollforhope/2019-SOFT-Stroll-for-Hope" target="_blank" rel="noopener noreferrer">Stroll for Hope"</a>
-
-* Consider sponsoring an event/item for the conference:
-
-        <a href="https://trisomy.org/conference-wish-list-2019-ann-arbor-2/" target="_blank" rel="noopener noreferrer">Sponsor an Event/Item"</a>
+Invoice #: $contact{form_id}
 
 
-Thanks again!
+--------------------
 
-
-----------
+Summary of your registration:
 
 $userData{summary}
 
 
-Invoice:
-  
-$userData{invoice}
+Registration #: $contact{form_id}
+    ~;
 
-Invoice #: $contact{form_id}
-~;
-    }
+    $invoice_message =~ s/\n\n\n+/\n\n/g;
+    $invoice_message =~ s/\n/<br>/g;
 
-
-
-    $message =~ s/\n\n\n+/\n\n/g;
-    $message =~ s/\n/<br>/g;
-
-    my $htmlEmail = qq~
+    my $htmlInvoice = qq~
     <!DOCTYPE html>
     <html>
         <body style="font-family: monospace, monospace; font-size: 14px;">
-            $message
+            $invoice_message
         </body>
     </html>
     ~;
 
 
+    if ($contact{paymentPage}) {                  #  Don't send email unless on earlier saves, just on final payment page
+
+      my $from = '"SOFT Registration" <invoices@softconf.org>';
+      my $to = "\"$contact{firstName} $contact{lastName}\" <$contact{email}>";
+
+      if ($successful) {
+       
+        my $message;
+        
+        $message = MIME::Lite->new(
+          From     => $from,
+          To       => $to,
+          Cc       => 'support@softconf.org',
+          Subject  => "SOFT Conference Invoice for $contact{firstName} $contact{lastName}",
+          Type     => 'text/html',
+          Encoding => 'quoted-printable',
+          Data     => $htmlInvoice
+        );
+        
+        $message->send();
 
 
-# MIME::Lite->send('smtp','smtp.gmail.com', SSL=>1, AuthUser=>"stormdevelopment\@gmail.com", AuthPass=>"Bigfoot3600!", DEBUG=>1);
+        $message = MIME::Lite->new(
+          From     => $from,
+          To       => $to,
+          Cc       => 'support@softconf.org',
+          Subject  => "SOFT Conference - Next steps to help you get ready",
+          Type     => 'text/html',
+          Encoding => 'quoted-printable',
+          Data     => $htmlSummary
+        );
+        
+        $message->send();
 
-    if ($successful) {
-     
-      my $message = MIME::Lite->new(
-        From     => $from,
-        To       => $to,
-        #Cc       => 'support@softconf.org',
-        Cc       => 'stormdevelopment@gmail.com',
-        Subject  => $subject,
-        Type     => 'text/html',
-        Encoding => 'quoted-printable',
-        Data     => $htmlEmail
-      );
-      
-      $message->send();
-
-    }
-    else {
-      my $message = MIME::Lite->new(
-        From     => $from,
-        To       => 'support@softconf.org',
-        Subject  => "Failed: Not registered for SOFT Conference",
-        Type     => "text/html",
-        Encoding => "quoted-printable",
-        Data     => $htmlEmail
-      );
-      
-      $message->send();
+      }
+      else {
+        my $message = MIME::Lite->new(
+          From     => $from,
+          To       => 'support@softconf.org',
+          Subject  => "Failed: Not registered for SOFT Conference",
+          Type     => "text/html",
+          Encoding => "quoted-printable",
+          Data     => $htmlSummary
+        );
+        
+        $message->send();
+      }
     }
 
   }
