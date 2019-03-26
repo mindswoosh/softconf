@@ -3895,14 +3895,14 @@ const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByChe
 
     let total = Math.max(0, Number(grandTotal));
     let currency = 'USD'; // or you can set this value from your props or state
-    // let env = 'production'; // you can set here to 'production' for production, or 'sandbox' for the sandbox
-    let env = 'sandbox'; // you can set here to 'production' for production, or 'sandbox' for the sandbox
+    let env = 'production'; // you can set here to 'production' for production, or 'sandbox' for the sandbox
+    // let env = 'sandbox'; // you can set here to 'production' for production, or 'sandbox' for the sandbox
 
     const client = {
-        sandbox:    'AfxDPuLCwqEXQXi-J-TmoqC9IEIl4UA9d6L84_Sp-xKuebeDaRyanklLx23mUeoVskOvKNGyfpHcWS9U',
+        // sandbox:    'AfxDPuLCwqEXQXi-J-TmoqC9IEIl4UA9d6L84_Sp-xKuebeDaRyanklLx23mUeoVskOvKNGyfpHcWS9U',
         // sandbox:    'AXtGSZ2ooq-9eHmPsThjFwah94wWEeRqy3IzPROc5PwpJsaFsavJAYXyrPhd8vVuCQroMd44oeNHCX-P',        //  Barb's
         // sandbox:    'YOUR-SANDBOX-APP-ID',
-        // production: 'ARCgszhyt3vhExezgwyU6gY7aJTSe6dkF9xX7wEsMz69szcZGZabN6Q_O9crRR-upB9zsa942pH4PJtr',
+        production: 'ARCgszhyt3vhExezgwyU6gY7aJTSe6dkF9xX7wEsMz69szcZGZabN6Q_O9crRR-upB9zsa942pH4PJtr',
     }
 
     return (
