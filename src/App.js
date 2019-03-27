@@ -2220,6 +2220,7 @@ class App extends Component {
     fetch(targetUrl, {
       method: 'POST',
       body:   JSON.stringify(userData),
+      headers: {'Content-Type': 'application/json'}
     })
     .then(response => {
       //console.log(response);
@@ -2264,6 +2265,7 @@ class App extends Component {
     fetch(targetUrl, {
       method: 'POST',
       body:   JSON.stringify(userData),
+      headers: {'Content-Type': 'application/json'}
     })
     .then(response => {
       //console.log(response);
@@ -3859,6 +3861,7 @@ const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByChe
       fetch(targetUrl, {
         method: 'POST',
         body: JSON.stringify(userData),
+        headers: {'Content-Type': 'application/json'}
       })
       .then(response => {
         //console.log(response);
@@ -3979,6 +3982,7 @@ const ThankYou = ({thisState, setUserData}) => {
   //     //   'Content-Type': 'application/json',
   //     // },
   //     body: JSON.stringify(userData),
+  //     headers: {'Content-Type': 'application/json'}
   //   })
   //   .then(response => {
   //     //console.log(response);
