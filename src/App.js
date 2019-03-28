@@ -3851,8 +3851,12 @@ const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByChe
 
 
     //  Save what we've got so far to the database...
+    console.log("Got to the invoice page.");
+    console.log("Before userDataSaved: " + thisState.userDataSaved);
 
     if (!thisState.userDataSaved) {
+
+      console.log("Inside the test...");
 
       userData.paymentPage = false;
 
@@ -3864,7 +3868,7 @@ const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByChe
         headers: {'Content-Type': 'application/json'}
       })
       .then(response => {
-        //console.log(response);
+        console.log(response);
         return response.json();
       })
       .then(data => {
