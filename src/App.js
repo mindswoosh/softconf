@@ -2208,7 +2208,7 @@ class App extends Component {
   //  extra pieces before sending it to the db.
   onPaymentSuccess(payment) {
     // Congratulation, it came here means everything's fine!
-    console.log("Paid!");
+    // console.log("Paid!");
     userData.paid = true;
     userData.payerID = payment.payerID;
     userData.paymentID = payment.paymentID;
@@ -2230,14 +2230,14 @@ class App extends Component {
       return response.json();
     })
     .then(data => {
-        console.log("Stored", data.message);
+        // console.log("Stored", data.message);
         this.setPaymentSaved(true);
         return data;
     })
     .catch(e => {
-      console.log('Data store failed');
+      // console.log('Data store failed');
       alert("You've successfully paid, but there was a problem updating your registration. Will you please send an email to 'help@softconf.org' and let us know you got this message? Thank you.");
-      console.log(e); 
+      // console.log(e); 
       return e;
     });
 
@@ -2249,7 +2249,7 @@ class App extends Component {
 
   onPaymentFailure(payment) {
     // Congratulation, it came here means everything's fine!
-    console.log("The payment failed.");
+    // console.log("The payment failed.");
 
     userData.paid = false;
 
@@ -2278,14 +2278,14 @@ class App extends Component {
       return response.json();
     })
     .then(data => {
-        console.log("Stored");
+        // console.log("Stored");
         this.setPaymentSaved(true);
         return data;
     })
     .catch(e => {
-      console.log('Data store failed');
+      // console.log('Data store failed');
       alert("There was a problem handling your check registration. Will you please send an email to 'help@softconf.org' and let us know you got this message? Thank you.");
-      console.log(e); 
+      // console.log(e); 
       return e;
     });
 
@@ -3865,12 +3865,12 @@ const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByChe
 
 
     //  Save what we've got so far to the database...
-    console.log("Got to the invoice page.");
-    console.log("Before summarySaved: " + thisState.summarySaved);
+    // console.log("Got to the invoice page.");
+    // console.log("Before summarySaved: " + thisState.summarySaved);
 
     if (!thisState.summarySaved) {
 
-      console.log("Inside the test...");
+      // console.log("Inside the test...");
 
       userData.paymentPage = false;
 
@@ -3882,18 +3882,18 @@ const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByChe
         headers: {'Content-Type': 'application/json'}
       })
       .then(response => {
-        console.log(response);
+        // console.log(response);
         return response.json();
       })
       .then(data => {
-          console.log("Saved in checkout");
+          // console.log("Saved in checkout");
           setSummarySaved(true);
           return data;
       })
       .catch(e => {
-        console.log('Data store failed in checkout');
+        // console.log('Data store failed in checkout');
         alert("There is a problem saving your registration information. Please try registering using a different device.");
-        console.log(e); 
+        // console.log(e); 
         return e;
       });
     }
@@ -3903,7 +3903,7 @@ const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByChe
 
     const onCancel = (data) => {
         // User pressed "cancel" or close Paypal's popup!
-        console.log('The payment was cancelled!', data);
+        // console.log('The payment was cancelled!', data);
         // You can bind the "data" object's value to your state or props or whatever here, please see below for sample returned data
     }
 
@@ -3917,12 +3917,12 @@ const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByChe
 
     let total = Math.max(0, Number(grandTotal));
     let currency = 'USD'; // or you can set this value from your props or state
-    // let env = 'production'; // you can set here to 'production' for production, or 'sandbox' for the sandbox
-    let env = 'sandbox'; // you can set here to 'production' for production, or 'sandbox' for the sandbox
+    let env = 'production'; // you can set here to 'production' for production, or 'sandbox' for the sandbox
+    // let env = 'sandbox'; // you can set here to 'production' for production, or 'sandbox' for the sandbox
 
     const client = {
-        sandbox:    'AfxDPuLCwqEXQXi-J-TmoqC9IEIl4UA9d6L84_Sp-xKuebeDaRyanklLx23mUeoVskOvKNGyfpHcWS9U',
-        // production: 'ARCgszhyt3vhExezgwyU6gY7aJTSe6dkF9xX7wEsMz69szcZGZabN6Q_O9crRR-upB9zsa942pH4PJtr',
+        // sandbox:    'AfxDPuLCwqEXQXi-J-TmoqC9IEIl4UA9d6L84_Sp-xKuebeDaRyanklLx23mUeoVskOvKNGyfpHcWS9U',
+        production: 'ARCgszhyt3vhExezgwyU6gY7aJTSe6dkF9xX7wEsMz69szcZGZabN6Q_O9crRR-upB9zsa942pH4PJtr',
     }
 
     return (
