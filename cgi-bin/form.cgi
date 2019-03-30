@@ -21,7 +21,8 @@ my $q = CGI->new;
 #  Eventually, we want to get the front end and back end on the same server
 if (defined($ENV{REQUEST_METHOD})  &&  $ENV{REQUEST_METHOD} eq "OPTIONS") {
   print "Access-Control-Allow-Origin: *\n";
-  print "Access-Control-Allow-Methods: GET,POST,OPTIONS\n";
+  print "Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS\n";
+  print "Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept\n";
   print "Access-Control-Allow-Credentials: false\n";
   print "Content-type: text/html\n\n";
   exit;
