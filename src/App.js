@@ -602,8 +602,9 @@ class App extends Component {
       pageHistory: [],                //  Keep a history of the pages visited for use by the Back button
       // formID: '',
       workshopAttendee: 0,
-      userDataSaved: false,
-      shirtDropdowns: {},             //  { id1: { size, quantity }, id2: {...} }
+      summarySaved:     false,
+      paymentSaved:     false,
+      shirtDropdowns:   {},             //  { id1: { size, quantity }, id2: {...} }
 
       eventInfo: {
         eventTitle: '',
@@ -671,7 +672,8 @@ class App extends Component {
     //  This set of change handlers could probably be drastically reduced by using
     //  generic handlers that take values, not events or opts as arguments
 
-    this.setUserData          = this.setUserData.bind(this);
+    this.setSummarySaved      = this.setSummarySaved.bind(this);
+    this.setPaymentSaved      = this.setPaymentSaved.bind(this);
     this.setEventInfo         = this.setEventInfo.bind(this);
     this.onChangeContactInfo  = this.onChangeContactInfo.bind(this);
     this.onChangeCountry      = this.onChangeCountry.bind(this);
@@ -975,19 +977,19 @@ class App extends Component {
               [pages.CHECKOUT]:
                   <Checkout
                     thisState={this.state}
-                    setUserData={this.setUserData}
                     softDonation={this.state.softDonation}
                     fundDonation={this.state.fundDonation}
                     onChange={this.onChangeFieldValue}
                     onClickByCheck={this.onClickByCheck}
                     onPaymentSuccess={this.onPaymentSuccess}
                     onPaymentFailure={this.onPaymentFailure}
+                    setSummarySaved={this.setSummarySaved}
                   />,
 
               [pages.THANKYOU]:
                   <ThankYou
                     thisState={this.state}
-                    setUserData={this.setUserData}
+                    setPaymentSaved={this.setPaymentSaved}
                   />,
 
               // [pages.MERCHANDISE]:  <Merchancise merchandise={merchandise} />,
@@ -1788,7 +1790,8 @@ class App extends Component {
           pageHistory.push(currentPage);
 
           this.setState({
-            userDataSaved: false,
+            summarySaved: false,            //  Nothing saved yet
+            paymentSaved: false,
             pageHistory,
             currentPage: pages.CHECKOUT,
           });
@@ -1796,13 +1799,11 @@ class App extends Component {
           break;
 
       case pages.CHECKOUT:
-          // let attendees = this.state.attendees;
-
-          // pageHistory.push(currentPage);
+          // pageHistory.push(currentPage);     
 
           // this.setState({
-          //   pageHistory,
-          //   currentPage: pages.END,
+          //   paymentSaved: false,
+          //   currentPage: pages.THANKYOU,
           // });
 
           break;
@@ -2198,7 +2199,9 @@ class App extends Component {
 
 
   //-------------------------------------------------------------------------------------------
-  //  SOFT Wear page
+
+  //  let proxyUrl  = 'https://cors-anywhere.herokuapp.com/' + targetUrl;
+  //  fetch(proxyUrl + targetUrl, {
 
 
   //  This assumes that userData already has the data initialized. We just filling in a few
@@ -2228,11 +2231,12 @@ class App extends Component {
     })
     .then(data => {
         console.log("Stored", data.message);
-        this.setUserData(true);
+        this.setPaymentSaved(true);
         return data;
     })
     .catch(e => {
       console.log('Data store failed');
+      alert("You've successfully paid, but there was a problem updating your registration. Will you please send an email to 'help@softconf.org' and let us know you got this message? Thank you.");
       console.log(e); 
       return e;
     });
@@ -2248,9 +2252,11 @@ class App extends Component {
     console.log("The payment failed.");
 
     userData.paid = false;
-    this.setState ({
-      currentPage: pages.THANKYOU,
-    });
+
+    alert("The payment failed for some reason. Please try again.");
+    // this.setState ({
+    //   currentPage: pages.THANKYOU,
+    // });
   }
 
 
@@ -2273,11 +2279,12 @@ class App extends Component {
     })
     .then(data => {
         console.log("Stored");
-        this.setUserData(true);
+        this.setPaymentSaved(true);
         return data;
     })
     .catch(e => {
       console.log('Data store failed');
+      alert("There was a problem handling your check registration. Will you please send an email to 'help@softconf.org' and let us know you got this message? Thank you.");
       console.log(e); 
       return e;
     });
@@ -2289,9 +2296,16 @@ class App extends Component {
   }
 
 
-  setUserData(saved) {
+  setSummarySaved(saved) {
     this.setState ({
-      userDataSaved: saved,
+      summarySaved: saved,
+    });
+  }
+
+
+  setPaymentSaved(saved) {
+    this.setState ({
+      paymentSaved: saved,
     });
   }
 
@@ -3630,7 +3644,7 @@ function pluralize(n) {
   return n !== 1 ? 's' : '';
 }
 
-const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByCheck, onPaymentSuccess, onPaymentFailure, setUserData}) => {
+const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByCheck, onPaymentSuccess, onPaymentFailure, setSummarySaved}) => {
 
     let costPerAdult = 0;
     let costPerChild = 0;
@@ -3852,9 +3866,9 @@ const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByChe
 
     //  Save what we've got so far to the database...
     console.log("Got to the invoice page.");
-    console.log("Before userDataSaved: " + thisState.userDataSaved);
+    console.log("Before summarySaved: " + thisState.summarySaved);
 
-    if (!thisState.userDataSaved) {
+    if (!thisState.summarySaved) {
 
       console.log("Inside the test...");
 
@@ -3873,11 +3887,12 @@ const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByChe
       })
       .then(data => {
           console.log("Saved in checkout");
-          setUserData(true);
+          setSummarySaved(true);
           return data;
       })
       .catch(e => {
         console.log('Data store failed in checkout');
+        alert("There is a problem saving your registration information. Please try registering using a different device.");
         console.log(e); 
         return e;
       });
@@ -3944,15 +3959,17 @@ const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByChe
                 </div>
             :
               <div className="checkout-btn v-indent">
-                {thisState.userDataSaved &&
-                  <PaypalExpressBtn env={env} client={client} currency={currency} total={total} onError={onPaymentFailure} onSuccess={onPaymentSuccess} onCancel={onCancel} />
+                {thisState.summarySaved &&
+                  <div>
+                    <PaypalExpressBtn env={env} client={client} currency={currency} total={total} onError={onPaymentFailure} onSuccess={onPaymentSuccess} onCancel={onCancel} />
+                    <br />
+                    <span className="pay-by-check">(or... <a href="" onClick={onClickByCheck}>Pay by Check</a>)</span>
+                  </div>
                 }
-                <br />
-                <span className="pay-by-check">(or... <a href="" onClick={onClickByCheck}>Pay by Check</a>)</span>
               </div>
           }
         </div>
-        {!thisState.userDataSaved &&
+        {!thisState.summarySaved &&
           <Loading />
         }
       </div>
@@ -3964,46 +3981,7 @@ const Checkout = ({thisState, softDonation, fundDonation, onChange, onClickByChe
 //----------------------------------------------------------------------------------------------------
 
 
-const ThankYou = ({thisState, setUserData}) => {
-
-  //  Save everything in the database...
-
-  // // Create a unique "invoice" ID
-  // userData.formID =  userData.contactInfo.lastName.replace(/[^A-Za-z]/g, '').toUpperCase().substring(0,3) + (new Date().getTime())%1000000;
-
-  // // See documentation for fetch here: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
-  // // let targetUrl = 'http://greatday.biz/cgi-bin/form.cgi';
-  // let targetUrl = 'https://softconf.org/cgi-bin/form.cgi';
-  // // let proxyUrl  = 'https://cors-anywhere.herokuapp.com/' + targetUrl;
-
-  // if (!thisState.userDataSaved) {
-  //   // fetch(proxyUrl + targetUrl, {
-  //   fetch(targetUrl, {
-  //     method: 'POST',
-  //     //mode: 'no-cors',
-  //     // headers: {
-  //     //   'Accept': 'application/json',
-  //     //   'Content-Type': 'application/json',
-  //     // },
-  //     body: JSON.stringify(userData),
-  //     headers: {'Content-Type': 'application/json'}
-  //   })
-  //   .then(response => {
-  //     //console.log(response);
-  //     return response.json();
-  //   })
-  //   .then(data => {
-  //       console.log(data.message);
-  //       setUserData(true);
-  //       return data;
-  //   })
-  //   .catch(e => {
-  //     console.log('Data store failed');
-  //     console.log(e); 
-  //     return e;
-  //   });
-  // }
-
+const ThankYou = ({thisState}) => {
 
   return (
     <div>
@@ -4077,6 +4055,9 @@ Submit photos by July 1st to:</p>
       <br />
       <p className="v-indent">Thanks again!</p>
       <div className="footer-balloons"></div>
+      {!thisState.paymentSaved &&
+        <Loading />
+      }
     </div>
   );
 }

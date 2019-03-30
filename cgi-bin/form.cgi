@@ -24,7 +24,7 @@ if (defined($ENV{REQUEST_METHOD})  &&  $ENV{REQUEST_METHOD} eq "OPTIONS") {
   print "Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS\n";
   print "Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept\n";
   print "Access-Control-Allow-Credentials: false\n";
-  print "Content-type: text/html\n\n";
+  print "Content-type: text/plain\n\n";
   exit;
 }
 
@@ -573,14 +573,14 @@ Registration #: $contact{form_id}
   print "Access-Control-Allow-Origin: *\n";
   print "Access-Control-Allow-Methods: GET,POST,OPTIONS\n";
   print "Access-Control-Allow-Headers: X-Requested-With\n";
-  print "Content-type: text/html\n\n";
+  print "Content-type: text/plain\n\n";
   print $json->encode(\%msg);
 }
 else {
     print "Access-Control-Allow-Origin: *\n";
     print "Access-Control-Allow-Methods: GET,POST,OPTIONS\n";
     print "Access-Control-Allow-Headers: X-Requested-With\n";
-    print "Content-type: text/html\n\n";
+    print "Content-type: text/plain\n\n";
     print "No params...";
 }
 
