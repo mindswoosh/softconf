@@ -1406,7 +1406,7 @@ class App extends Component {
 
           let bad_attendee = attendees.find( a => { 
             return (  a.firstName === ''  ||  a.lastName === ''  ||  a.peopleType === ''  || 
-                     (a.peopleType === peopleTypes.CHILD  &&  (a.age === null || a.age === '' || a.age > 11)) ||
+                     (a.peopleType === peopleTypes.CHILD  &&  (a.age === null || a.age === '' || a.age === -1 || a.age > 11)) ||
                      (a.peopleType === peopleTypes.TEEN   &&  (a.age === null || a.age === '' || a.age < 12)) ||
                      (a.peopleType === peopleTypes.SOFTCHILD  &&  (a.dateOfBirth === null  ||  a.diagnosis === null  ||  (a.diagnosis === otherDiagnosisTitle && a.otherDiagnosis === "")) )
                    ) 
@@ -1926,7 +1926,9 @@ class App extends Component {
       attendees[i].otherDiagnosis = "";
     }
     if (field === "age") {
-      attendees[i].childCareSessions = {};
+      this.state.eventInfo.childCareSessions.forEach( (sess) => {
+        attendees[i].childCareSessions[sess.id] = false;
+      });
     }
     this.setState ({
       attendees
