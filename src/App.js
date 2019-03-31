@@ -60,7 +60,8 @@ var sprintf = require('sprintf-js').sprintf;
 
 const DEBUG = false;  //  Set to false for production
 
-const JSONversion = '1.1';            //  Added paymentEmail to contacts
+// const JSONversion = '1.1';           //  Added paymentEmail to contacts
+const JSONversion = '1.2';              //  Added firstTime question
 
 var nextID = 10000;
 
@@ -569,7 +570,7 @@ function attendee(firstName, lastName, peopleType, age, eventInfo) {
     eatsMeals:      false,
 
     // Picnic
-    picnicTrans:    false,                //  Needs transportation to the picnic?
+    picnicTrans:    false,          //  Needs transportation to the picnic?
     picnicTiedown:  false,
 
     // Professional
@@ -640,6 +641,7 @@ class App extends Component {
       softMember:       false,
       boardMember:      false,
       chapterChair:     false,
+      firstTime:        false,
       joeyWatson:       false,
       joeyWatsonCode:   '',
       softDonation:     0,
@@ -816,6 +818,7 @@ class App extends Component {
                     softMember={this.state.softMember}
                     boardMember={this.state.boardMember}
                     chapterChair={this.state.chapterChair}
+                    firstTime={this.state.firstTime}
                     joeyWatson={this.state.joeyWatson}
                     joeyWatsonCode={this.state.joeyWatsonCode}
                     onChangeField={this.onChangeFieldValue}
@@ -2471,7 +2474,7 @@ const Welcome = ({brochureURL}) =>
 
 
 
-const Basics = ({attendance, reception, photoWaiver, softMember, sundayBreakfast, boardMember, chapterChair, joeyWatson, joeyWatsonCode, onChangeField}) =>
+const Basics = ({attendance, reception, photoWaiver, softMember, sundayBreakfast, boardMember, chapterChair, firstTime, joeyWatson, joeyWatsonCode, onChangeField}) =>
   <div>
     <h2>Getting Started</h2>
     <p>In the next few pages, you'll be asked a series of questions so that we can tailor this year's
@@ -2521,6 +2524,15 @@ const Basics = ({attendance, reception, photoWaiver, softMember, sundayBreakfast
 
           {photoWaiver  &&  attendance === 'full'  && 
             <div>
+              <div className="v-indent">
+                Is this your first time attending a SOFT Conference?
+                <div className="inline">
+                  <RadioGroup name="firstTime" selectedValue={firstTime} onChange={(val) => onChangeField("firstTime", val)}>
+                    <span className="radio-yes"><Radio value={true} /> Yes</span>
+                    <Radio value={false} /> No
+                  </RadioGroup>
+                </div>
+              </div>
               <div className="v-indent">
                 Are you planning to attend the welcome reception on Wednesday evening?
                 <div className="inline">
@@ -3203,6 +3215,7 @@ const Summary = ({thisState}) => {
     softMember:           thisState.softMember,
     boardMember:          thisState.boardMember,
     chapterChair:         thisState.chapterChair,
+    firstTime:            thisState.firstTime,
     joeyWatson:           thisState.joeyWatson,
     joeyWatsonCode:       thisState.joeyWatsonCode,
     attendingClinics:     thisState.attendingClinics,
@@ -3249,19 +3262,19 @@ const Summary = ({thisState}) => {
   //  General questions
 
   if (userData.attendance === 'full') {
-    output += add_line(0, sprintf("%-32s%s", 'Attending Wednesday reception: ', boolToYN(userData.reception))); 
-    output += add_line(0, sprintf("%-32s%s", 'Attending Sunday breakfast: ', boolToYN(userData.sundayBreakfast)));
+    output += add_line(0, sprintf("%-32s%s", 'Attending Wednesday reception? ', boolToYN(userData.reception))); 
+    output += add_line(0, sprintf("%-32s%s", 'Attending Sunday breakfast? ', boolToYN(userData.sundayBreakfast)));
     output += '\n';
 
-    output += add_line(0, sprintf("%-19s%s", 'Board member:', boolToYN(userData.boardMember)));
-    output += add_line(0, sprintf("%-19s%s", 'Chapter Chair:', boolToYN(userData.chapterChair)));
-    output += add_line(0, sprintf("%-19s%s", 'Joey Watson Fund:', boolToYN(userData.joeyWatson)));
+    output += add_line(0, sprintf("%-32s%s", 'Are you a SOFT member?', boolToYN(userData.softMember)));
+    output += add_line(0, sprintf("%-32s%s", 'Your first time attending?', boolToYN(userData.firstTime)));
+    output += add_line(0, sprintf("%-32s%s", 'Are you a Board member?', boolToYN(userData.boardMember)));
+    output += add_line(0, sprintf("%-32s%s", 'Are you a Chapter Chair?', boolToYN(userData.chapterChair)));
+    output += add_line(0, sprintf("%-32s%s", 'Joey Watson Fund?', boolToYN(userData.joeyWatson)));
     if (userData.joeyWatson) {
-      output += add_line(0, sprintf("%-19s%s",'Joey Watson Code: ', userData.joeyWatsonCode));
+      output += add_line(0, sprintf("%-32s%s",'Joey Watson Code? ', userData.joeyWatsonCode));
     }
   }
-
-  output += add_line(0, sprintf("%-19s%s", 'SOFT member:', boolToYN(userData.softMember)));
   output += '\n';
 
 

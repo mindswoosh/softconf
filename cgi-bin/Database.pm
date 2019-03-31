@@ -160,6 +160,7 @@ our @contact_cols = qw(
     softMember
     boardMember
     chapterChair
+    firstTime
     joeyWatson
     joeyWatsonCode
 

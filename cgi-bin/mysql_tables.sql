@@ -63,6 +63,7 @@ CREATE TABLE contacts
     softMember          TINYINT DEFAULT FALSE,
     boardMember         TINYINT DEFAULT FALSE,
     chapterChair        TINYINT DEFAULT FALSE,
+    firstTime           TINYINT DEFAULT FALSE,
     joeyWatson          TINYINT DEFAULT FALSE,
     joeyWatsonCode      VARCHAR(20),
 
