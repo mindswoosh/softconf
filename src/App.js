@@ -2649,7 +2649,8 @@ const Attendees = ({eventInfo, attendance, attendees, onRemove, onAdd, onChange,
        <p>
          Full Conference rates:<br />
          Adults: ${eventInfo.costAdult}  (Ages 12 and above are charged as adults)<br />
-         Children: ${eventInfo.costChild} (Ages 11 and under)
+         Children: ${eventInfo.costChild} (Ages 11 and under)<br />
+         SOFT Children (and Adults): No cost
        </p>
      </div>
     }
