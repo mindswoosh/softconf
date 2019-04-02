@@ -537,7 +537,7 @@ Registration #: $contact{form_id}
         $message = MIME::Lite->new(
           From     => $from,
           To       => $to,
-          Cc       => 'support@softconf.org',
+          Cc       => 'noreply@softconf.org',
           Subject  => "SOFT Conference - Next steps to help you get ready",
           Type     => 'text/html',
           Encoding => 'quoted-printable',
