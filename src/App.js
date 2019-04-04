@@ -186,8 +186,8 @@ const eventInfoDefault = {
           },
           {
             id:           "2d",
-            title:        '"I am": The Journey',
-            moderator:    "Martiana Biagi",
+            title:        "Crafting Your Story",
+            moderator:    "Terre Krotzer",
             description:  ""
           },
         ]
@@ -222,8 +222,8 @@ const eventInfoDefault = {
           },
           {
             id:           "3d",
-            title:        "Crafting Your Story",
-            moderator:    "Terre Krotzer",
+            title:        '"I am": The Journey',
+            moderator:    "Martiana Biagi",
             description:  ""
           },
         ]
