@@ -572,6 +572,97 @@ code {
 }
 
 
+/* Admin styles */
+
+/*.ui-widget-header {
+  border: none;
+  border-bottom: 1px solid #aaa;
+  background: white; 
+}
+
+.ui-widget.ui-widget-content {
+  border: none;
+}
+
+.ui-tabs .ui-tabs-nav li {
+  margin: 1px .25em 0 .25em;
+}*/
+
+#admin-nav-bar {
+  width: 100%;
+  border-bottom: 1px solid #aaa;
+  margin: 15px 0 40px 0;
+}
+
+.admin-btn, .admin-btn:visited {
+  font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+  font-size: 20px;
+  color: black;
+  display: inline-block;
+  margin-left: 1em;
+  padding: 5px 15px 5px 15px;
+  border: 1px solid #aaa;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background-color: #F3F7FD;
+  text-decoration: none;
+}
+
+.admin-btn:hover {
+  background-color: #ffffff;
+}
+
+.admin-btn-active, .admin-btn-active:visited {
+  font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+  font-size: 20px;
+  color: black;
+  margin-left: 1em;
+  padding: 5px 15px 6px 15px;
+  border: 1px solid #aaa;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  position: relative; top: 0px;
+  background-color: white;
+  text-decoration: none;
+}
+
+.admin-body {
+  font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+  font-size: 16px;
+  text-align: left;
+}
+
+.admin-body a {
+  color: darkblue;
+
+}
+.admin-body a:visited {
+  color: darkblue;
+}
+
+.admin-indent {
+  display: inline-block;
+  margin: 0 15px;
+}
+
+.admin-twice-indent {
+  display: inline-block;
+  margin: 0 30px;
+}
+
+.admin-linespace-after {
+  display: inline-block;
+  padding-bottom: 0.33em;
+}
+
+.admin-name {
+  display: inline-block;
+  width: 200px;
+}
+
+
+/* Handle screen size adjustments */
+
 @media screen and (max-width: 720px) {
 
   .inline-info {

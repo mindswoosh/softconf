@@ -23,12 +23,13 @@ our @EXPORT = qw(
   $FALSE
   $dbh
   $CONFERENCE_ID
-  $DEBUG 
+  $DEBUG
+
+  $otherDiagnosisTitle
+  %peopleTypes
+  %reg_type
 );
 
-
-use Settings;
-use strict;
 
 
 #----------------------------------------------------------------------
@@ -58,32 +59,32 @@ our $dbh;
 our $DEBUG = 1;
 
 
+#----------------------------------------------------------------------
+#  This title is used in menus and compared against explicitly
+
+our $otherDiagnosisTitle = 'Other Diagnosis';
+
 
 #------------------------------------------------------------------------
-#  This is the HTML FORM code for including a PayPay link. PayPal links
-#  are specified in an event using the PAYPAL inline function:
-#
-#       PAYPAL{email address; event name; cost}
 
 
-our $paypal_template = qq~
-    <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
-    <i><font face="Arial Black" color="#000080" size="4">
-    </font></i><font color="#000080">
-    <input type="hidden" value="EMAILADDRESS" name="business">
-    <input type="hidden" value="_xclick" name="cmd">
-    <input type="hidden" value="1" name="undefined_quantity">
-    <input type="hidden" value="EVENTNAME" name="item_name">
-    <input type="hidden" value="LegalShieldEvent" name="item_number">
-    <input type="hidden" value="COST" name="amount">
-    <input type="hidden" value="1" name="no_shipping">
-    <input type="hidden" value="USD" name="currency_code">
-    <input type="hidden" value="US" name="lc"><strong>
-    <font face="Arial">
-    <input type="image" alt="Make payments with PayPal - it's fast, free and secure!"
-    src="$system_web_url/images/buynow.jpg" border="0" name="I1">
-    </font></strong></font></p></form>
-~;
+our %peopleTypes = (
+    SOFTCHILD    => "SOFT Child",
+    CHILD        => "Child",
+    TEEN         => "Teen",
+    ADULT        => "Adult",
+    PROFESSIONAL => "Professional",
+    SOFTANGEL    => "SOFT Angel",
+);
+
+
+
+our %reg_type = (
+    full      => 'Attending the full Conference',
+    workshops => 'Attending only the workshops (for Professionals only)',
+    picnic    => 'Only attending the picnic',
+    balloon   => 'Requesting a balloon (not attending)'
+);
 
 
 
