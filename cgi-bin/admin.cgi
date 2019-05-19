@@ -10,7 +10,7 @@ use Database;
 use CGI;
 use CGI::Carp 'fatalsToBrowser';
 
-use Reports qw(contact_summary welcome_dinner workshop_attendance);
+use Reports;
 use TextTools qw(trim quote textToHTML);
 use Lists;
 use Interface;
@@ -26,6 +26,12 @@ our $search = $q->param('search') || "";
 
 if ($action eq "summary") {
     display_contact($q->param('id'));
+}
+elsif ($action eq "welcome_csv") {
+    welcome_report_csv();
+}
+elsif ($action eq "shirts_csv") {
+    shirts_csv();
 }
 elsif ($tab eq "registrations") {
     list_contacts($action || "all", $search);
@@ -161,6 +167,9 @@ sub show_reports {
     if ($rep_type eq "welcome_rep") {
         $html .= welcome_report();
     }
+    elsif ($rep_type eq "softwear_rep") {
+        $html .= softwear_report();
+    }
     elsif ($rep_type eq "workshop_rep") {
         $html .= workshop_report();
     }
@@ -185,10 +194,52 @@ sub welcome_report {
     my @matching_contacts = get_contact_list($search, "completed", "full");
 
     my $html = "<h3>Welcome Dinner:</h3>";
+
     $html .= welcome_dinner(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/cgi-bin/admin.cgi?action=welcome_csv" target="_blank">CSV Report</a><br><br>~;
 
     return $html;
 }
+
+
+sub welcome_report_csv {
+
+    my @matching_contacts = get_contact_list($search, "completed", "full");
+
+    print "Content-type: text/plain\n\n";
+    print welcome_dinner_csv(@matching_contacts);
+
+    exit;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+sub softwear_report {
+
+    my @matching_contacts = get_contact_list($search, "completed", "full");
+
+    my $html = "<h3>SOFT Wear Orders:</h3>";
+
+    $html .= shirts_ordered_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/cgi-bin/admin.cgi?action=shirts_csv" target="_blank">CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+sub shirts_csv {
+
+    my @matching_contacts = get_contact_list($search, "completed", "full");
+
+    print "Content-type: text/plain\n\n";
+    print shirts_ordered_csv(@matching_contacts);
+
+    exit;
+}
+
 
 #----------------------------------------------------------------------------------------------------
 

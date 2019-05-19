@@ -11,9 +11,14 @@ use EventInfo;
 use Common 'is_fully_paid';
 
 use Exporter 'import';
-our @EXPORT_OK = qw(
+our @EXPORT = qw(
     contact_summary
     welcome_dinner
+    welcome_dinner_csv
+
+    shirts_ordered_html
+    shirts_ordered_csv
+
     workshop_attendance
 );
 
@@ -450,6 +455,9 @@ sub contact_summary {
 }
 
 
+#--------------------------------------------------------------------------------
+
+
 sub welcome_dinner {
     my @contacts = @_;
 
@@ -461,7 +469,7 @@ sub welcome_dinner {
 
     my $i = 1;
     for my $contact_ref (@contacts) {
-        my %contact = %{$contact_ref};
+        my %contact = %$contact_ref;
 
         my $not_paid = is_fully_paid(%contact) ? "" : " &mdash; Not Paid Yet";
 
@@ -509,6 +517,42 @@ sub welcome_dinner {
 }
 
 
+sub welcome_dinner_csv {
+    my @contacts = @_;
+
+    return "" unless (@contacts != 0);
+
+    my $csv = "Contact, Email, Phone, Attendee, Meal, Paid?\n";
+
+    for my $contact_ref (@contacts) {
+        my %contact = %$contact_ref;
+
+        my $not_paid = is_fully_paid(%contact) ? "" : "Not Paid Yet";
+
+        my @attendees = get_attendee_list($contact{id});
+
+        for my $attendee_ref (@attendees) {
+            my %attendee = %$attendee_ref;
+
+            $attendee{welcomeDinner} = "None" unless ($attendee{welcomeDinner});
+
+            $csv .= csv_column("$contact{firstName} $contact{lastName}") . ", ";
+            $csv .= csv_column($contact{email}) . ", ";
+            $csv .= csv_column($contact{phoneMobile} || $contact{phoneHome} ||  $contact{phoneWork}) . ", ";
+
+            $csv .= csv_column("$attendee{firstName} $attendee{lastName}") . ", ";
+            $csv .= csv_column($attendee{welcomeDinner}) . ", ";
+            $csv .= csv_column($not_paid) . "\n";
+        }
+    }
+
+    return $csv;
+}
+
+
+#--------------------------------------------------------------------------------
+
+
 sub workshop_attendance {
     my $conference_id = shift;
 
@@ -547,5 +591,208 @@ sub workshop_attendance {
 
     return $html;
 }
+
+
+#--------------------------------------------------------------------------------
+
+sub _shirts_ordered {
+    my @contacts = @_;
+
+    return ("", "") unless (@contacts != 0);
+
+    my $html = "";
+    my $csv = "Contact, Email, Phone, Shirt Type, Shirt Size, Quantity, Cost\n";
+
+    my @shirtTypesInfo = get_shirttypes_info($CONFERENCE_ID);
+
+    my %shirt_quantities;
+    my %shirt_quantities_cost;
+
+    my $i = 1;
+
+    for my $contact_ref (@contacts) {
+        my %contact = %$contact_ref;
+
+        my @shirtsOrdered_refs = get_shirtsordered_list($contact{id});
+
+        next unless(@shirtsOrdered_refs);
+
+        my $not_paid = is_fully_paid(%contact) ? "" : " &mdash; Not Paid Yet";
+
+        $html .= qq~<br><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a>$not_paid<br>~;
+
+        my $shirt_id_cur = "";
+
+        for my $shirtOrdered_ref (@shirtsOrdered_refs) {
+            my %shirtOrdered = %$shirtOrdered_ref;
+
+            my @shirtType_refs = grep { $shirtOrdered{shirt_id} eq $_->{id} } @shirtTypesInfo;
+
+            die "Unknown shirt type..."  unless (@shirtType_refs);
+
+            my %shirtType = %{$shirtType_refs[0]};
+
+            #  HTML output
+            if ($shirt_id_cur ne $shirtType{id}) {
+                $html .= qq~<div class="admin-linespace-before"><span class="row-num"></span>$shirtType{description}</div><br>~;
+                $shirt_id_cur = $shirtType{id};
+            }
+            $html .= qq~<span class="row-num"></span><span class="admin-indent"></span><span class="admin-name">$shirtOrdered{quantity} x $shirtOrdered{shirtSize}</span><span class="admin-twice-indent"></span><span class="row-num">~;
+            $html .= sprintf("\$%5.2f", $shirtOrdered{quantity} * $shirtType{cost}) . qq~</span><br>~;
+
+            #  CSV output
+            $csv .= csv_column("$contact{firstName} $contact{lastName}") . ", ";
+            $csv .= csv_column($contact{email}) . ", ";
+            $csv .= csv_column($contact{phoneMobile} || $contact{phoneHome} ||  $contact{phoneWork}) . ", ";
+            
+            $csv .= csv_column($shirtType{description}) . ", ";
+            $csv .= csv_column($shirtOrdered{shirtSize}) . ", ";
+            $csv .= csv_column($shirtOrdered{quantity}) . ", ";
+
+            $csv .= csv_column(sprintf("\$%5.2f", $shirtOrdered{quantity} * $shirtType{cost})) . "\n";
+
+            $shirt_quantities{"$shirtType{description}::$shirtOrdered{shirtSize}"} += $shirtOrdered{quantity};
+            $shirt_quantities_cost{"$shirtType{description}::$shirtOrdered{shirtSize}"} += $shirtOrdered{quantity} * $shirtType{cost};
+        }
+
+        $html .= "<br>";
+        $i++;
+    }
+
+    $csv .= "\n\n\n";
+    $csv .= "Order summary:\n";
+
+    my $total_cost = 0;
+
+    for my $key (sort keys %shirt_quantities) {
+
+        my ($description, $size) = split(/::/, $key);
+        my $quantity = $shirt_quantities{$key};
+        my $cost = $shirt_quantities_cost{$key};
+
+        $csv .= ",,,";       
+        $csv .= csv_column($description) . ", ";
+        $csv .= csv_column($size) . ", ";
+        $csv .= csv_column($quantity) . ", ";
+
+        $csv .= csv_column(sprintf("\$%5.2f", $cost)) . "\n";
+
+        $total_cost += $cost;
+    }
+
+    $csv .= ",,,,,Total:,";
+    $csv .= csv_column(sprintf("\$%5.2f", $total_cost)) . "\n";
+
+    $html =~ s/\n/<br>/g;
+
+    return ($html, $csv);
+}
+
+
+sub shirts_ordered_html {
+    my @contacts = @_;
+
+    return (_shirts_ordered(@contacts))[0];
+}
+
+
+sub shirts_ordered_csv {
+    my @contacts = @_;
+
+    return (_shirts_ordered(@contacts))[1];
+}
+
+
+# sub shirts_ordered_csv {
+#     my @contacts = @_;
+
+#     return "" unless (@contacts != 0);
+
+#     my $csv = "Contact, Email, Phone, Shirt Type, Shirt Size, Quantity, Cost\n";
+
+#     my @shirtTypesInfo = get_shirttypes_info($CONFERENCE_ID);
+
+#     my %shirt_quantities;
+#     my %shirt_quantities_cost;
+
+#     for my $contact_ref (@contacts) {
+#         my %contact = %$contact_ref;
+
+#         my @shirtsOrdered_refs = get_shirtsordered_list($contact{id});
+
+#         next unless(@shirtsOrdered_refs);
+
+#         for my $shirtOrdered_ref (@shirtsOrdered_refs) {
+#             my %shirtOrdered = %$shirtOrdered_ref;
+
+#             my @shirtType_refs = grep { $shirtOrdered{shirt_id} eq $_->{id} } @shirtTypesInfo;
+
+#             die "Unknown shirt type..."  unless (@shirtType_refs);
+
+#             my %shirtType = %{$shirtType_refs[0]};
+
+#             $csv .= csv_column("$contact{firstName} $contact{lastName}") . ", ";
+#             $csv .= csv_column($contact{email}) . ", ";
+#             $csv .= csv_column($contact{phoneMobile} || $contact{phoneHome} ||  $contact{phoneWork}) . ", ";
+            
+#             $csv .= csv_column($shirtType{description}) . ", ";
+#             $csv .= csv_column($shirtOrdered{shirtSize}) . ", ";
+#             $csv .= csv_column($shirtOrdered{quantity}) . ", ";
+
+#             $csv .= csv_column(sprintf("\$%5.2f", $shirtOrdered{quantity} * $shirtType{cost})) . "\n";
+
+#             $shirt_quantities{"$shirtType{description}::$shirtOrdered{shirtSize}"} += $shirtOrdered{quantity};
+#             $shirt_quantities_cost{"$shirtType{description}::$shirtOrdered{shirtSize}"} += $shirtOrdered{quantity} * $shirtType{cost};
+#         }
+#     }
+
+#     $csv .= "\n\n\n";
+#     $csv .= "Order summary:\n";
+
+#     my $total_cost = 0;
+
+#     for my $key (sort keys %shirt_quantities) {
+
+#         my ($description, $size) = split(/::/, $key);
+#         my $quantity = $shirt_quantities{$key};
+#         my $cost = $shirt_quantities_cost{$key};
+
+#         $csv .= ",,,";       
+#         $csv .= csv_column($description) . ", ";
+#         $csv .= csv_column($size) . ", ";
+#         $csv .= csv_column($quantity) . ", ";
+
+#         $csv .= csv_column(sprintf("\$%5.2f", $cost)) . "\n";
+
+#         $total_cost += $cost;
+#     }
+
+#     $csv .= ",,,,,Total:,";
+#     $csv .= csv_column(sprintf("\$%5.2f", $total_cost)) . "\n";
+
+#     return $csv;
+# }
+
+
+#--------------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------------
+#  Support functions
+
+
+#  Take the column text and escapes it as necessary
+sub csv_column {
+    my $text = shift;
+
+    $text =~ s/"/""/g;
+
+    if ($text =~ /,/) {
+        $text = '"' . $text . '"';
+    }
+
+    return $text;
+}
+
 
 1;

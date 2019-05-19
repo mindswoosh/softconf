@@ -650,6 +650,11 @@ code {
   margin: 0 30px;
 }
 
+.admin-linespace-before {
+  display: inline-block;
+  padding-top: 0.5em;
+}
+
 .admin-linespace-after {
   display: inline-block;
   padding-bottom: 0.33em;
