@@ -76,10 +76,10 @@ sub list_contacts {
 
     }
     elsif ($reg_type eq "unpaid") {
-        @matching_contacts = get_contact_list($search, "completed", "unpaid");
+        @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
     }
     else {
-        @matching_contacts = get_contact_list($search, "completed", $reg_type);
+        @matching_contacts = get_contact_list($search, "completed", $reg_type, "all");
     }
 
     print_header();
@@ -220,7 +220,8 @@ sub softwear_report {
 
     my @matching_contacts = get_contact_list($search, "completed", "full");
 
-    my $html = "<h3>SOFT Wear Orders:</h3>";
+
+    my $html = "<h3>SOFT Wear Orders fully Paid:</h3>";
 
     $html .= shirts_ordered_html(@matching_contacts);
 

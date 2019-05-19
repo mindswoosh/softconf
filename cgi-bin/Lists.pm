@@ -34,9 +34,11 @@ sub get_contact_list {
     my $search_term = shift || "";
     my $status = shift || "completed";
     my $type = shift || "all";
+    my $paymentType = shift || "all";
 
-    die "Bad status: $status"  if ($status !~ /^(all|completed|abandoned)$/);    
-    die "Bad type: $type "     if ($type   !~ /^(all|full|workshops|picnic|balloon|unpaid)$/);
+    die "Bad status: $status"             if ($status      !~ /^(all|completed|abandoned)$/);    
+    die "Bad type: $type"                 if ($type        !~ /^(all|full|workshops|picnic|balloon)$/);
+    die "Bad payment type: $paymentType"  if ($paymentType !~ /^(all|paid|unpaid)$/);
 
     my @matching_contacts = ();
     my ($dbh, $sth, %contact);
@@ -49,9 +51,9 @@ sub get_contact_list {
         while (my $contact_ref = $sth->fetchrow_hashref()) {
             my %contact = %$contact_ref;
 
-            next unless ($status eq "all"     ||  $status eq ($contact{paymentPage} ? "completed" : "abandoned"));
-            next unless ($type   eq "all"     ||  $type eq "unpaid"  ||  $contact{attendance} eq $type);
-            next     if ($type   eq "unpaid"  &&  is_fully_paid(%contact));
+            next unless ($status      eq "all"  ||  $status eq ($contact{paymentPage} ? "completed" : "abandoned"));
+            next unless ($type        eq "all"  ||  $contact{attendance} eq $type);
+            next unless ($paymentType eq "all"  ||  ( $paymentType eq "paid"  &&  is_fully_paid(%contact) )  ||  ($paymentType eq "unpaid"  &&  !is_fully_paid(%contact) ) );
 
             if ($search_term eq ""  ||  $contact{firstName} =~ m/$search_term/i  ||  $contact{lastName} =~ m/$search_term/i  ||  $contact{email} =~ m/$search_term/i) {
                 push @matching_contacts, $contact_ref;
