@@ -1000,6 +1000,8 @@ class App extends Component {
           }
           <PrevNextButtons pageNum={currentPage} contact={contactInfo} onClickPrev={this.onPrevPage} onClickNext={this.onNextPage}/>
         </div>
+        <br />
+        <center><a href="https://softconf.org/cgi-bin/validate.cgi">admin</a></center>
       </div>
     );
   }
