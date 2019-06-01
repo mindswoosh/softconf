@@ -191,6 +191,7 @@ our @contact_cols = qw(
     paymentEmail
     paymentName
     paymentPage
+    paymentNotes
 );
 
 

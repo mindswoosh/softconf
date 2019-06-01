@@ -3,6 +3,9 @@ package Interface;
 use strict;
 use warnings;
 
+use Globals '$system_dir';
+use Common 'file_version';
+
 use Exporter 'import';
 our @EXPORT = qw(
     print_header
@@ -20,6 +23,9 @@ our @EXPORT = qw(
 sub print_header {
     my $head = shift || "";
 
+    my $softreg_version   = file_version("$system_dir/js/softreg.js");
+    my $fancydiag_version = file_version("$system_dir/js/fancybox/fancydialogs.js");
+
     print "Content-type: text/html\n\n";
     print qq~
         <!DOCTYPE html>
@@ -30,7 +36,12 @@ sub print_header {
               <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
               <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
               <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-              <script src="https://softconf.org/js/softreg.js"></script>
+
+              <link rel="stylesheet" href="https://softconf.org/js/fancybox/jquery.fancybox.css">
+              <script src="https://softconf.org/js/fancybox/jquery.fancybox.pack.js"></script>
+              <script src="https://softconf.org/js/fancybox/fancydialogs.js?v=$fancydiag_version"></script>
+
+              <script src="https://softconf.org/js/softreg.js?v=$softreg_version"></script>
               <link rel="stylesheet" href="https://softconf.org/css/App.css" type="text/css" />
 
               $head
@@ -135,14 +146,30 @@ sub print_reg_menu {
 #------------------------------------------------
 
 our @select_reports = (
-    select_rep    => "Select Report...",
-    welcome_rep   => "Welcome Dinner",
-    workshop_rep  => "Workshop Attendance",
-    picnic_rep    => "Picnic Attendance",
-    sibshirts_rep => "Sibling Shirts",
-    softwear_rep  => "SOFT Wear",    
-    notes_rep     => "Special Notes",
-    donation_rep  => "Donations",
+    select_rep    		=> "Select Report...",
+    reception_rep 		=> "Welcome Reception",
+    welcome_rep   		=> "Welcome Dinner",
+    workshop_rep  		=> "Workshop Attendance",
+    clinics_rep   		=> "Clinic Choices",
+    picnic_rep    		=> "Picnic Attendance",
+    childcare_rep 		=> "Childcare Sessions",
+    sibouting_rep 		=> "Sibling Outings",
+    remembrance_rep		=> "Remembrance Outing",
+    balloons_rep  		=> "Balloon Requests",
+    breakfast_rep 		=> "Final Breakfast",
+    chapterchair_rep	=> "Chapter Chair Lunch",
+    disabled  => "─────────────────────────",
+    softwear_rep  		=> "SOFT Wear",
+    directory_rep 		=> "Directory",
+    attendance_rep		=> "Total attendance",
+    softchild_rep		=> "SOFT Children",
+    notes_rep     		=> "Additional Notes",
+    disabled  => "─────────────────────────",
+    financial_rep		=> "Financial Report",
+    joeywatson_rep  	=> "Joey Watson Report",
+    donation_rep  		=> "Donations",
+    disabled  => "─────────────────────────",
+    membership_rep		=> "Membership Report"
 );
 
 

@@ -93,7 +93,8 @@ CREATE TABLE contacts
     paymentToken        VARCHAR(255),
     paymentEmail        VARCHAR(255),
     paymentName         VARCHAR(255),
-    paymentPage         TINYINT DEFAULT FALSE
+    paymentPage         TINYINT DEFAULT FALSE,
+    paymentNotes        VARCHAR(1000)
 );
 
 

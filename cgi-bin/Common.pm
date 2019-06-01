@@ -8,17 +8,22 @@
 
 package Common;
 
+use DateTime;
+
 require Exporter;
 @ISA    = qw(Exporter);
 @EXPORT = qw(
     trim
     titlecase
-    BrowserRefresh
+    redirect
     GetTemplate
     GetBodyFromTemplate
     StripHTML
     modification_time
     is_fully_paid
+    is_complete
+    age_from_birthdate
+    file_version
 );
 
 use strict;
@@ -50,21 +55,16 @@ sub titlecase {
 }
 
 
-sub BrowserRefresh {
-    my ($location) = @_;
+sub redirect {
+	my $url = shift;
 
-    print "Content-type: text/html\n\n";
+	# Prevent header injection
+	$url =~ s/[\r\n]//g;
 
-    # This is faster and cleaner but doesn't update the address bar
-    #     my $template = get($location);
-    #     print $template;
-    #     exit;
-
-    print "<html><head>\n";
-    print "<meta http-equiv='refresh' content='0; url=$location'>\n";
-    print "</head></html>";
-    exit;
+	print "Location: $url\n\n";
+	exit;
 }
+
 
 use LWP::Simple;
 
@@ -106,6 +106,36 @@ sub GetBodyFromTemplate {
 }
 
 
+#------------------------------------------------
+# Converts the modtime of a file to base62 so the
+# modtime can be used for short version strings
+# with .js and .css files: 1542312959 => 1Gno3t
+#
+#     code.js?v=1Gno3t
+#
+# Using these version strings will cause browsers
+# to automatically recache a .js or .css file
+# when they are modified.
+#------------------------------------------------
+
+sub file_version {
+   my $file = shift;        # Full path to file
+
+   my $seconds = (stat $file)[9] || 0;
+   warn "File '$file' not found"  unless ($seconds);
+
+   my $version = "";
+   do {
+       $version .= ('0'..'9', 'a'..'z', 'A'..'Z')[$seconds%62];
+       $seconds = int($seconds/62);
+   }
+   while ($seconds > 0);
+
+   return reverse $version;
+}
+
+
+
 sub StripHTML {
     my $html = shift;
 
@@ -117,29 +147,57 @@ sub StripHTML {
     return ($html);
 }
 
+
 #  Return the modification time of the filepath/file passed in
 sub modification_time {
     return (stat(shift))[9];
 }
 
-#  Determining whether somebody owes anything has a few quirks, so let's
-#  encapsulate that here...
 
+#  Determining whether somebody owes anything has a few quirks, so let's
+#  encapsulate that here... This deterimes whether somebody owes
+#  anything for registration, not if they've pledged a donation.
 
 sub is_fully_paid {
     my %contact = @_;
 
-    #  The only registrations that are free are balloon releases, but
-    #  they might have pledged some donations. A family could also be
-    #  fully comp'd with a Joey Watson scholarship.
-
     my $paid = 1;
-    if ($contact{attendance} ne "balloon" || $contact{grandTotal} > 0) {
-        $paid = $contact{paid} ? 1 : 0;    # "$contact{paid}" is a flag, not a payment
+    if ($contact{attendance} ne "balloon"  &&  $contact{grandTotal} > 0) {
+        $paid = $contact{paid};    # "$contact{paid}" is a flag, not a payment
     }
 
     return $paid;
 }
+
+
+sub is_complete {
+    my %contact = @_;
+    return $contact{paymentPage} != 0;
+}
+
+
+sub age_from_birthdate {
+	my $birthdate = shift;			#  MM/DD/YYYY
+
+	my ($month, $day, $year);
+
+	if ($birthdate =~ m/(\d\d)\/(\d\d)\/(\d\d\d\d)/) {
+		($month, $day, $year) = ($1, $2, $3);
+	}
+	else {
+		die "Bad birthdate!";
+	}
+
+	# $day = 20; $month = 5; $year = 2019;
+	my $dt_birth = DateTime->new(year => $year, month => $month, day => $day);
+	my $dt_today = DateTime->new(year => 2019, month => 5, day => 21);
+
+	my $age = int(($dt_today->epoch() - $dt_birth->epoch()) / (86400*365));
+
+	return ($age);
+}
+
+
 
 #----------------------------------------------------------------------
 #  Report Module Success

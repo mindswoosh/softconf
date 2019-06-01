@@ -8,6 +8,18 @@ function redirect(url) {
 }
 
 
+function ensurePayment(contact_id) {
+	var notes = prompt('Mark contact as "Paid"?\n\nPayment Notes: (Check #, PayPal, etc.)');
+
+	if (notes != null) {
+		notes = encodeURIComponent(notes);
+		redirect('http://softconf.org/cgi-bin/admin.cgi?action=mark_paid&id=' + contact_id + '&msg=' + notes);
+	}
+
+	return false;
+}
+
+
 $(document).ready(function() {
 
     $("#registration").selectmenu();
@@ -23,5 +35,4 @@ $(document).ready(function() {
         }
     });
 
-    console.log( "ready!" );
 });

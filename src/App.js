@@ -286,31 +286,35 @@ const eventInfoDefault = {
       'Adult - 5XL',
     ],
 
-  childCareBlurb: "Childcare will be available during the Workshops and Clinics and is available for children 11 and under and for SOFT children of any age. Please refer to the brochure for the times of the Workshops and Clinics you plan to attend in which you might need childcare.",
+  childCareBlurb: "Child care will be available during the Workshops and Clinics and is available for children 11 and under and for SOFT children of any age. Please refer to the brochure for the times of the Workshops and Clinics you plan to attend in which you might need child care. No child care is available on Friday morning for SOFT children.",
   childCareSessions: [
     {
       id: 'cc1',
       title: "Wednesday 8am-5:30pm",
       pre5Only: false,
       boardOnly: true,
+      noSOFTkids: false,
     },
     {
       id: 'cc2',
       title: "Thursday 8am-2pm",
       pre5Only: false,
       boardOnly: false,
+      noSOFTkids: false,
     },
     {
       id: 'cc3',
       title: "Thursday 2pm-4:30pm",
       pre5Only: false,
       boardOnly: false,
+      noSOFTkids: false,
     },
     {
       id: 'cc4',
       title: "Friday 11:45am-5pm",
       pre5Only: false,
       boardOnly: false,
+      noSOFTkids: true,
     },
   ],
 
@@ -1651,7 +1655,7 @@ class App extends Component {
           attendees = attendees.map(a => {
             if (a.peopleType === peopleTypes.CHILD  ||  a.peopleType === peopleTypes.SOFTCHILD) {
               for (let sess of this.state.eventInfo.childCareSessions) {
-                if (!qualifiesChildCare(a.age, sess, this.state.boardMember)) {
+                if (!qualifiesChildCare(a, sess, this.state.boardMember)) {
                   a.childCareSessions[sess.id] = false;                               //  Make sure non-board members always have false for board-only settings
                 }
               }
@@ -2939,8 +2943,22 @@ const Remembrance = ({ attendees, needsRembTrans, blurb, menuInfo, onChange, onC
 //----------------------------------------------------------------------------------------------------
 
 
-function qualifiesChildCare(age, session, isBoardMember) {
-  return (!session.pre5Only || age < 5) && (!session.boardOnly || isBoardMember);
+function qualifiesChildCare(child, session, isBoardMember) {
+  
+  if (child.peopleType === peopleTypes.SOFTCHILD  &&  session.noSOFTkids) {
+  	return false;
+  }
+  
+  //  SOFT children of any age can attend the "under 5" child care sessions
+  if (child.peopleType !== peopleTypes.SOFTCHILD  &&  session.pre5Only  &&  child.age >= 5) {
+  	return false;
+  }
+
+  if (session.boardOnly  &&  !isBoardMember) {
+  	return false;
+  }
+
+  return true;
 }
 
 
@@ -2955,7 +2973,7 @@ const Childcare = ({attendees, childCareSessions, boardMember, onChange, blurb})
           <div key={a.id} className="indent">
             <span className="remb-name"><strong>{a.firstName} {a.lastName}</strong></span>
             {childCareSessions.map( (ccs,i) =>
-              { return (qualifiesChildCare(a.age, ccs, boardMember) ?
+              { return (qualifiesChildCare(a, ccs, boardMember) ?
                   <div key={a.id + "-" + ccs.id} className="indent" >
                     <Checkbox defaultChecked={a.childCareSessions[ccs.id]} onChange={event => onChange(event, a.id, ccs.id)} />
                     {ccs.title}
@@ -3493,7 +3511,7 @@ const Summary = ({thisState}) => {
                       let numSessions = 0;
                       for (let sess of thisState.eventInfo.childCareSessions) {
                         // child.childCareSessions:  { ccID1: bool, ccID2: bool, ccID3:bool... }
-                        if (child.childCareSessions.hasOwnProperty(sess.id) && qualifiesChildCare(child.age, sess, thisState.boardMember)) {
+                        if (child.childCareSessions.hasOwnProperty(sess.id) && qualifiesChildCare(child, sess, thisState.boardMember)) {
                           output += add_line(2, sprintf("%-25s%s", sess.title + ': ', boolToYN(child.childCareSessions[sess.id])));
                           numSessions++;
                         }

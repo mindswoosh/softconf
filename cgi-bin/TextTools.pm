@@ -5,7 +5,7 @@ use warnings;
 
 use Exporter 'import';
 our @EXPORT_OK = qw(
-    commify trim quote boolToYesNo textToHTML
+    commify trim quote boolToYesNo textToHTML pluralizeText
 );
 
 
@@ -67,6 +67,22 @@ sub textToHTML {
     return $text;
 }
 
+
+
+#------------------------------------------------
+# Pluralize a word based on the number of "things"
+#------------------------------------------------
+
+sub pluralizeText {
+	my $num = shift;
+	my $str = shift;
+
+	if ($num != 1) {		#  Very simplistic
+		$str .= "s";
+	}
+
+	return $str;
+}
 
 
 1;

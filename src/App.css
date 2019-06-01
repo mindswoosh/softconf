@@ -665,6 +665,48 @@ code {
   width: 200px;
 }
 
+.dmin-totala {
+  display: inline-block;
+  width: 200px;
+  text-align: right;
+}
+
+.admin-cost {
+  display: inline-block;
+  width: 100px;
+  text-align: right;
+}
+
+.admin-narrow-box {
+  display: inline-block;
+  width: 50px;
+  text-align: left;
+}
+
+.admin-medium-box {
+  display: inline-block;
+  width: 110px;
+  text-align: left;
+}
+
+.admin-wide-box {
+  display: inline-block;
+  width: 150px;
+  text-align: left;
+}
+
+.admin-extrawide-box {
+  display: inline-block;
+  width: 350px;
+  text-align: left;
+}
+
+.admin-superwide-box {
+  display: inline-block;
+  width: 600px;
+  text-align: left;
+}
+
 
 /* Handle screen size adjustments */
 

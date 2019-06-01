@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Settings;
-use Globals qw($otherDiagnosisTitle %peopleTypes %reg_type $CONFERENCE_ID);
+use Globals qw($otherDiagnosisTitle %peopleTypes %reg_type $CONFERENCE_ID $report_dir $system_url);
 use Database;
 
 use CGI;
@@ -14,24 +14,24 @@ use Reports;
 use TextTools qw(trim quote textToHTML);
 use Lists;
 use Interface;
-use Common 'is_fully_paid';
+use Common qw(is_fully_paid redirect);
 
 our $q = CGI->new;
 
 our $tab    = $q->param('tab')    || "registrations";
 our $action = $q->param('action') || "";
 our $search = $q->param('search') || "";
+our $id     = $q->param('id')     || "";
+
 
 #----------------------------------------------------------------------------------------------------
 
+
 if ($action eq "summary") {
-    display_contact($q->param('id'));
+    display_contact($id);
 }
-elsif ($action eq "welcome_csv") {
-    welcome_report_csv();
-}
-elsif ($action eq "shirts_csv") {
-    shirts_csv();
+elsif ($action eq "mark_paid") {
+	mark_paid($id);
 }
 elsif ($tab eq "registrations") {
     list_contacts($action || "all", $search);
@@ -52,6 +52,7 @@ else {
 }
 
 exit;
+
 
 #----------------------------------------------------------------------------------------------------
 
@@ -96,7 +97,7 @@ sub list_contacts {
         <button type="submit">Go</button>
       </form>
     ~;
-    print "<br><br>";
+    print qq~<br><br><br><div class="admin-twice-indent">~;
 
     if (@matching_contacts != 0) {
         my $i = 1;
@@ -118,10 +119,11 @@ sub list_contacts {
     if ($search ne "") {
         print qq~<br><br><a class="admin-indent" href="/cgi-bin/admin.cgi?tab=registrations&action=$reg_type&search="">Show All</a>~;
     }
-    print "<br><br>";
+    print "</div><br><br>";
 
     print_footer();
 }
+
 
 #----------------------------------------------------------------------------------------------------
 
@@ -133,15 +135,20 @@ sub display_contact {
 
     $text = textToHTML($text);
 
+    $text =~ s/Not&nbsp;Paid&nbsp;Yet/Not Paid Yet<span class="admin-medium-box"><\/span><button id="paymentbtn" type="button" onclick="ensurePayment($contact_id);">Mark as Paid<\/button>/;
+
     print_header();
     print_navigation("registrations");
     print qq~
-      <h1 style="margin-left: 10px;">Registration for:</h1>
-      <br>
-      <div style="font-family: monospace, monospace; font-size: 14px; margin-left: 15px;">
-         $text
-         <br><br>
-      </div>
+    	<div style="margin-left: 10px;">
+			<input action="action" type="button" value="<< Go Back" onclick="window.history.go(-1); return false;"><br><br>
+			<h1>Registration for:</h1>
+			<br>
+			<div style="font-family: monospace, monospace; font-size: 14px; margin-left: 15px;">
+			 $text
+			 <br><br>
+			</div>
+		</div>
     ~;
 
     print_footer();
@@ -149,11 +156,501 @@ sub display_contact {
     exit;
 }
 
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub reception_report {
+
+	#  Create the .csv version
+	
+    my $csv = "Welcome Reception - Fully Paid:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    $csv .= reception_csv(@matching_contacts);
+
+    $csv .= "\n\n\nWelcome Reception - Not Paid:\n\n";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    $csv .= reception_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/reception.csv") or die "Could not save reception.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Welcome Reception - Fully Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    $html .= reception_html(@matching_contacts);
+
+    $html .= "<br><br><h3>Welcome Reception - Not Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    $html .= reception_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/reception.csv" download="reception.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub welcome_report {
+
+	#  Create the .csv version
+	
+    my $csv = "Welcome Dinners - Fully Paid:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    $csv .= welcome_dinner_csv(@matching_contacts);
+
+    $csv .= "\n\n\nWelcome Dinners - Not Paid:\n\n";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    $csv .= welcome_dinner_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/welcome_dinner.csv") or die "Could not save welcome_dinner.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Welcome Dinners - Fully Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    $html .= welcome_dinner_html(@matching_contacts);
+
+    $html .= "<br><br><h3>Welcome Dinners - Not Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    $html .= welcome_dinner_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/welcome_dinner.csv" download="welcome_dinner.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub softwear_report {
+
+	#  Create the .csv version
+	
+    my $csv = "Shirts ordered - Fully Paid:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    $csv .= shirts_ordered_csv(@matching_contacts);
+
+    $csv .= "\n\n\nShirts ordered - Not Paid:\n\n";
+    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    $csv .= shirts_ordered_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/softwear.csv") or die "Could not save softwear.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>SOFT Wear Orders - Fully Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    $html .= shirts_ordered_html(@matching_contacts);
+
+    $html .= "<br><br><h3>SOFT Wear Orders - Not Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    $html .= shirts_ordered_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/softwear.csv" download="softwear.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub workshop_report {
+
+	#  Create the .csv version
+	
+    my $csv = "Workshop Attendance - Fully Paid:\n\n";
+    $csv .= workshop_attendance_csv("paid");
+
+    $csv .= "\n\n\nWorkshop Attendance - Not Paid:\n\n";
+    $csv .= workshop_attendance_csv("unpaid");
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/workshops.csv") or die "Could not save workshops.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Workshop Attendance - Fully Paid:</h3>";
+    $html .= workshop_attendance_html("paid");
+
+    $html .= "<br><h3>Workshop Attendance - Not Paid:</h3>";
+    $html .= workshop_attendance_html("unpaid");
+
+    $html .= qq~<br><a href="/reports/workshops.csv" download="workshops.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub clinic_report {
+
+	#  Create the .csv version
+	
+    my $csv = "Clinic Choices - Fully Paid:\n\n";
+    $csv .= clinics_csv("paid");
+
+    $csv .= "\n\n\nClinic Choices - Not Paid:\n\n";
+    $csv .= clinics_csv("unpaid");
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/clinics.csv") or die "Could not save clinics.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Clinic Choices - Fully Paid:</h3>";
+    $html .= clinics_html("paid");
+
+    $html .= "<br><h3>Clinic Choices - Not Paid:</h3>";
+    $html .= clinics_html("unpaid");
+
+    $html .= qq~<br><a href="/reports/clinics.csv" download="clinics.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub sibouting_report {
+
+	#  Create the .csv version
+	
+    my $csv = "Sib Outings - Fully Paid:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    $csv .= sibouting_csv(@matching_contacts);
+
+    $csv .= "Sib Outings - Not Paid:\n\n";
+    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    $csv .= sibouting_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/sibouting.csv") or die "Could not save sibouting.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Sib Outings - Fully Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    $html .= sibouting_html(@matching_contacts);
+
+    $html .= "<br><br><h3>Sib Outings - Not Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    $html .= sibouting_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/sibouting.csv" download="sibouting.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub childcare_report {
+
+	#  Create the .csv version
+	
+    my $csv = "Childcare Attendance - Fully Paid:\n\n";
+    $csv .= childcare_csv("paid");
+
+    $csv .= "\n\n\nChildcare Attendance - Not Paid:\n\n";
+    $csv .= childcare_csv("unpaid");
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/childcare.csv") or die "Could not save childcare.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Childcare Attendance - Fully Paid:</h3>";
+    $html .= childcare_html("paid");
+
+    $html .= "<br><h3>Childcare Attendance - Not Paid:</h3>";
+    $html .= childcare_html("unpaid");
+
+    $html .= qq~<br><a href="/reports/childcare.csv" download="childcare.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub picnic_report {
+
+	#  Create the .csv version
+
+    my $csv = "Picnic Attendance - Fully Paid:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    push @matching_contacts, get_contact_list($search, "completed", "picnic", "paid");
+    $csv .= picnic_csv(@matching_contacts);
+
+    $csv .= "\n\n\nPicnic Attendance - Not Paid:\n\n";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    push @matching_contacts, get_contact_list($search, "completed", "picnic", "unpaid");
+    $csv .= picnic_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/picnic.csv") or die "Could not save picnic.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Picnic Attendance - Fully Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    push @matching_contacts, get_contact_list($search, "completed", "picnic", "paid");
+    $html .= picnic_html(@matching_contacts);
+
+    $html .= "<br><br><h3>Picnic Attendance - Not Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    push @matching_contacts, get_contact_list($search, "completed", "picnic", "unpaid");
+    $html .= picnic_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/picnic.csv" download="picnic.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub remembrance_report {
+
+	#  Create the .csv version
+
+    my $csv = "Remembrance Outing - Fully Paid:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    $csv .= remembrance_csv(@matching_contacts);
+
+    $csv .= "\n\n\nRemembrance Outing - Not Paid:\n\n";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    $csv .= remembrance_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/remembrance.csv") or die "Could not save remembrance.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Remembrance Outing - Fully Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    $html .= remembrance_html(@matching_contacts);
+
+    $html .= "<br><br><h3>Remembrance Outing - Not Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    $html .= remembrance_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/remembrance.csv" download="remembrance.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub chapterchair_report {
+
+	#  Create the .csv version
+
+    my $csv = "Chapter Chair Lunch - Fully Paid:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    $csv .= chapterchair_csv(@matching_contacts);
+
+    $csv .= "\n\n\nChapter Chair Lunch - Not Paid:\n\n";
+    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    $csv .= chapterchair_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/chapterchair.csv") or die "Could not save chapterchair.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Chapter Chair Lunch - Fully Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    $html .= chapterchair_html(@matching_contacts);
+
+    $html .= "<br><br><h3>Chapter Chair Lunch - Not Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    $html .= chapterchair_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/chapterchair.csv" download="chapterchair.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub breakfast_report {
+
+	#  Create the .csv version
+	
+    my $csv = "Final Breakfast - Fully Paid:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    $csv .= breakfast_csv(@matching_contacts);
+
+    $csv .= "\n\n\nFinal Breakfast - Not Paid:\n\n";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    $csv .= breakfast_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/breakfast.csv") or die "Could not save breakfast.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Final Breakfast - Fully Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    $html .= breakfast_html(@matching_contacts);
+
+    $html .= "<br><br><h3>Final Breakfast - Not Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    $html .= breakfast_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/breakfast.csv" download="breakfast.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub directory_report {
+
+	#  Create the .csv version
+
+    my $csv = "Directory Information - Fully Paid:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    $csv .= directory_csv(@matching_contacts);
+
+    $csv .= "\n\n\nDirectory Information - Not Paid:\n\n";
+    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    $csv .= directory_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/directory.csv") or die "Could not save directory.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Directory Information - Fully Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    $html .= directory_html(@matching_contacts);
+
+    $html .= "<br><br><h3>Directory Information - Not Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    $html .= directory_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/directory.csv" download="directory.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub notes_report {
+
+	#  Create the .csv version
+
+    my $csv = "Additional Notes - Fully Paid:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    $csv .= notes_csv(@matching_contacts);
+
+    $csv .= "\n\n\nAdditional Notes - Not Paid:\n\n";
+    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    $csv .= notes_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/notes.csv") or die "Could not save notes.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Additional Notes - Fully Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    $html .= notes_html(@matching_contacts);
+
+    $html .= "<br><br><h3>Additional Notes - Not Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    $html .= notes_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/notes.csv" download="notes.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
 #----------------------------------------------------------------------------------------------------
 
 
 sub show_reports {
     my $rep_type = shift;
+
+    our %dispatch = (
+    	"reception_rep"		=> \&reception_report,
+        "welcome_rep"       => \&welcome_report,
+        "softwear_rep"      => \&softwear_report,
+        "workshop_rep"      => \&workshop_report,
+        "clinics_rep"       => \&clinic_report,
+        "sibouting_rep"		=> \&sibouting_report,
+        "picnic_rep"		=> \&picnic_report,
+        "remembrance_rep"	=> \&remembrance_report,
+        "chapterchair_rep"	=> \&chapterchair_report,
+        "childcare_rep"     => \&childcare_report,
+        "breakfast_rep"		=> \&breakfast_report,
+        "directory_rep"		=> \&directory_report,
+        "notes_rep"			=> \&notes_report,
+    );
 
     print_header();
     print_navigation("reports");
@@ -164,16 +661,11 @@ sub show_reports {
 
     my $html = "";
 
-    if ($rep_type eq "welcome_rep") {
-        $html .= welcome_report();
-    }
-    elsif ($rep_type eq "softwear_rep") {
-        $html .= softwear_report();
-    }
-    elsif ($rep_type eq "workshop_rep") {
-        $html .= workshop_report();
+    if (exists $dispatch{$rep_type}) {
+        $html .= $dispatch{$rep_type}->();
     }
     else {
+    	$html .= "<br>Choose a report from the drop-down menu.";
         $html .= "<br>"x20;
     }
 
@@ -186,74 +678,26 @@ sub show_reports {
     exit;
 }
 
-#----------------------------------------------------------------------------------------------------
-
-
-sub welcome_report {
-
-    my @matching_contacts = get_contact_list($search, "completed", "full");
-
-    my $html = "<h3>Welcome Dinner:</h3>";
-
-    $html .= welcome_dinner(@matching_contacts);
-
-    $html .= "<br>"x3 . qq~<a href="/cgi-bin/admin.cgi?action=welcome_csv" target="_blank">CSV Report</a><br><br>~;
-
-    return $html;
-}
-
-
-sub welcome_report_csv {
-
-    my @matching_contacts = get_contact_list($search, "completed", "full");
-
-    print "Content-type: text/plain\n\n";
-    print welcome_dinner_csv(@matching_contacts);
-
-    exit;
-}
-
 
 #----------------------------------------------------------------------------------------------------
 
-sub softwear_report {
+sub mark_paid {
+	my $contact_id = shift;
 
-    my @matching_contacts = get_contact_list($search, "completed", "full");
+	my%contact = GetContact($contact_id);
 
+	if ($contact{id} == $contact_id) {			#  Simple validation
+		$contact{paid} = 1;
 
-    my $html = "<h3>SOFT Wear Orders fully Paid:</h3>";
+		my $notes = $q->param('msg') || "";
+		$contact{paymentNotes} = $notes;
 
-    $html .= shirts_ordered_html(@matching_contacts);
+		UpdateContact(%contact);
+	}
 
-    $html .= "<br>"x3 . qq~<a href="/cgi-bin/admin.cgi?action=shirts_csv" target="_blank">CSV Report</a><br><br>~;
-
-    return $html;
+	redirect("$system_url/cgi-bin/admin.cgi?action=summary&id=$contact_id");
 }
 
-
-sub shirts_csv {
-
-    my @matching_contacts = get_contact_list($search, "completed", "full");
-
-    print "Content-type: text/plain\n\n";
-    print shirts_ordered_csv(@matching_contacts);
-
-    exit;
-}
-
-
-#----------------------------------------------------------------------------------------------------
-
-
-sub workshop_report {
-
-    my $html = "<h3>Workshop Attendance:</h3>";
-    $html .= workshop_attendance($CONFERENCE_ID);
-
-    return $html;
-}
-
-#----------------------------------------------------------------------------------------------------
 
 
 sub form_editor {

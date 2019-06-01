@@ -10,6 +10,7 @@ use Database;
 use Exporter 'import';
 our @EXPORT = qw(
     get_workshop_info
+    get_clinic_info
     get_childcare_info
     get_shirttypes_info
 );
@@ -251,6 +252,30 @@ sub get_shirttypes_info {
     );
 
     return @shirtTypesInfo;
+}
+
+
+
+
+#----------------------------------------------------------------------------------------------------
+#  Return an array of clinic titles -- that's all we're doing so far...
+#
+#  my @clinicInfo = get_info_info($conference_id);
+
+sub get_clinic_info {
+    my $conference_id = shift || "";
+
+    my @clinicNames = (
+        'Orthopedic',
+        'Otolaryngology',
+        'GI',
+        'Pulmonology',
+        'Genetics',
+        'Immuno-Hematology',
+        'Infectious Disease',
+    );
+
+    return @clinicNames;
 }
 
 

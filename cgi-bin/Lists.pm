@@ -13,10 +13,16 @@ our @EXPORT = qw(
     get_contact_list
     get_attendee_list
     get_softangels_list
+    
     get_clinics
+    get_clinic_choices
+    
     get_workshop_choices
     get_workshop_attendee_list
+    
     get_childcare_needs
+    get_childcare_attendee_list
+
     get_shirtsordered_list
 );
 
@@ -185,6 +191,29 @@ sub get_clinics {
 }
 
 
+sub get_clinic_choices {
+	my $clinicName = shift;
+	my $clinicChoice = shift;
+
+	my @matching_clinics = ();
+    my ($dbh, $sth);
+
+    $dbh = OpenDatabase();
+    {
+        $sth = $dbh->prepare("SELECT * FROM clinics WHERE title=? and position=? ORDER by id");
+        $sth->execute($clinicName, $clinicChoice);
+
+        while (my $clinic_ref = $sth->fetchrow_hashref()) {
+          push @matching_clinics, $clinic_ref;
+        }
+
+        $sth->finish();
+    }
+    CloseDatabase($dbh);
+
+    return @matching_clinics;
+}
+
 
 #----------------------------------------------------------------------------------------------------
 #  Search for workshop sessions of specified attendee, returning a hash
@@ -245,6 +274,29 @@ sub get_childcare_needs {
 }
 
 
+sub get_childcare_attendee_list {
+	my $session_id = shift;
+
+    my @matching_children = ();
+    my ($dbh, $sth);
+
+    $dbh = OpenDatabase();
+    {
+        $sth = $dbh->prepare("SELECT * FROM childcare WHERE session_id=? ORDER by id");
+        $sth->execute($session_id);
+
+        while (my $child_ref = $sth->fetchrow_hashref()) {
+          push @matching_children, $child_ref;
+        }
+
+        $sth->finish();
+    }
+    CloseDatabase($dbh);
+
+    return @matching_children;
+}
+
+
 
 #----------------------------------------------------------------------------------------------------
 #  Return an array of hash references for shirts ordered
@@ -261,6 +313,36 @@ sub get_shirtsordered_list {
     $dbh = OpenDatabase();
     {
         $sth = $dbh->prepare("SELECT * FROM shirts WHERE contact_id=? ORDER by id");
+        $sth->execute($contact_id);
+
+        while (my $shirtsordered_ref = $sth->fetchrow_hashref()) {
+          push @shirtsordered, $shirtsordered_ref;
+        }
+
+        $sth->finish();
+    }
+    CloseDatabase($dbh);
+
+    return @shirtsordered;
+}
+
+
+
+
+#----------------------------------------------------------------------------------------------------
+#  Return an array of hash references for shirts ordered
+#
+#  my @shirtsOrdered_refs = get_shirtsordered_list($contact_id);
+
+
+sub get_sibouting_list {
+
+    my @attendees = ();
+    my ($dbh, $sth);
+
+    $dbh = OpenDatabase();
+    {
+        $sth = $dbh->prepare("SELECT * FROM attendees WHERE contact_id=? ORDER by id");
         $sth->execute($contact_id);
 
         while (my $shirtsordered_ref = $sth->fetchrow_hashref()) {

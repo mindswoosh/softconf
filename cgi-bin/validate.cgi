@@ -40,7 +40,7 @@ sub prompt {
     	<br>
     	<h3 class="admin-indent">Enter Password:</h3><br><br>
 		<form action="/cgi-bin/validate.cgi" method="GET" style="display: inline-block;">
-			<span class="admin-indent"><input type="password" name="password"></span> &nbsp;
+			<span class="admin-indent"><input type="password" name="password" autofocus></span> &nbsp;
 			<button type="submit">Submit</button>
 		</form>
 		<br><br><br>

@@ -28,6 +28,11 @@ our @EXPORT = qw(
   $otherDiagnosisTitle
   %peopleTypes
   %reg_type
+
+  $system_url
+  $system_dir
+
+  $report_dir
 );
 
 
@@ -52,6 +57,11 @@ our $CONFERENCE_ID = "MI2019";
 our $dbh;
 
 
+#----------------------------------------------------------------------
+#  The directory where all of our .csv reports are written to
+
+our $report_dir = "/home4/softconf/public_html/reports";
+
 
 #----------------------------------------------------------------------
 #  Include DEBUG code?
@@ -63,6 +73,13 @@ our $DEBUG = 1;
 #  This title is used in menus and compared against explicitly
 
 our $otherDiagnosisTitle = 'Other Diagnosis';
+
+
+#----------------------------------------------------------------------
+#  What website are we running on?
+
+our $system_url = "https://softconf.org";
+our $system_dir = "/home4/softconf/public_html";
 
 
 #------------------------------------------------------------------------
