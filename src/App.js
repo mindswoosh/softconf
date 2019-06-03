@@ -1360,7 +1360,7 @@ class App extends Component {
 
           let bad_softAngel = softAngels.find( a => { 
             return (  a.firstName === ''  ||  a.lastName === ''  ||  a.peopleType === '' ||
-                      a.dateOfBirth === null  ||  a.dateOfDeath === null  ||  a.diagnosis === null  ||  
+                      a.dateOfBirth === null  ||  a.dateOfDeath === null  ||  a.diagnosis === ''  ||  
                       (a.diagnosis === otherDiagnosisTitle  &&  a.otherDiagnosis === '')
                    )
           });
@@ -1414,7 +1414,7 @@ class App extends Component {
             return (  a.firstName === ''  ||  a.lastName === ''  ||  a.peopleType === ''  || 
                      (a.peopleType === peopleTypes.CHILD  &&  (a.age === null || a.age === '' || a.age === -1 || a.age > 11)) ||
                      (a.peopleType === peopleTypes.TEEN   &&  (a.age === null || a.age === '' || a.age < 12)) ||
-                     (a.peopleType === peopleTypes.SOFTCHILD  &&  (a.dateOfBirth === null  ||  a.diagnosis === null  ||  (a.diagnosis === otherDiagnosisTitle && a.otherDiagnosis === "")) )
+                     (a.peopleType === peopleTypes.SOFTCHILD  &&  (a.dateOfBirth === null  ||  a.diagnosis === ''  ||  (a.diagnosis === otherDiagnosisTitle && a.otherDiagnosis === "")) )
                    ) 
           });
 
@@ -2966,7 +2966,7 @@ const Childcare = ({attendees, childCareSessions, boardMember, onChange, blurb})
   <div>
     <h2>Childcare</h2>
     <p>{blurb}</p>
-    <p>Please put a checkmark next to each timeslot where you will need childcare.</p>
+    <p>Please put a checkmark next to each timeslot where you will need child care.</p>
     <div className="remembrance">
       {attendees.map( (a,i) => 
         {return (a.peopleType === peopleTypes.SOFTCHILD  ||  a.peopleType === peopleTypes.CHILD)  &&
@@ -3494,14 +3494,14 @@ const Summary = ({thisState}) => {
 
           if (userData.attendance !== 'picnic') {
 
-                //  Include Childcare section?
+                //  Include Child care section?
                 let children = userData.attendees.filter( a => { 
                   return (a.peopleType === peopleTypes.CHILD  ||  a.peopleType === peopleTypes.SOFTCHILD);
                 });
 
                 if (children.length > 0) {
 
-                    output += add_line(0, '\nChildcare:');
+                    output += add_line(0, '\nChild care:');
                     output += '\n';
 
                     for (let child of children) {

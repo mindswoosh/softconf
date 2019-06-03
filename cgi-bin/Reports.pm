@@ -341,7 +341,7 @@ sub contact_summary {
 
                 if (@children > 0) {
 
-                    $output .= add_line(0, "\nChildcare:");
+                    $output .= add_line(0, "\nChild care:");
                     $output .= "\n";
 
                     for my $child_ref (@children) {
@@ -1060,7 +1060,7 @@ sub sibouting_csv {
 sub _childcare {
     my $status = shift;   #  "paid" or "unpaid"
 
-    die "Incorrect childcare status: $status" unless ($status =~ /^(all|paid|unpaid)$/);
+    die "Incorrect child care status: $status" unless ($status =~ /^(all|paid|unpaid)$/);
 
     my $html = "";
     my $csv = "Session, Contact ID, Contact, Email, Phone, Child, Age, SOFT Child?\n";
