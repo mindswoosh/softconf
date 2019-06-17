@@ -9,6 +9,8 @@
 package Common;
 
 use DateTime;
+use Globals;
+use List::Util 'max';
 
 require Exporter;
 @ISA    = qw(Exporter);
@@ -23,7 +25,10 @@ require Exporter;
     is_fully_paid
     is_complete
     age_from_birthdate
+    age_of_softangel
+    friendly_date
     file_version
+    diagnosis
 );
 
 use strict;
@@ -197,6 +202,82 @@ sub age_from_birthdate {
 	return ($age);
 }
 
+
+sub age_of_softangel {
+	my %softangel = @_;			#  MM/DD/YYYY
+
+	my ($bmonth, $bday, $byear);
+	my ($dmonth, $dday, $dyear);
+
+	if ($softangel{birthDate} =~ m/(\d\d)\/(\d\d)\/(\d\d\d\d)/) {
+		($bmonth, $bday, $byear) = ($1, $2, $3);
+	}
+	else {
+		die "Bad birthdate!";
+	}
+
+	if ($softangel{deathDate} =~ m/(\d\d)\/(\d\d)\/(\d\d\d\d)/) {
+		($dmonth, $dday, $dyear) = ($1, $2, $3);
+	}
+	else {
+		die "Bad deathdate!";
+	}
+
+	# $day = 20; $month = 5; $year = 2019;
+	my $dt_birth = DateTime->new(year => $byear, month => $bmonth, day => $bday);
+	my $dt_death = DateTime->new(year => $dyear, month => $dmonth, day => $dday);
+
+	my $age = int(($dt_death->epoch() - $dt_birth->epoch()) / (86400*365));
+
+	if ($age == 0) {
+		my $days = max(1, int(($dt_death->epoch() - $dt_birth->epoch()) / 86400));
+
+		if ($days < 60) {
+			$age = "$days day" . ($days != 1 ? "s" : "");
+		}
+		else {
+			my $num_months = int($days/30);
+			$age = "$num_months month" . ($num_months != 1 ? "s" : "");
+		}
+	}
+
+	return ($age);
+}
+
+
+sub friendly_date {
+	my $date = shift;
+
+	my ($month, $day, $year);
+
+	if ($date =~ m/(\d\d)\/(\d\d)\/(\d\d\d\d)/) {
+		($month, $day, $year) = ($1, $2, $3);
+	}
+	else {
+		die "Bad birthdate!";
+	}
+
+	my $dt_date = DateTime->new(year => $year, month => $month, day => $day);;
+
+	return $dt_date->strftime("%b %e, %Y");
+}
+
+
+sub diagnosis {
+	my %softangel = @_;
+
+	my $diagnosis = $softangel{diagnosis};
+	if ($softangel{diagnosis} eq $otherDiagnosisTitle) {
+
+		$diagnosis = $softangel{otherDiagnosis};
+	}
+	
+	$diagnosis =~ s/trisomy/Trisomy/ig;
+	$diagnosis =~ s/partial/Partial/ig;
+	$diagnosis =~ s/trisomy partial/Partial Trisomy/ig;
+
+	return $diagnosis;
+}
 
 
 #----------------------------------------------------------------------

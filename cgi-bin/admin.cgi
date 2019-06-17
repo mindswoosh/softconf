@@ -490,11 +490,11 @@ sub chapterchair_report {
 	#  Create the .csv version
 
     my $csv = "Chapter Chair Lunch - Fully Paid:\n\n";
-    my @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    my @matching_contacts = get_contact_list($search, "completed", "full", "paid");
     $csv .= chapterchair_csv(@matching_contacts);
 
     $csv .= "\n\n\nChapter Chair Lunch - Not Paid:\n\n";
-    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
     $csv .= chapterchair_csv(@matching_contacts);
 
     #  Save the .csv file
@@ -506,11 +506,11 @@ sub chapterchair_report {
     #  Display the HTML version...
 
     my $html = "<h3>Chapter Chair Lunch - Fully Paid:</h3>";
-    @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    @matching_contacts = get_contact_list($search, "completed", "full", "paid");
     $html .= chapterchair_html(@matching_contacts);
 
     $html .= "<br><br><h3>Chapter Chair Lunch - Not Paid:</h3>";
-    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
     $html .= chapterchair_html(@matching_contacts);
 
     $html .= "<br>"x3 . qq~<a href="/reports/chapterchair.csv" download="chapterchair.csv">Download CSV Report</a><br><br>~;
@@ -518,6 +518,33 @@ sub chapterchair_report {
     return $html;
 }
 
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub balloons_report {
+
+	#  Create the .csv version
+	
+    my $csv = "Balloon Requests:\n\n";
+    $csv .= balloons_csv();
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/balloons.csv") or die "Could not save balloons.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Balloon Requests:</h3>";
+    $html .= balloons_html();
+
+    $html .= "<br>"x3 . qq~<a href="/reports/balloons.csv" download="balloons.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
 
 
 #----------------------------------------------------------------------------------------------------
@@ -648,6 +675,7 @@ sub show_reports {
         "chapterchair_rep"	=> \&chapterchair_report,
         "childcare_rep"     => \&childcare_report,
         "breakfast_rep"		=> \&breakfast_report,
+        "balloons_rep"	    => \&balloons_report,
         "directory_rep"		=> \&directory_report,
         "notes_rep"			=> \&notes_report,
     );

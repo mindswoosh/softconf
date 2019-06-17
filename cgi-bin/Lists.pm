@@ -6,13 +6,14 @@ use warnings;
 use Settings;
 use Globals;
 use Database;
-use Common 'is_fully_paid';
+use Common qw(is_fully_paid is_complete);
 
 use Exporter 'import';
 our @EXPORT = qw(
     get_contact_list
     get_attendee_list
     get_softangels_list
+    get_all_softangels_list
     
     get_clinics
     get_clinic_choices
@@ -57,7 +58,7 @@ sub get_contact_list {
         while (my $contact_ref = $sth->fetchrow_hashref()) {
             my %contact = %$contact_ref;
 
-            next unless ($status      eq "all"  ||  $status eq ($contact{paymentPage} ? "completed" : "abandoned"));
+            next unless ($status      eq "all"  ||  $status eq (is_complete(%contact) ? "completed" : "abandoned"));
             next unless ($type        eq "all"  ||  $contact{attendance} eq $type);
             next unless ($paymentType eq "all"  ||  ( $paymentType eq "paid"  &&  is_fully_paid(%contact) )  ||  ($paymentType eq "unpaid"  &&  !is_fully_paid(%contact) ) );
 
@@ -146,7 +147,7 @@ sub get_softangels_list {
 
     $dbh = OpenDatabase();
     {
-        $sth = $dbh->prepare("SELECT * FROM softangels WHERE contact_id=? ORDER by id");
+        $sth = $dbh->prepare("SELECT * FROM softangels WHERE contact_id=? ORDER BY id");
         $sth->execute($contact_id);
 
         while (my $softangel_ref = $sth->fetchrow_hashref()) {
@@ -159,6 +160,29 @@ sub get_softangels_list {
 
     return @matching_softangels;
 }
+
+
+sub get_all_softangels_list {
+
+    my @matching_softangels = ();
+    my ($dbh, $sth);
+
+    $dbh = OpenDatabase();
+    {
+        $sth = $dbh->prepare("SELECT * FROM softangels ORDER BY id");
+        $sth->execute();
+
+        while (my $softangel_ref = $sth->fetchrow_hashref()) {
+          push @matching_softangels, $softangel_ref;
+        }
+
+        $sth->finish();
+    }
+    CloseDatabase($dbh);
+
+    return @matching_softangels;
+}
+
 
 
 
@@ -329,31 +353,31 @@ sub get_shirtsordered_list {
 
 
 
-#----------------------------------------------------------------------------------------------------
-#  Return an array of hash references for shirts ordered
-#
-#  my @shirtsOrdered_refs = get_shirtsordered_list($contact_id);
+# #----------------------------------------------------------------------------------------------------
+# #  Return an array of hash references for shirts ordered
+# #
+# #  my @shirtsOrdered_refs = get_shirtsordered_list($contact_id);
 
 
-sub get_sibouting_list {
+# sub get_sibouting_list {
 
-    my @attendees = ();
-    my ($dbh, $sth);
+#     my @attendees = ();
+#     my ($dbh, $sth);
 
-    $dbh = OpenDatabase();
-    {
-        $sth = $dbh->prepare("SELECT * FROM attendees WHERE contact_id=? ORDER by id");
-        $sth->execute($contact_id);
+#     $dbh = OpenDatabase();
+#     {
+#         $sth = $dbh->prepare("SELECT * FROM attendees WHERE contact_id=? ORDER by id");
+#         $sth->execute();
 
-        while (my $shirtsordered_ref = $sth->fetchrow_hashref()) {
-          push @shirtsordered, $shirtsordered_ref;
-        }
+#         while (my $shirtsordered_ref = $sth->fetchrow_hashref()) {
+#           push @shirtsordered, $shirtsordered_ref;
+#         }
 
-        $sth->finish();
-    }
-    CloseDatabase($dbh);
+#         $sth->finish();
+#     }
+#     CloseDatabase($dbh);
 
-    return @shirtsordered;
-}
+#     return @shirtsordered;
+# }
 
 1;

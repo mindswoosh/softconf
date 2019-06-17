@@ -29,6 +29,9 @@ use Common qw(
     is_fully_paid
     is_complete
     age_from_birthdate
+    age_of_softangel
+    friendly_date
+    diagnosis
 );
 
 use Exporter 'import';
@@ -64,6 +67,9 @@ our @EXPORT = qw(
 
     breakfast_html
     breakfast_csv
+
+    balloons_html
+    balloons_csv
 
     shirts_ordered_html
     shirts_ordered_csv
@@ -1172,7 +1178,7 @@ sub _clinics {
     for (my $choice = 0; $choice < @clinicInfo; $choice++) {
 
     	if ($choice < 3) {
-	        $html .= qq~<br><div class="admin-linespace-before"><span class="admin-indent"></span><b>~ . $ordinalNames[$choice] . " Choices:</b></div><br>";
+	        $html .= qq~<div class="admin-linespace-before"><span class="admin-indent"></span><b>~ . $ordinalNames[$choice] . " Choices:</b></div><br>";
 	    }
 
         for (my $clinicID = 0; $clinicID <  @clinicInfo; $clinicID++) {
@@ -1253,10 +1259,10 @@ sub _clinics {
             # }
         }
 
-        
+        $html .= "<br>"  if ($choice < 3);
     }
 
-    $html .= qq~<br><br><div class="admin-linespace-after"><span class="admin-twice-indent"></span><span class="admin-indent"></span><span class="row-num"></span><span class="admin-name" style="text-align: right;"><b>Totals:</b>&nbsp; &nbsp;</span><span class="admin-medium-box">$totalMeals Meals</span><span class="admin-medium-box">$totalBusSeats Bus Seats</span>$totalTieDowns Tie-Downs<br><br>~;
+    $html .= qq~<div class="admin-linespace-after"><span class="admin-twice-indent"></span><span class="admin-indent"></span><span class="row-num"></span><span class="admin-name" style="text-align: right;"><b>Totals:</b>&nbsp; &nbsp;</span><span class="admin-medium-box">$totalMeals Meals</span><span class="admin-medium-box">$totalBusSeats Bus Seats</span>$totalTieDowns Tie-Downs<br><br>~;
 
     $csv  .= "\n,,,,Totals:, $totalMeals, $totalBusSeats, $totalTieDowns\n\n";
 
@@ -1450,8 +1456,89 @@ sub remembrance_csv {
 }
 
 
+#--------------------------------------------------------------------------------
+
+
+sub _balloons {
+
+    my $html = "";
+    my $csv = "Contact ID, Contact, Email, Phone, SOFT Angel, Diagnosis, Birth Date, Death Date, Age\n";
+
+    my %diagnosisTypes =();
+
+    my @softangels = get_all_softangels_list();
+
+    my $i = 1;
+    for my $softangel_ref (@softangels) {
+        my %softangel = %$softangel_ref;
+
+		my %contact = GetContact($softangel{contact_id});
+
+		next unless (is_complete(%contact));
+
+        my $diagnosis = diagnosis(%softangel);
+        my $age = age_of_softangel(%softangel);
+
+        $softangel{birthDate} = friendly_date($softangel{birthDate});
+        $softangel{deathDate} = friendly_date($softangel{deathDate});
+
+        $html .= qq~<span class="row-num">$i: </span><span class="admin-wider-box"><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$softangel{firstName} $softangel{lastName}</a></span><br>~;
+        $html .= qq~<span class="row-num"></span><span class="admin-wider-box">$diagnosis</span><span class="admin-extrawide-box">$softangel{birthDate} &nbsp;&nbsp;&mdash;&nbsp;&nbsp; $softangel{deathDate}</span>~;
+        $html .= qq~<span>(Age: $age)</span>~;
+        $html .= "<br><br>";
+
+        $csv .= csv_column($contact{id}) . ",";
+        $csv .= csv_column("$contact{firstName} $contact{lastName}") . ",";
+        $csv .= csv_column($contact{email}) . ",";
+        $csv .= csv_column($contact{phoneMobile} || $contact{phoneHome} ||  $contact{phoneWork}) . ",";
+
+        $csv .= csv_column("$softangel{firstName} $softangel{lastName}") . ",";
+        $csv .= csv_column($diagnosis) . ",";
+        $csv .= csv_column($softangel{birthDate}) . ",";
+        $csv .= csv_column($softangel{deathDate}) . ",";
+        $csv .= csv_column($age) . "\n";
+
+        $diagnosisTypes{$diagnosis}++;
+        $i++;
+    }
+
+    $html .= "<br><br>SOFT Angels:<br><br>";
+    $csv  .= "\n\nSOFT Angels:\n\n";
+
+    my @types = keys %diagnosisTypes;
+    @types = sort { $a cmp $b } @types;
+
+    for my $type (@types) {
+
+    	$html .= qq~<span class="row-num">$diagnosisTypes{$type}</span>$type<br>~;
+
+    	$csv  .= ",";
+    	$csv  .= csv_column("$diagnosisTypes{$type} $type");
+    	$csv  .= "\n";
+    }
+
+    return ($html, $csv);
+}
+
+
+sub balloons_html {
+    return (_balloons())[0];
+}
+
+
+sub balloons_csv {
+    return (_balloons())[1];
+}
+
+
 
 #--------------------------------------------------------------------------------
+
+
+sub pluralizePerson {
+	my $num = shift;
+	return $num == 1 ? "person" : "people";
+}
 
 
 sub _chapterchair {
@@ -1463,6 +1550,9 @@ sub _chapterchair {
     my $csv = "Contact ID, Contact, Email, Phone, Attendee\n";
 
     my $totalAttending = 0;
+    my $sibTotals = 0;
+    my $nonEaters = 0;
+    my $otherLunch = 0;
 
     my $i = 1;
     for my $contact_ref (@contacts) {
@@ -1477,36 +1567,59 @@ sub _chapterchair {
         for my $attendee_ref (@attendees) {
             my %attendee = %$attendee_ref;
 
-            next  unless ($attendee{chapterChairLunch});
+            if ($attendee{chapterChairLunch}) {
+	            if ($numAttendees == 1) {
+	            	$html .= $contactHtml;
+	            	$i++;
+	            }
 
-            if ($numAttendees == 1) {
-            	$html .= $contactHtml;
-            	$i++;
-            }
+	            $totalAttending++;
 
-            $totalAttending++;
+	            $html .= qq~<div class="admin-linespace-after"><span class="row-num"></span>$attendee{firstName} $attendee{lastName}</div><br>~;
 
-            $html .= qq~<div class="admin-linespace-after"><span class="row-num"></span>$attendee{firstName} $attendee{lastName}</div><br>~;
+	            $csv .= csv_column($contact{id}) . ",";
+	            $csv .= csv_column("$contact{firstName} $contact{lastName}") . ",";
+	            $csv .= csv_column($contact{email}) . ",";
+	            $csv .= csv_column($contact{phoneMobile} || $contact{phoneHome} ||  $contact{phoneWork}) . ",";
 
-            $csv .= csv_column($contact{id}) . ",";
-            $csv .= csv_column("$contact{firstName} $contact{lastName}") . ",";
-            $csv .= csv_column($contact{email}) . ",";
-            $csv .= csv_column($contact{phoneMobile} || $contact{phoneHome} ||  $contact{phoneWork}) . ",";
+	            $csv .= csv_column("$attendee{firstName} $attendee{lastName}") . "\n";
 
-            $csv .= csv_column("$attendee{firstName} $attendee{lastName}") . "\n";
+	            $numAttendees++;
+	        }
+	        else {		#  Not at the chapter chair luncheon
 
-            $numAttendees++;
+	        	if ($attendee{sibOuting}) {					#  At sib outing
+	        		$sibTotals++;
+	        	}
+	        	elsif ($attendee{peopleType} eq $peopleTypes{SOFTCHILD}  &&  !$attendee{eatsMeals}) {				#  At non-chapter chair luncheon, but not eating
+	        		$nonEaters++;
+	        	}
+	        	else {										#  At non-chapter chair luncheon
+	        		$otherLunch++;
+	        	}
+
+	        }
+
         }
         $html .= "<br>"  if ($numAttendees != 1);
     }
 
     $html .= "<br><b>Totals:</b><br><br>";
-    $html .= qq~<div class="admin-linespace-after"><span class="admin-narrow-box"></span>$totalAttending total people attending</div><br>~;
+    $html .= qq~<div class="admin-linespace-after"><span class="admin-narrow-box"></span>$totalAttending ~ . pluralizePerson($totalAttending) . qq~ attending Chapter Chair Luncheon</div><br></br>~;
+    $html .= qq~<div class="admin-linespace-after"><span class="admin-narrow-box"></span>$otherLunch ~ . pluralizePerson($otherLunch) . qq~ eating at the NON-Chapter Chair luncheon</div><br>~;
+    $html .= qq~<div class="admin-linespace-after"><span class="admin-narrow-box"></span>$nonEaters ~ . pluralizePerson($nonEaters) . qq~ NOT eating at the NON-Chapter Chair luncheon</div><br><br>~;
+    $html .= qq~<div class="admin-linespace-after"><span class="admin-narrow-box"></span>$sibTotals ~ . pluralizePerson($sibTotals) . qq~ away at Sibling Outings during Chapter Chair luncheon</div><br>~;
 
     $csv .= "\nTotals:\n";
     $csv .= ",";
-    $csv .= csv_column("$totalAttending total people attending");
-    $csv .= "\n\n";
+    $csv .= csv_column("$totalAttending " . pluralizePerson($totalAttending) . " attending Chapter Chair Luncheon") . "\n\n";
+    $csv .= ",";
+    $csv .= csv_column("$otherLunch " . pluralizePerson($otherLunch) . " eating at the NON-Chapter Chair luncheon") . "\n";
+    $csv .= ",";
+    $csv .= csv_column("$nonEaters " . pluralizePerson($nonEaters) . " NOT eating at the NON-Chapter Chair luncheon") . "\n\n";
+    $csv .= ",";
+    $csv .= csv_column("$sibTotals " . pluralizePerson($sibTotals) . " away at Sibling Outings during Chapter Chair luncheon") . "\n";
+    $csv .= "\n";
 
     return ($html, $csv);
 }

@@ -695,6 +695,12 @@ code {
   text-align: left;
 }
 
+.admin-wider-box {
+  display: inline-block;
+  width: 250px;
+  text-align: left;
+}
+
 .admin-extrawide-box {
   display: inline-block;
   width: 350px;
