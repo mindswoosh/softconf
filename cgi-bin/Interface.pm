@@ -162,14 +162,12 @@ our @select_reports = (
     softwear_rep  		=> "SOFT Wear",
     directory_rep 		=> "Directory",
     attendance_rep		=> "Total attendance",
-    softchild_rep		=> "SOFT Children",
-    notes_rep     		=> "Additional Notes",
+    softchild_rep		=> "SOFT Children / Angels",
+    notes_rep     		=> "Special Needs Notes",
     disabled  => "─────────────────────────",
     financial_rep		=> "Financial Report",
     joeywatson_rep  	=> "Joey Watson Report",
     donation_rep  		=> "Donations",
-    disabled  => "─────────────────────────",
-    membership_rep		=> "Membership Report"
 );
 
 

@@ -11,6 +11,7 @@ package Common;
 use DateTime;
 use Globals;
 use List::Util 'max';
+use POSIX qw(strftime);
 
 require Exporter;
 @ISA    = qw(Exporter);
@@ -28,7 +29,9 @@ require Exporter;
     age_of_softangel
     friendly_date
     file_version
+    eats_meals
     diagnosis
+    sort_by_field
 );
 
 use strict;
@@ -181,42 +184,20 @@ sub is_complete {
 }
 
 
-sub age_from_birthdate {
-	my $birthdate = shift;			#  MM/DD/YYYY
-
-	my ($month, $day, $year);
-
-	if ($birthdate =~ m/(\d\d)\/(\d\d)\/(\d\d\d\d)/) {
-		($month, $day, $year) = ($1, $2, $3);
-	}
-	else {
-		die "Bad birthdate!";
-	}
-
-	# $day = 20; $month = 5; $year = 2019;
-	my $dt_birth = DateTime->new(year => $year, month => $month, day => $day);
-	my $dt_today = DateTime->new(year => 2019, month => 5, day => 21);
-
-	my $age = int(($dt_today->epoch() - $dt_birth->epoch()) / (86400*365));
-
-	return ($age);
-}
-
-
-sub age_of_softangel {
-	my %softangel = @_;			#  MM/DD/YYYY
+sub age_from_dates {
+	my ($birthdate, $deathdate) = @_;
 
 	my ($bmonth, $bday, $byear);
 	my ($dmonth, $dday, $dyear);
 
-	if ($softangel{birthDate} =~ m/(\d\d)\/(\d\d)\/(\d\d\d\d)/) {
+	if ($birthdate =~ m/(\d\d)\/(\d\d)\/(\d\d\d\d)/) {
 		($bmonth, $bday, $byear) = ($1, $2, $3);
 	}
 	else {
 		die "Bad birthdate!";
 	}
 
-	if ($softangel{deathDate} =~ m/(\d\d)\/(\d\d)\/(\d\d\d\d)/) {
+	if ($deathdate =~ m/(\d\d)\/(\d\d)\/(\d\d\d\d)/) {
 		($dmonth, $dday, $dyear) = ($1, $2, $3);
 	}
 	else {
@@ -245,6 +226,22 @@ sub age_of_softangel {
 }
 
 
+sub age_from_birthdate {
+	my $birthdate = shift;			#  MM/DD/YYYY
+
+	my $now = DateTime->now;
+	my $todate = $now->strftime('%m/%d/%Y');
+
+	return age_from_dates($birthdate, $todate);
+}
+
+
+sub age_of_softangel {
+	my %softangel = @_;
+	return age_from_dates($softangel{birthDate}, $softangel{deathDate});
+}
+
+
 sub friendly_date {
 	my $date = shift;
 
@@ -263,20 +260,37 @@ sub friendly_date {
 }
 
 
+sub eats_meals {
+	my %attendee = @_;
+
+	return $attendee{peopleType} ne $peopleTypes{SOFTCHILD}  ||  $attendee{eatsMeals};
+}
+
+
+#  diagnosis() returns the diagnosis of either a SOFT child or a SOFT Angel
 sub diagnosis {
-	my %softangel = @_;
+	my %softangelchild = @_;
 
-	my $diagnosis = $softangel{diagnosis};
-	if ($softangel{diagnosis} eq $otherDiagnosisTitle) {
+	my $diagnosis = $softangelchild{diagnosis};
+	if ($softangelchild{diagnosis} eq $otherDiagnosisTitle) {
 
-		$diagnosis = $softangel{otherDiagnosis};
+		$diagnosis = $softangelchild{otherDiagnosis};
 	}
 	
 	$diagnosis =~ s/trisomy/Trisomy/ig;
 	$diagnosis =~ s/partial/Partial/ig;
+	$diagnosis =~ s/par\./Partial/ig;
 	$diagnosis =~ s/trisomy partial/Partial Trisomy/ig;
 
 	return $diagnosis;
+}
+
+
+sub sort_by_field {
+	my $field = shift;
+	my @contacts = @_;
+
+	@contacts = sort { $a->{$field} cmp $b->{$field} } @contacts;
 }
 
 

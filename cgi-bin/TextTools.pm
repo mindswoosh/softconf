@@ -5,7 +5,13 @@ use warnings;
 
 use Exporter 'import';
 our @EXPORT_OK = qw(
-    commify trim quote boolToYesNo textToHTML pluralizeText
+    commify 
+    trim 
+    quote 
+    boolToYesNo 
+    textToHTML
+    pluralize_person
+    pluralize
 );
 
 
@@ -73,16 +79,84 @@ sub textToHTML {
 # Pluralize a word based on the number of "things"
 #------------------------------------------------
 
-sub pluralizeText {
-	my $num = shift;
-	my $str = shift;
+my %plurals = (
+	"belief"	=> "beliefs",
+	"chef"		=> "chefs",
+	"chief"		=> "chiefs",
+	"child" 	=> "children",
+	"deer"		=> "deer",
+	"foot"		=> "feet",
+	"gas"		=> "gasses",
+	"goose"		=> "geese",
+	"halo"		=> "halos",
+	"man"		=> "men",
+	"mouse"		=> "mice",
+	"person" 	=> "people",
+	"photo"		=> "photos",
+	"piano"		=> "pianos",
+	"roof"		=> "roofs",
+	"series"	=> "series",
+	"sheep"		=> "sheep",
+	"species"	=> "species",
+	"tooth"		=> "teeth",
+	"woman"		=> "women",
+);
 
-	if ($num != 1) {		#  Very simplistic
-		$str .= "s";
+
+sub pluralize {
+	my ($num, $noun) = @_;
+
+	return $noun  if ($num == 1);
+
+	#  Handle multi-word phrases
+
+	my $phrase_start = "";
+
+	if ($noun =~ m/^(.*)\s(\w+)$/) {
+		$phrase_start = $1;
+		$noun = $2;
 	}
 
-	return $str;
+	my $plural = $plurals{lc($noun)};
+
+	unless ($plural) {
+
+		#  See for rule: https://www.grammarly.com/blog/plural-nouns/
+		if ($noun =~ /(o|s|sh|ch|x|z)$/i) {
+			$plural = $noun . "es";
+		}
+		elsif ($noun =~ /(.+)(f|fe)$/i) {
+			$plural = $1 . "ves";
+		}
+		elsif ($noun =~ /(.+[^aeiou])(y)$/i) {
+			$plural = $1 . "ies";
+		}
+		elsif ($noun =~ /(.+[aeiou])(y)$/i) {
+			$plural = $1 . "ys";
+		}
+		elsif ($noun =~ /(.+)(is)$/i) {
+			$plural = $1 . "es";
+		}
+		else  {
+			$plural = $noun . "s";
+		}
+	}
+
+	if ($noun =~ /^[A-Z]/) {
+		$plural = ucfirst($plural);
+	}
+
+	$plural = "$phrase_start $plural"  if ($phrase_start ne "");
+
+	return $plural;
 }
+
+
+sub pluralize_person {
+	my $num = shift;
+	return pluralize($num, "person");
+}
+
 
 
 1;

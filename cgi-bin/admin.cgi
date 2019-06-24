@@ -14,7 +14,7 @@ use Reports;
 use TextTools qw(trim quote textToHTML);
 use Lists;
 use Interface;
-use Common qw(is_fully_paid redirect);
+use Common qw(is_fully_paid redirect sort_by_field);
 
 our $q = CGI->new;
 
@@ -414,11 +414,13 @@ sub picnic_report {
     my $csv = "Picnic Attendance - Fully Paid:\n\n";
     my @matching_contacts = get_contact_list($search, "completed", "full", "paid");
     push @matching_contacts, get_contact_list($search, "completed", "picnic", "paid");
+    @matching_contacts = sort_by_field("lastName", @matching_contacts);
     $csv .= picnic_csv(@matching_contacts);
 
     $csv .= "\n\n\nPicnic Attendance - Not Paid:\n\n";
     @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
     push @matching_contacts, get_contact_list($search, "completed", "picnic", "unpaid");
+    @matching_contacts = sort_by_field("lastName", @matching_contacts);
     $csv .= picnic_csv(@matching_contacts);
 
     #  Save the .csv file
@@ -432,11 +434,13 @@ sub picnic_report {
     my $html = "<h3>Picnic Attendance - Fully Paid:</h3>";
     @matching_contacts = get_contact_list($search, "completed", "full", "paid");
     push @matching_contacts, get_contact_list($search, "completed", "picnic", "paid");
+    @matching_contacts = sort_by_field("lastName", @matching_contacts);
     $html .= picnic_html(@matching_contacts);
 
     $html .= "<br><br><h3>Picnic Attendance - Not Paid:</h3>";
     @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
     push @matching_contacts, get_contact_list($search, "completed", "picnic", "unpaid");
+    @matching_contacts = sort_by_field("lastName", @matching_contacts);
     $html .= picnic_html(@matching_contacts);
 
     $html .= "<br>"x3 . qq~<a href="/reports/picnic.csv" download="picnic.csv">Download CSV Report</a><br><br>~;
@@ -587,16 +591,22 @@ sub breakfast_report {
 #----------------------------------------------------------------------------------------------------
 
 
+sub sort_directory {
+	return sort { $a->{attendance} cmp $b->{attendance}  ||  $a->{id} cmp $b->{id}}  @_;
+}
+
 sub directory_report {
 
 	#  Create the .csv version
 
     my $csv = "Directory Information - Fully Paid:\n\n";
     my @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    @matching_contacts = sort_directory(@matching_contacts);
     $csv .= directory_csv(@matching_contacts);
 
     $csv .= "\n\n\nDirectory Information - Not Paid:\n\n";
     @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    @matching_contacts = sort_directory(@matching_contacts);
     $csv .= directory_csv(@matching_contacts);
 
     #  Save the .csv file
@@ -616,6 +626,95 @@ sub directory_report {
     $html .= directory_html(@matching_contacts);
 
     $html .= "<br>"x3 . qq~<a href="/reports/directory.csv" download="directory.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+sub sort_attendance {
+	return sort { $a->{attendance} cmp $b->{attendance}  ||  $a->{lastName} cmp $b->{lastName}}  @_;
+}
+
+sub attendance_report {
+
+	#  Create the .csv version
+
+    my $csv = "Attendance Report - Fully Paid:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    @matching_contacts = sort_attendance(@matching_contacts);
+    $csv .= attendance_csv(@matching_contacts);
+
+    $csv .= "\n\n\nAttendance Report - Not Paid:\n\n";
+    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    @matching_contacts = sort_attendance(@matching_contacts);
+    $csv .= attendance_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/attendance.csv") or die "Could not save attendance.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Attendance Report - Fully Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    @matching_contacts = sort_attendance(@matching_contacts);
+    $html .= attendance_html(@matching_contacts);
+
+    $html .= "<br><br><h3>Attendance Report - Not Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    @matching_contacts = sort_attendance(@matching_contacts);
+    $html .= attendance_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/attendance.csv" download="attendance.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub softchild_report {
+
+	#  Create the .csv version
+	
+    my $csv = "Soft Children of Attendees - Fully Paid:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    push @matching_contacts, get_contact_list($search, "completed", "picnic", "paid");
+    @matching_contacts = sort_by_field("lastName", @matching_contacts);
+    $csv .= softchildren_csv(@matching_contacts);
+
+    $csv .= "\n\n\nSoft Children of Attendees - Not Paid:\n\n";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    push @matching_contacts, get_contact_list($search, "completed", "picnic", "unpaid");
+    @matching_contacts = sort_by_field("lastName", @matching_contacts);
+    $csv .= softchildren_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/softchildren.csv") or die "Could not save softchildren.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Soft Children of Attendees - Fully Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    push @matching_contacts, get_contact_list($search, "completed", "picnic", "paid");
+    @matching_contacts = sort_by_field("lastName", @matching_contacts);
+    $html .= softchildren_html(@matching_contacts);
+
+    $html .= "<br><br><h3>Soft Children of Attendees - Not Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    push @matching_contacts, get_contact_list($search, "completed", "picnic", "unpaid");
+    @matching_contacts = sort_by_field("lastName", @matching_contacts);
+    $html .= softchildren_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/softchildren.csv" download="softchildren.csv">Download CSV Report</a><br><br>~;
 
     return $html;
 }
@@ -677,6 +776,8 @@ sub show_reports {
         "breakfast_rep"		=> \&breakfast_report,
         "balloons_rep"	    => \&balloons_report,
         "directory_rep"		=> \&directory_report,
+        "attendance_rep"    => \&attendance_report,
+        "softchild_rep"		=> \&softchild_report,
         "notes_rep"			=> \&notes_report,
     );
 
@@ -716,6 +817,7 @@ sub mark_paid {
 
 	if ($contact{id} == $contact_id) {			#  Simple validation
 		$contact{paid} = 1;
+		$contact{paymentPage} = 1;
 
 		my $notes = $q->param('msg') || "";
 		$contact{paymentNotes} = $notes;
