@@ -20,6 +20,26 @@ function ensurePayment(contact_id) {
 }
 
 
+//  Toggle the archive state of a contact. isArchived is the current state, not the new state
+function toggleArchive(contact_id, isArchived) {
+	var notes = '';
+
+	if (isArchived) {
+		notes = prompt('Restore this archived contact?\n\nEnter reason:');
+	}
+	else {
+		notes = prompt('Archive this contact?\n\nEnter reason:');
+	}
+
+	if (notes != null) {
+		notes = encodeURIComponent(notes);
+		redirect('http://softconf.org/cgi-bin/admin.cgi?action=toggle_archive&id=' + contact_id + '&archive=' + isArchived + '&msg=' + notes);
+	}
+
+	return false;
+}
+
+
 $(document).ready(function() {
 
     $("#registration").selectmenu();

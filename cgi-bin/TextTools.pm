@@ -103,6 +103,9 @@ my %plurals = (
 );
 
 
+
+#  Take a noun and pluralize it based on $num
+
 sub pluralize {
 	my ($num, $noun) = @_;
 

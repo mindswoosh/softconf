@@ -94,7 +94,10 @@ CREATE TABLE contacts
     paymentEmail        VARCHAR(255),
     paymentName         VARCHAR(255),
     paymentPage         TINYINT DEFAULT FALSE,
-    paymentNotes        VARCHAR(1000)
+    paymentNotes        VARCHAR(1000),
+
+    archived            TINYINT DEFAULT FALSE,
+    archiveNotes        VARCHAR(1000)
 );
 
 

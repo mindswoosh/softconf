@@ -192,6 +192,9 @@ our @contact_cols = qw(
     paymentName
     paymentPage
     paymentNotes
+
+    archived
+    archiveNotes
 );
 
 

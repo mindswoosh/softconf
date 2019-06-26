@@ -33,6 +33,9 @@ if ($action eq "summary") {
 elsif ($action eq "mark_paid") {
 	mark_paid($id);
 }
+elsif ($action eq "toggle_archive") {
+	toggle_archive($id);
+}
 elsif ($tab eq "registrations") {
     list_contacts($action || "all", $search);
 }
@@ -131,6 +134,8 @@ sub list_contacts {
 sub display_contact {
     my $contact_id = shift;
 
+    my %contact = GetContact($contact_id);
+
     my $text = contact_summary($contact_id);
 
     $text = textToHTML($text);
@@ -144,13 +149,27 @@ sub display_contact {
 			<input action="action" type="button" value="<< Go Back" onclick="window.history.go(-1); return false;"><br><br>
 			<h1>Registration for:</h1>
 			<br>
+	~;
+
+	if ($contact{archived}) {
+		print qq~<h3><font color="red">THIS CONTACT IS ARCHIVED</font></h3><font color="red">Archive reason: $contact{archiveNotes}</font><br><br><br>~;
+	}
+
+	print qq~
 			<div style="font-family: monospace, monospace; font-size: 14px; margin-left: 15px;">
 			 $text
 			 <br><br>
 			</div>
-		</div>
-    ~;
+	~;
 
+	if ($contact{archived}) {
+		print qq~<button id="paymentbtn" type="button" onclick="toggleArchive($contact_id, $contact{archived});">Restore Contact<\/button>~;
+	}
+	else {
+		print qq~<button id="paymentbtn" type="button" onclick="toggleArchive($contact_id, $contact{archived});">Archive Contact<\/button>~;
+	}
+
+	print qq~</div>~;
     print_footer();
 
     exit;
@@ -813,7 +832,7 @@ sub show_reports {
 sub mark_paid {
 	my $contact_id = shift;
 
-	my%contact = GetContact($contact_id);
+	my %contact = GetContact($contact_id);
 
 	if ($contact{id} == $contact_id) {			#  Simple validation
 		$contact{paid} = 1;
@@ -828,6 +847,26 @@ sub mark_paid {
 	redirect("$system_url/cgi-bin/admin.cgi?action=summary&id=$contact_id");
 }
 
+sub toggle_archive {
+	my $contact_id = shift;
+
+	my $archive = $q->param('archive') || "";
+
+	my %contact = GetContact($contact_id);
+
+	#  Simple validation. The current archive status must match the one in the URL
+	if ($contact{id} == $contact_id  &&  !($contact{archived} xor $archive) ) {
+
+		$contact{archived} = $archive ? 0 : 1;
+
+		my $notes = $q->param('msg') || "";
+		$contact{archiveNotes} = $notes;
+
+		UpdateContact(%contact);	
+	}
+
+	redirect("$system_url/cgi-bin/admin.cgi?action=summary&id=$contact_id");
+}
 
 
 sub form_editor {

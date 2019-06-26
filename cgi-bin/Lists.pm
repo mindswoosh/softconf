@@ -52,7 +52,7 @@ sub get_contact_list {
 
     $dbh = OpenDatabase();
     {
-        $sth = $dbh->prepare("SELECT * FROM contacts ORDER BY lastName");
+        $sth = $dbh->prepare("SELECT * FROM contacts WHERE archived IS FALSE ORDER BY lastName");
         $sth->execute();
 
         while (my $contact_ref = $sth->fetchrow_hashref()) {
