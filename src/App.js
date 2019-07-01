@@ -107,7 +107,7 @@ const eventInfoDefault = {
   eventTitle:           '2019 Conference Registration',
   brochureURL:          'https://trisomy.org/conference-brochure-ann-arbor-2019/',
 
-  costAdult:            145,         // One free registration for board members
+  costAdult:            165,         // One free registration for board members
   costChild:             95,         // Children under 2 are free
   costSoftChild:          0,
   costProfessional:     135,
@@ -1916,7 +1916,6 @@ class App extends Component {
     let i = attendees.findIndex(a => a.id === id);
     console.assert(i !== -1, "Warning -- didn't find attendee in attendee list: id = " + id);
     attendees[i][field] = event.target.value;
-
     this.setState ({
       attendees
     });
@@ -1927,9 +1926,13 @@ class App extends Component {
     let { attendees } = this.state;
     let i = attendees.findIndex(a => a.id === id);
     console.assert(i !== -1, "Warning -- couldn't find attendee in attendee list: id = " + id);
+
     attendees[i][field] = opt.value;
     if (field === "diagnosis"  &&  opt.value !== otherDiagnosisTitle) {
       attendees[i].otherDiagnosis = "";
+    }
+    if (field === "peopleType") {
+      attendees[i].welcomeDinner = "";
     }
     if (field === "age") {
       this.state.eventInfo.childCareSessions.forEach( (sess) => {
