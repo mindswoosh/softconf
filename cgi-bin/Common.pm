@@ -180,7 +180,7 @@ sub is_fully_paid {
 
 sub is_complete {
     my %contact = @_;
-    return $contact{paymentPage} != 0;
+    return !$contact{archived}  &&  $contact{paymentPage} != 0;
 }
 
 

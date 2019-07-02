@@ -55,4 +55,24 @@ $(document).ready(function() {
         }
     });
 
+    $("#meeting-reports").selectmenu();
+    $("#meeting-reports").on("selectmenuchange", function(event, ui) {
+        if (!ui.item.value.match(/select/i)) {
+            redirect("https://www.softconf.org/cgi-bin/admin.cgi?tab=reports&action="+ui.item.value);
+        }
+    });
+
+    $("#meal-reports").selectmenu();
+    $("#meal-reports").on("selectmenuchange", function(event, ui) {
+        if (!ui.item.value.match(/select/i)) {
+            redirect("https://www.softconf.org/cgi-bin/admin.cgi?tab=reports&action="+ui.item.value);
+        }
+    });
+    
+    $("#financial-reports").selectmenu();
+    $("#financial-reports").on("selectmenuchange", function(event, ui) {
+        if (!ui.item.value.match(/select/i)) {
+            redirect("https://www.softconf.org/cgi-bin/admin.cgi?tab=reports&action="+ui.item.value);
+        }
+    });
 });

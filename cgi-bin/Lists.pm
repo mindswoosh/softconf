@@ -11,6 +11,8 @@ use Common qw(is_fully_paid is_complete);
 use Exporter 'import';
 our @EXPORT = qw(
     get_contact_list
+    get_archived_list
+    
     get_attendee_list
     get_softangels_list
     get_all_softangels_list
@@ -61,6 +63,33 @@ sub get_contact_list {
             next unless ($status      eq "all"  ||  $status eq (is_complete(%contact) ? "completed" : "abandoned"));
             next unless ($type        eq "all"  ||  $contact{attendance} eq $type);
             next unless ($paymentType eq "all"  ||  ( $paymentType eq "paid"  &&  is_fully_paid(%contact) )  ||  ($paymentType eq "unpaid"  &&  !is_fully_paid(%contact) ) );
+
+            if ($search_term eq ""  ||  $contact{firstName} =~ m/$search_term/i  ||  $contact{lastName} =~ m/$search_term/i  ||  $contact{email} =~ m/$search_term/i) {
+                push @matching_contacts, $contact_ref;
+            }
+        }
+
+        $sth->finish();
+    }
+    CloseDatabase($dbh);
+
+    return @matching_contacts;
+}
+
+
+sub get_archived_list {
+	my $search_term = shift || "";
+
+    my @matching_contacts = ();
+    my ($dbh, $sth, %contact);
+
+    $dbh = OpenDatabase();
+    {
+        $sth = $dbh->prepare("SELECT * FROM contacts WHERE archived IS TRUE ORDER BY lastName");
+        $sth->execute();
+
+        while (my $contact_ref = $sth->fetchrow_hashref()) {
+            my %contact = %$contact_ref;
 
             if ($search_term eq ""  ||  $contact{firstName} =~ m/$search_term/i  ||  $contact{lastName} =~ m/$search_term/i  ||  $contact{email} =~ m/$search_term/i) {
                 push @matching_contacts, $contact_ref;

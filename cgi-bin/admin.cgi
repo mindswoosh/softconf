@@ -79,6 +79,9 @@ sub list_contacts {
         @matching_contacts = grep { my $contact_email = lc($_->{email}); !$emails{$contact_email} } get_contact_list($search, "abandoned", "all");
 
     }
+    elsif ($reg_type eq "archived") {
+    	@matching_contacts = get_archived_list($search);
+    }
     elsif ($reg_type eq "unpaid") {
         @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
     }
@@ -245,6 +248,43 @@ sub welcome_report {
     $html .= welcome_dinner_html(@matching_contacts);
 
     $html .= "<br>"x3 . qq~<a href="/reports/welcome_dinner.csv" download="welcome_dinner.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub first_timers_report {
+
+	#  Create the .csv version
+	
+    my $csv = "First Time Attendees - Fully Paid:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    $csv .= first_timers_csv(@matching_contacts);
+
+    $csv .= "\n\n\nFirst Time Attendees - Not Paid:\n\n";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    $csv .= first_timers_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/first_timers.csv") or die "Could not save first_timers.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>First Time Attendees - Fully Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    $html .= first_timers_html(@matching_contacts);
+
+    $html .= "<br><br><h3>First Time Attendees - Not Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    $html .= first_timers_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/first_timers.csv" download="first_timers.csv">Download CSV Report</a><br><br>~;
 
     return $html;
 }
@@ -784,6 +824,7 @@ sub show_reports {
     our %dispatch = (
     	"reception_rep"		=> \&reception_report,
         "welcome_rep"       => \&welcome_report,
+        "first_timer_rep"   => \&first_timers_report,
         "softwear_rep"      => \&softwear_report,
         "workshop_rep"      => \&workshop_report,
         "clinics_rep"       => \&clinic_report,
@@ -803,17 +844,25 @@ sub show_reports {
     print_header();
     print_navigation("reports");
 
-    print qq~<div><h3 class="admin-indent">Show Report:</h3>~;
-    print_report_menu($rep_type);
-    print "</div><br>";
-
     my $html = "";
 
     if (exists $dispatch{$rep_type}) {
         $html .= $dispatch{$rep_type}->();
     }
     else {
-    	$html .= "<br>Choose a report from the drop-down menu.";
+    	print qq~<div><h3 class="admin-indent admin-name">General Reports:</h3>~;
+	    print_meeting_menu($rep_type);
+	    print "</div><br><br>";
+
+    	print qq~<div><h3 class="admin-indent admin-name">Meal Reports:</h3>~;
+	    print_meal_menu($rep_type);
+	    print "</div><br><br>";
+
+    	print qq~<div><h3 class="admin-indent admin-name">Financial Reports:</h3>~;
+	    print_financial_menu($rep_type);
+	    print "</div><br>";
+
+    	$html .= "<br>Choose a report from a drop-down menu.";
         $html .= "<br>"x20;
     }
 

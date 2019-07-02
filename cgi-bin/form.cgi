@@ -126,6 +126,9 @@ if ($q->param)            #  fetches the names of the params as a list
       paymentEmail      => $userData{paymentEmail},
       paymentName       => $userData{paymentName},
       paymentPage       => $userData{paymentPage},
+
+      archived			=> "0",
+      archiveNotes	    => "",
     );
 
 

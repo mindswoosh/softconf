@@ -683,6 +683,12 @@ code {
   text-align: left;
 }
 
+.admin-slim-box {
+  display: inline-block;
+  width: 75px;
+  text-align: left;
+}
+
 .admin-medium-box {
   display: inline-block;
   width: 110px;

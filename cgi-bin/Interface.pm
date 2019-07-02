@@ -12,7 +12,9 @@ our @EXPORT = qw(
     print_footer
     print_navigation
     print_reg_menu
-    print_report_menu
+    print_meeting_menu
+    print_meal_menu
+    print_financial_menu
 );
 
 
@@ -128,6 +130,7 @@ our @select_registrations = (
     unpaid    => "Unpaid Registrations",
     disabled  => "─────────────────────────",
     abandoned => "Abandoned Registrations",
+    archived  => "Archived Registrations",
 );
 
 
@@ -145,40 +148,131 @@ sub print_reg_menu {
 #  Drop-down menu for reports
 #------------------------------------------------
 
-our @select_reports = (
+# our @select_reports = (
+#     select_rep    		=> "Select Report...",
+#     reception_rep 		=> "Welcome Reception",
+#     welcome_rep   		=> "Welcome Dinner",
+#     workshop_rep  		=> "Workshop Attendance",
+#     clinics_rep   		=> "Clinic Choices",
+#     picnic_rep    		=> "Picnic Attendance",
+#     childcare_rep 		=> "Childcare Sessions",
+#     sibouting_rep 		=> "Sibling Outings",
+#     remembrance_rep		=> "Remembrance Outing",
+#     balloons_rep  		=> "Balloon Requests",
+#     breakfast_rep 		=> "Sunday Breakfast",
+#     chapterchair_rep	=> "Chapter Chair Lunch",
+#     disabled  => "─────────────────────────",
+#     softwear_rep  		=> "SOFT Wear",
+#     directory_rep 		=> "Directory",
+#     attendance_rep		=> "Total attendance",
+#     softchild_rep		=> "SOFT Children / Angels",
+#     notes_rep     		=> "Special Needs Notes",
+#     disabled  => "─────────────────────────",
+#     financial_rep		=> "Financial Report",
+#     joeywatson_rep  	=> "Joey Watson Report",
+#     donation_rep  		=> "Donations",
+# );
+
+# sub print_report_menu {
+#   my $selected = shift;
+
+#   print qq~<select name="reports" id="reports" style="display: none;">~;
+#   print select_options_tmpl($selected, @select_reports);
+#   print qq~</select>~;
+# }
+
+our @select_meeting_reports = (
     select_rep    		=> "Select Report...",
-    reception_rep 		=> "Welcome Reception",
-    welcome_rep   		=> "Welcome Dinner",
+    first_timer_rep     => "First Time Attendees",
     workshop_rep  		=> "Workshop Attendance",
     clinics_rep   		=> "Clinic Choices",
-    picnic_rep    		=> "Picnic Attendance",
     childcare_rep 		=> "Childcare Sessions",
     sibouting_rep 		=> "Sibling Outings",
-    remembrance_rep		=> "Remembrance Outing",
     balloons_rep  		=> "Balloon Requests",
-    breakfast_rep 		=> "Final Breakfast",
-    chapterchair_rep	=> "Chapter Chair Lunch",
     disabled  => "─────────────────────────",
     softwear_rep  		=> "SOFT Wear",
     directory_rep 		=> "Directory",
     attendance_rep		=> "Total attendance",
     softchild_rep		=> "SOFT Children / Angels",
     notes_rep     		=> "Special Needs Notes",
-    disabled  => "─────────────────────────",
+);
+
+
+sub print_meeting_menu {
+  my $selected = shift;
+
+  print qq~<select name="meeting-reports" id="meeting-reports" style="display: none;">~;
+  print select_options_tmpl($selected, @select_meeting_reports);
+  print qq~</select>~;
+}
+
+
+
+#------------------------------------------------
+#  Drop-down menu for meal reports
+#------------------------------------------------
+
+our @select_meal_reports = (
+    select_rep    		=> "Select Report...",
+    reception_rep 		=> "Welcome Reception",
+    welcome_rep   		=> "Welcome Dinner",
+    remembrance_rep		=> "Remembrance Outing",
+    picnic_rep    		=> "Picnic Attendance",
+    breakfast_rep 		=> "Sunday Breakfast",
+    chapterchair_rep	=> "Chapter Chair Lunch",
+);
+
+
+sub print_meal_menu {
+  my $selected = shift;
+
+  print qq~<select name="meal-reports" id="meal-reports" style="display: none;">~;
+  print select_options_tmpl($selected, @select_meal_reports);
+  print qq~</select>~;
+}
+
+
+
+#------------------------------------------------
+#  Drop-down menu for financial reports
+#------------------------------------------------
+
+our @select_financial_reports = (
     financial_rep		=> "Financial Report",
     joeywatson_rep  	=> "Joey Watson Report",
     donation_rep  		=> "Donations",
 );
 
 
-sub print_report_menu {
+sub print_financial_menu {
   my $selected = shift;
 
-  print qq~<select name="reports" id="reports" style="display: none;">~;
-  print select_options_tmpl($selected, @select_reports);
+  print qq~<select name="financial-reports" id="financial-reports" style="display: none;">~;
+  print select_options_tmpl($selected, @select_financial_reports);
   print qq~</select>~;
 }
 
+
+#------------------------------------------------
+#  Drop-down menu for special list reports
+#------------------------------------------------
+
+our @select_special_reports = (
+	#  Board members
+	#  Chapter Chair members
+	#  1st time attendees
+	#  SOFT Members
+	#  Non-Soft Members
+);
+
+
+sub print_special_menu {
+  my $selected = shift;
+
+  print qq~<select name="special-reports" id="special-reports" style="display: none;">~;
+  print select_options_tmpl($selected, @select_special_reports);
+  print qq~</select>~;
+}
 
 
 #------------------------------------------------------------------------------------

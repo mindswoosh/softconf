@@ -45,6 +45,9 @@ our @EXPORT = qw(
     welcome_dinner_html
     welcome_dinner_csv
 
+    first_timers_html
+    first_timers_csv
+
     workshop_attendance_html
     workshop_attendance_csv
 
@@ -536,6 +539,24 @@ sub contact_summary {
 
 #--------------------------------------------------------------------------------
 
+our @peopleSort = (
+	"SOFT Angel",
+	"SOFT Child",
+	"Child",
+	"Teen",
+	"Adult",
+	"Professional",
+);
+
+sub sort_by_peopleType {
+    my ($person1, $person2) = @_;
+
+    my $index1 = first_index { $_ eq $person1 } @peopleSort;
+    my $index2 = first_index { $_ eq $person2 } @peopleSort;
+
+    return ($index1 <=> $index2);
+}
+
 
 sub _buffet {
 	my $type = shift;
@@ -557,6 +578,8 @@ sub _buffet {
     for my $contact_ref (@contacts) {
         my %contact = %$contact_ref;
 
+        next unless (is_complete(%contact));
+        
         next if ($type eq "reception"  &&  !$contact{reception});
         next if ($type eq "breakfast"  &&  !$contact{sundayBreakfast});
 
@@ -599,7 +622,7 @@ sub _buffet {
     $html .= qq~<span class="admin-narrow-box"></span>$numAttendees ~ . pluralize_person($numAttendees) . " attending the $type<br><br>";
     $html .= qq~<span class="admin-narrow-box"></span>$eaters ~ . pluralize_person($eaters) . "  eating at the $type:<br>";
 
-    for my $eaterType (keys %eaterTypes) {
+    for my $eaterType (sort { sort_by_peopleType($a, $b) } keys %eaterTypes) {
     	$html .= qq~<span class="indent"></span><span class="admin-narrow-box"></span><span class="row-num">$eaterTypes{$eaterType}</span> ~ . pluralize($eaterTypes{$eaterType}, $eaterType) . "<br>";
     }
     $html .= "<br>";
@@ -608,7 +631,7 @@ sub _buffet {
     $csv  .= "\nTotals:\n";
     $csv .= ", $numAttendees " . pluralize_person($numAttendees) . " attending the $type\n\n";
     $csv .= ", $eaters " . pluralize_person($eaters) . " eating at the $type:\n";
-    for my $eaterType (keys %eaterTypes) {
+    for my $eaterType (sort { sort_by_peopleType($a, $b) } keys %eaterTypes) {
     	$csv .= ",     -  $eaterTypes{$eaterType} " . pluralize($eaterTypes{$eaterType}, $eaterType) . "\n";
     }
     $csv .= "\n";
@@ -662,6 +685,8 @@ sub _welcome_dinner {
     my $i = 1;
     for my $contact_ref (@contacts) {
         my %contact = %$contact_ref;
+
+        next unless (is_complete(%contact));
 
         my $not_paid = is_fully_paid(%contact) ? "" : " — Not Paid Yet";
 
@@ -724,6 +749,68 @@ sub welcome_dinner_csv {
 }
 
 
+
+#--------------------------------------------------------------------------------
+
+
+sub _first_timers {
+    my @contacts = @_;
+
+    return "" unless (@contacts != 0);
+
+    my $html = "";
+    my $csv = "Contact ID, Contact, Email, Phone, Attendee, Type, Paid?\n";
+
+    my $i = 1;
+    for my $contact_ref (@contacts) {
+        my %contact = %$contact_ref;
+
+        next unless (is_complete(%contact));
+
+        next unless ($contact{firstTime});
+
+        my $not_paid = is_fully_paid(%contact) ? "" : " — Not Paid Yet";
+
+        $html .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a>$not_paid</div><br>~;
+        my @attendees = get_attendee_list($contact{id});
+
+        for my $attendee_ref (@attendees) {
+            my %attendee = %$attendee_ref;
+
+            $html .= qq~<div class="admin-linespace-after"><span class="row-num"></span><span class="admin-name">$attendee{firstName} $attendee{lastName}:</span>$attendee{peopleType}</div><br>~;
+
+            $csv .= csv_column($contact{id}) . ",";
+            $csv .= csv_column("$contact{firstName} $contact{lastName}") . ",";
+            $csv .= csv_column($contact{email}) . ",";
+            $csv .= csv_column($contact{phoneMobile} || $contact{phoneHome} ||  $contact{phoneWork}) . ",";
+
+            $csv .= csv_column("$attendee{firstName} $attendee{lastName}") . ",";
+            $csv .= csv_column($attendee{peopleType}) . ",";
+            $csv .= csv_column($not_paid ? "Not Paid" : "Fully Paid") . "\n";
+        }
+        $html .= "<br>";
+        $i++;
+    }
+
+    return ($html, $csv);
+}
+
+
+sub first_timers_html {
+    my @contacts = @_;
+
+    return (_first_timers(@contacts))[0];
+}
+
+
+sub first_timers_csv {
+    my @contacts = @_;
+
+    return (_first_timers(@contacts))[1];
+}
+
+
+
 #--------------------------------------------------------------------------------
 
 #  Workshops are attendee-based, not contact-based, so we don't pass in a list
@@ -760,9 +847,10 @@ sub _workshop_attendance {
                 my %workshop_attendee = %$workshop_attendee_ref;
 
                 my %attendee = GetAttendee($workshop_attendee{attendee_id});
-                my %contact = GetContact($attendee{'contact_id'});
+                my %contact = GetContact($attendee{contact_id});
 
                 next unless (is_complete(%contact));
+
                 next if ($status eq "paid"    &&  !is_fully_paid(%contact));
                 next if ($status eq "unpaid"  &&  is_fully_paid(%contact));
 
@@ -857,6 +945,8 @@ sub _shirts_ordered {
 
     for my $contact_ref (@contacts) {
         my %contact = %$contact_ref;
+
+        next unless (is_complete(%contact));
 
         my @shirtsOrdered_refs = get_shirtsordered_list($contact{id});
 
@@ -981,6 +1071,8 @@ sub _sibouting {
     for my $contact_ref (@contacts) {
     	my %contact = %$contact_ref;
 
+    	next unless (is_complete(%contact));
+
     	my @attendees = get_attendee_list($contact{id});
 
     	for my $attendee_ref (@attendees) {
@@ -1030,6 +1122,8 @@ sub _outing {
 		my %attendee = %$attendee_ref;
 
 		my %contact = GetContact($attendee{contact_id});
+
+		next unless (is_complete(%contact));
 
 		$shirt_quantities{$attendee{sibShirtSize}}++;
 
@@ -1320,12 +1414,15 @@ sub _picnic {
     my $totalBusSeats = 0;
     my $totalTieDowns = 0;
 
+    my %eaterTypes;
     my $totalEaters = 0;
     my $totalNonEaters = 0;
 
     my $i = 1;
     for my $contact_ref (@contacts) {
         my %contact = %$contact_ref;
+
+        next unless (is_complete(%contact));
 
         my $not_paid = is_fully_paid(%contact) ? "" : " — Not Paid Yet";
 
@@ -1346,6 +1443,7 @@ sub _picnic {
             my $eats_meals = eats_meals(%attendee);
             if ($eats_meals) {
             	$totalEaters++;
+            	$eaterTypes{$attendee{peopleType}}++;
             }
             else {
             	$totalNonEaters++;
@@ -1376,16 +1474,26 @@ sub _picnic {
     $html .= qq~<div class="admin-linespace-after"><span class="row-num"></span><span class="admin-name">$totalBusSeats Bus ~ . 
              pluralize($totalBusSeats, "Seat") . "</span>$totalTieDowns Tie-" . pluralize($totalTieDowns, "Down") . "</div><br>";
     $html .= "<br><b>Total Meal Needs:</b><br><br>";
-    $html .= qq~<div class="admin-linespace-after"><span class="row-num"></span><span class="admin-name">$totalEaters ~ . pluralize_person($totalEaters) . " eating "
-             . "</span>$totalNonEaters " . pluralize_person($totalNonEaters) . " not eating</div><br>";
+    $html .= qq~<div class="admin-linespace-after"><span class="row-num"></span><span class="admin-name">$totalNonEaters ~ . pluralize_person($totalNonEaters) . " not eating</div><br><br>";
+
+    $html .= qq~<div class="admin-linespace-after"><span class="row-num"></span><span class="admin-name">$totalEaters ~ . pluralize_person($totalEaters) . " eating:</span></div><br>";
+    for my $meal (sort { sort_by_peopleType($a, $b) } keys %eaterTypes) {
+    	$html .= qq~<div class="admin-linespace-after"><span class="admin-slim-box"></span><span class="row-num">$eaterTypes{$meal}</span>$meal ~ . pluralize($eaterTypes{$meal}, "Meal") . "</div><br>";
+    }
+
 
     $csv  .= "\n,Transportaion Needs:,";
     $csv  .= csv_column("$totalBusSeats " . pluralize($totalBusSeats, "bus seat")) . ",";
     $csv  .= csv_column("$totalTieDowns " . pluralize($totalTieDowns, "tie-down")) . "\n";
 
-    $csv  .= "\n,Total Meal Needs:,";
-    $csv  .= csv_column("$totalEaters " . pluralize_person($totalEaters)) . " eating,";
-    $csv  .= csv_column("$totalNonEaters " . pluralize_person($totalNonEaters)) . " not eating," . "\n";
+    $csv  .= "\n,Total Meal Needs:\n";
+    $csv  .= ",," . csv_column("$totalNonEaters " . pluralize_person($totalNonEaters)) . " not eating" . "\n\n";
+    $csv  .= ",," . csv_column("$totalEaters " . pluralize_person($totalEaters)) . " eating:\n";
+    
+    for my $meal (sort { sort_by_peopleType($a, $b) } keys %eaterTypes) {
+    	$csv .= ",,     - " . csv_column("$eaterTypes{$meal} $meal " . pluralize($eaterTypes{$meal}, "Meal"));
+    	$csv .= "\n";
+    }
 
     return ($html, $csv);
 }
@@ -1424,6 +1532,8 @@ sub _remembrance {
     for my $contact_ref (@contacts) {
         my %contact = %$contact_ref;
 
+        next unless (is_complete(%contact));
+
         my $not_paid = is_fully_paid(%contact) ? "" : " — Not Paid Yet";
 
         my $busSeat = $contact{numRembTrans} ? 1 : 0;
@@ -1443,7 +1553,7 @@ sub _remembrance {
             }
 
             $totalBusSeats += $busSeat;
-            $numMeals{$attendee{rembLunch}}++;
+            $numMeals{"$attendee{peopleType} - $attendee{rembLunch}"}++;
 
             $html .= qq~<div class="admin-linespace-after"><span class="row-num"></span><span class="admin-name">$attendee{firstName} $attendee{lastName}:</span>~;
             $html .= qq~<span class="admin-wide-box">~;
@@ -1467,9 +1577,9 @@ sub _remembrance {
 
     #  List the meal totals
     $html .= "<br><b>Totals:</b><br><br>";
-    $html .= qq~<div class="admin-linespace-after"><span class="admin-narrow-box"></span>$totalBusSeats Bus ~ . pluralize($totalBusSeats, "Seat") . "</div><br>";
+    $html .= qq~<div class="admin-linespace-after"><span class="admin-narrow-box"></span><span class="row-num">$totalBusSeats</span>Bus ~ . pluralize($totalBusSeats, "Seat") . "</div><br><br>";
     for my $meal (keys %numMeals) {
-    	$html .= qq~<div class="admin-linespace-after"><span class="admin-narrow-box"></span>$numMeals{$meal} $meal ~ . pluralize($totalBusSeats, "Meal") . "</div><br>";
+    	$html .= qq~<div class="admin-linespace-after"><span class="admin-narrow-box"></span><span class="row-num">$numMeals{$meal}</span>$meal ~ . pluralize($numMeals{$meal}, "Meal") . "</div><br>";
     }
 
     $csv .= "\nTotals:\n";
@@ -1590,12 +1700,17 @@ sub _chapterchair {
 
     my $totalAttending = 0;
     my $sibTotals = 0;
+
+	my %eaterTypesLunch;
+    my %eaterTypesOtherLunch;
     my $nonEaters = 0;
     my $otherLunch = 0;
 
     my $i = 1;
     for my $contact_ref (@contacts) {
         my %contact = %$contact_ref;
+
+        next unless (is_complete(%contact));
 
         my $not_paid = is_fully_paid(%contact) ? "" : " — Not Paid Yet";
 
@@ -1613,6 +1728,7 @@ sub _chapterchair {
 	            }
 
 	            $totalAttending++;
+	            $eaterTypesLunch{$attendee{peopleType}}++;
 
 	            $html .= qq~<div class="admin-linespace-after"><span class="row-num"></span>$attendee{firstName} $attendee{lastName}</div><br>~;
 
@@ -1635,6 +1751,7 @@ sub _chapterchair {
 	        	}
 	        	else {										#  At non-chapter chair luncheon
 	        		$otherLunch++;
+	        		$eaterTypesOtherLunch{$attendee{peopleType}}++;
 	        	}
 
 	        }
@@ -1644,24 +1761,43 @@ sub _chapterchair {
     }
 
     $html .= "<br><b>Totals:</b><br><br>";
-    $html .= qq~<div class="admin-linespace-after"><span class="admin-narrow-box"></span>$totalAttending ~ . pluralize_person($totalAttending) . qq~ attending Chapter Chair Luncheon</div><br></br>~;
-    $html .= qq~<div class="admin-linespace-after"><span class="admin-narrow-box"></span>$otherLunch ~ . pluralize_person($otherLunch) . qq~ eating at the NON-Chapter Chair luncheon</div><br>~;
-    $html .= qq~<div class="admin-linespace-after"><span class="admin-narrow-box"></span>$nonEaters ~ . pluralize_person($nonEaters) . qq~ NOT eating at the NON-Chapter Chair luncheon</div><br><br>~;
-    $html .= qq~<div class="admin-linespace-after"><span class="admin-narrow-box"></span>$sibTotals ~ . pluralize_person($sibTotals) . qq~ away at Sibling Outings during Chapter Chair luncheon</div><br>~;
+    $html .= qq~<div class="admin-linespace-after"><span class="admin-narrow-box"></span>$totalAttending ~ . pluralize_person($totalAttending) . qq~ attending Chapter Chair Luncheon:</div><br>~;
+        for my $meal (sort { sort_by_peopleType($a, $b) } keys %eaterTypesLunch) {
+    	$html .= qq~<div class="admin-linespace-after"><span class="admin-slim-box"></span><span class="row-num">$eaterTypesLunch{$meal}</span> ~ . pluralize($eaterTypesLunch{$meal}, $meal) . "</div><br>";
+    }
+
+    $html .= qq~<br><div class="admin-linespace-after"><span class="admin-narrow-box"></span>$nonEaters ~ . pluralize_person($nonEaters) . qq~ at the NON-Chapter Chair luncheon who are NOT eating</div><br><br>~;
+    $html .= qq~<div class="admin-linespace-after"><span class="admin-narrow-box"></span>$otherLunch ~ . pluralize_person($otherLunch) . qq~ at the NON-Chapter Chair luncheon who ARE eating:</div><br>~;
+    for my $meal (sort { sort_by_peopleType($a, $b) } keys %eaterTypesOtherLunch) {
+    	$html .= qq~<div class="admin-linespace-after"><span class="admin-slim-box"></span><span class="row-num">$eaterTypesOtherLunch{$meal}</span> ~ . pluralize($eaterTypesOtherLunch{$meal}, $meal) . "</div><br>";
+    }
+    
+    $html .= qq~<br><div class="admin-linespace-after"><span class="admin-narrow-box"></span>$sibTotals ~ . pluralize_person($sibTotals) . qq~ away at Sibling Outings during Chapter Chair luncheon</div><br>~;
 
     $csv .= "\nTotals:\n";
     $csv .= ",";
-    $csv .= csv_column("$totalAttending " . pluralize_person($totalAttending) . " attending Chapter Chair Luncheon") . "\n\n";
+    $csv .= csv_column("$totalAttending " . pluralize_person($totalAttending) . " attending Chapter Chair Luncheon:") . "\n";
+    for my $meal (sort { sort_by_peopleType($a, $b) } keys %eaterTypesLunch) {
+    	$csv .= ",     - " . csv_column("$eaterTypesLunch{$meal} " . pluralize($eaterTypesLunch{$meal}, $meal));
+    	$csv .= "\n";
+    }
+
+    $csv .= "\n,";
+    $csv .= csv_column("$nonEaters " . pluralize_person($nonEaters) . " at the NON-Chapter Chair luncheon who are NOT eating") . "\n\n";
     $csv .= ",";
-    $csv .= csv_column("$otherLunch " . pluralize_person($otherLunch) . " eating at the NON-Chapter Chair luncheon") . "\n";
-    $csv .= ",";
-    $csv .= csv_column("$nonEaters " . pluralize_person($nonEaters) . " NOT eating at the NON-Chapter Chair luncheon") . "\n\n";
-    $csv .= ",";
+    $csv .= csv_column("$otherLunch " . pluralize_person($otherLunch) . " at the NON-Chapter Chair luncheon who ARE eating:") . "\n";
+    for my $meal (sort { sort_by_peopleType($a, $b) } keys %eaterTypesOtherLunch) {
+    	$csv .= ",     - " . csv_column("$eaterTypesOtherLunch{$meal} " . pluralize($eaterTypesOtherLunch{$meal}, $meal));
+    	$csv .= "\n";
+    }
+
+    $csv .= "\n,";
     $csv .= csv_column("$sibTotals " . pluralize_person($sibTotals) . " away at Sibling Outings during Chapter Chair luncheon") . "\n";
     $csv .= "\n";
 
     return ($html, $csv);
 }
+
 
 
 sub chapterchair_html {
@@ -2120,6 +2256,8 @@ sub _notes {
     my $i = 1;
     for my $contact_ref (@contacts) {
         my %contact = %$contact_ref;
+
+        next unless (is_complete(%contact));
 
         my $not_paid = is_fully_paid(%contact) ? "" : " — Not Paid Yet";
 
