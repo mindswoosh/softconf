@@ -2,6 +2,7 @@
 //  SOFT Conference Registration
 //
 //  9/18/18 v0.1 Steve Maguire steve@stormdev.com
+//  7/03/19 v1.0
 //
 //  Robin Weirich's book, page 191
 //  $ git add .
