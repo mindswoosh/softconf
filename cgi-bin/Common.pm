@@ -25,12 +25,14 @@ require Exporter;
     modification_time
     is_fully_paid
     is_complete
+    is_late_registrant
     age_from_birthdate
     age_of_softangel
     friendly_date
     file_version
     eats_meals
     diagnosis
+    contactNameHTML
     sort_by_field
 );
 
@@ -184,6 +186,13 @@ sub is_complete {
 }
 
 
+sub is_late_registrant {
+    my $contact_id = shift;
+
+    return $contact_id >= 1000;
+}
+
+
 sub age_from_dates {
 	my ($birthdate, $deathdate) = @_;
 
@@ -283,6 +292,17 @@ sub diagnosis {
 	$diagnosis =~ s/trisomy partial/Partial Trisomy/ig;
 
 	return $diagnosis;
+}
+
+
+sub contactNameHTML {
+    my %contact = @_;
+
+    my $fullname = "$contact{firstName} $contact{lastName}";
+    if (is_late_registrant($contact{id})) {
+        $fullname = "<font color=orange>$fullname</font>";
+    }
+    return $fullname;
 }
 
 

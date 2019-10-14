@@ -79,6 +79,7 @@ sub get_contact_list {
 
 sub get_archived_list {
 	my $search_term = shift || "";
+	my $status = shift || "all";
 
     my @matching_contacts = ();
     my ($dbh, $sth, %contact);
@@ -90,6 +91,9 @@ sub get_archived_list {
 
         while (my $contact_ref = $sth->fetchrow_hashref()) {
             my %contact = %$contact_ref;
+
+            next if ($status eq "paid"   &&  !is_fully_paid(%contact));
+            next if ($status eq "unpaid" &&   is_fully_paid(%contact));
 
             if ($search_term eq ""  ||  $contact{firstName} =~ m/$search_term/i  ||  $contact{lastName} =~ m/$search_term/i  ||  $contact{email} =~ m/$search_term/i) {
                 push @matching_contacts, $contact_ref;

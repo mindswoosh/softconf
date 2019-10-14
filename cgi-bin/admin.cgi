@@ -14,7 +14,7 @@ use Reports;
 use TextTools qw(trim quote textToHTML);
 use Lists;
 use Interface;
-use Common qw(is_fully_paid redirect sort_by_field);
+use Common qw(is_fully_paid is_late_registrant redirect contactNameHTML sort_by_field);
 
 our $q = CGI->new;
 
@@ -113,7 +113,7 @@ sub list_contacts {
             next if ($reg_type eq "unpaid" && is_fully_paid(%contact));
 
             print qq~
-          <span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a><br><br>
+          <span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a><br><br>
         ~;
             $i++;
         }
@@ -151,12 +151,18 @@ sub display_contact {
     	<div style="margin-left: 10px;">
 			<input action="action" type="button" value="<< Go Back" onclick="window.history.go(-1); return false;"><br><br>
 			<h1>Registration for:</h1>
-			<br>
 	~;
 
 	if ($contact{archived}) {
-		print qq~<h3><font color="red">THIS CONTACT IS ARCHIVED</font></h3><font color="red">Archive reason: $contact{archiveNotes}</font><br><br><br>~;
+		print qq~<h3><font color="red">THIS CONTACT IS ARCHIVED</font></h3><font color="red">Archive reason: $contact{archiveNotes}</font><br>~;
 	}
+
+    if (is_late_registrant($contact{id})) {
+        print qq~<h3><font color="orange">Late Registrant</font></h3>~;
+    }
+    else {
+        print "<br>";
+    }
 
 	print qq~
 			<div style="font-family: monospace, monospace; font-size: 14px; margin-left: 15px;">
@@ -215,6 +221,42 @@ sub reception_report {
     return $html;
 }
 
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub general_meals_report {
+
+	#  Create the .csv version
+	
+    my $csv = "General Meals for Fully Registered - Fully Paid:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    $csv .= general_meals_csv(@matching_contacts);
+
+    $csv .= "\n\n\nGeneral Meals for Fully Registered - Not Paid:\n\n";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    $csv .= general_meals_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/general_meals.csv") or die "Could not save general_meals.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>General Meals for Fully Registered - Fully Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "paid");
+    $html .= general_meals_html(@matching_contacts);
+
+    $html .= "<br><br><h3>General Meals for Fully Registered - Not Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "full", "unpaid");
+    $html .= general_meals_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/general_meals.csv" download="general_meals.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
 
 #----------------------------------------------------------------------------------------------------
 
@@ -815,6 +857,82 @@ sub notes_report {
     return $html;
 }
 
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub financial_report {
+
+	#  Create the .csv version
+
+    my $csv = "Financial Report:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    $csv .= financials_csv(@matching_contacts);
+
+    $csv .= "\n\n\nArchived Registrations With Payments\n";
+    @matching_contacts = get_archived_list("", "paid");
+    $csv .= financials_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/financial.csv") or die "Could not save financial.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Financial Report:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    $html .= financials_html(@matching_contacts);
+
+    $html .= "<br><br><h3>Archived Registrations With Payments</h3>";
+    @matching_contacts = get_archived_list("", "paid");
+    $html .= financials_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/financial.csv" download="financial.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
+#----------------------------------------------------------------------------------------------------
+
+
+sub donations_report {
+
+	#  Create the .csv version
+
+    my $csv = "Donations - Fully Paid:\n\n";
+    my @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    $csv .= donations_csv(@matching_contacts);
+
+    $csv .= "\n\n\nDonations - Not Paid:\n\n";
+    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    $csv .= donations_csv(@matching_contacts);
+
+    #  Save the .csv file
+    open(my $fh, '>', "$report_dir/donations.csv") or die "Could not save donations.csv";
+    print $fh $csv;
+    close $fh;
+
+
+    #  Display the HTML version...
+
+    my $html = "<h3>Donations - Fully Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "all", "paid");
+    $html .= donations_html(@matching_contacts);
+
+    $html .= "<br><br><h3>Donations - Not Paid:</h3>";
+    @matching_contacts = get_contact_list($search, "completed", "all", "unpaid");
+    $html .= donations_html(@matching_contacts);
+
+    $html .= "<br>"x3 . qq~<a href="/reports/donations.csv" download="donations.csv">Download CSV Report</a><br><br>~;
+
+    return $html;
+}
+
+
 #----------------------------------------------------------------------------------------------------
 
 
@@ -822,23 +940,26 @@ sub show_reports {
     my $rep_type = shift;
 
     our %dispatch = (
-    	"reception_rep"		=> \&reception_report,
+        "reception_rep"     => \&reception_report,
         "welcome_rep"       => \&welcome_report,
         "first_timer_rep"   => \&first_timers_report,
         "softwear_rep"      => \&softwear_report,
         "workshop_rep"      => \&workshop_report,
         "clinics_rep"       => \&clinic_report,
-        "sibouting_rep"		=> \&sibouting_report,
-        "picnic_rep"		=> \&picnic_report,
-        "remembrance_rep"	=> \&remembrance_report,
-        "chapterchair_rep"	=> \&chapterchair_report,
+        "sibouting_rep"     => \&sibouting_report,
+        "picnic_rep"        => \&picnic_report,
+        "remembrance_rep"   => \&remembrance_report,
+        "chapterchair_rep"  => \&chapterchair_report,
         "childcare_rep"     => \&childcare_report,
-        "breakfast_rep"		=> \&breakfast_report,
-        "balloons_rep"	    => \&balloons_report,
-        "directory_rep"		=> \&directory_report,
+        "breakfast_rep"     => \&breakfast_report,
+        "balloons_rep"      => \&balloons_report,
+        "directory_rep"     => \&directory_report,
         "attendance_rep"    => \&attendance_report,
-        "softchild_rep"		=> \&softchild_report,
-        "notes_rep"			=> \&notes_report,
+        "softchild_rep"     => \&softchild_report,
+        "notes_rep"         => \&notes_report,
+        "financial_rep"		=> \&financial_report,
+        "donations_rep"		=> \&donations_report,
+        "general_meals_rep" => \&general_meals_report,
     );
 
     print_header();

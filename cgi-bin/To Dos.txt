@@ -1,0 +1,28 @@
+
+NOTES:
+
+* Merge a contact
+
+* Create an HTML "Registration Closed" page
+
+
+Features:
+
+* Edit existing users by sending the registration back to the form
+	- Archive existing form for historical records
+	- Add new form
+
+
+
+
+Known Bugs:
+
+
+
+
+
+Refactor:
+
+* Set all state fields using just one or two functions with a field being passed to it
+
+* Create isChild(attendee), isSoftChild(attendee), etc.

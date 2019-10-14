@@ -27,7 +27,7 @@ sub print_header {
 
     my $softreg_version   = file_version("$system_dir/js/softreg.js");
     my $fancydiag_version = file_version("$system_dir/js/fancybox/fancydialogs.js");
-
+	my $appcss_version    = file_version("$system_dir/css/App.css");
     print "Content-type: text/html\n\n";
     print qq~
         <!DOCTYPE html>
@@ -44,7 +44,7 @@ sub print_header {
               <script src="https://softconf.org/js/fancybox/fancydialogs.js?v=$fancydiag_version"></script>
 
               <script src="https://softconf.org/js/softreg.js?v=$softreg_version"></script>
-              <link rel="stylesheet" href="https://softconf.org/css/App.css" type="text/css" />
+              <link rel="stylesheet" href="https://softconf.org/css/App.css?v=$appcss_version" type="text/css" />
 
               $head
            </head>
@@ -73,11 +73,13 @@ sub print_header {
 #------------------------------------------------
 
 sub print_footer {
-    my $footer = shift || "";
+    my $footer     = shift || "";
+	my $under_body = shift || "";
 
     print qq~
                     $footer
                  </div>
+                 $under_body
               </div>
            </body>
         </html>
@@ -148,38 +150,6 @@ sub print_reg_menu {
 #  Drop-down menu for reports
 #------------------------------------------------
 
-# our @select_reports = (
-#     select_rep    		=> "Select Report...",
-#     reception_rep 		=> "Welcome Reception",
-#     welcome_rep   		=> "Welcome Dinner",
-#     workshop_rep  		=> "Workshop Attendance",
-#     clinics_rep   		=> "Clinic Choices",
-#     picnic_rep    		=> "Picnic Attendance",
-#     childcare_rep 		=> "Childcare Sessions",
-#     sibouting_rep 		=> "Sibling Outings",
-#     remembrance_rep		=> "Remembrance Outing",
-#     balloons_rep  		=> "Balloon Requests",
-#     breakfast_rep 		=> "Sunday Breakfast",
-#     chapterchair_rep	=> "Chapter Chair Lunch",
-#     disabled  => "─────────────────────────",
-#     softwear_rep  		=> "SOFT Wear",
-#     directory_rep 		=> "Directory",
-#     attendance_rep		=> "Total attendance",
-#     softchild_rep		=> "SOFT Children / Angels",
-#     notes_rep     		=> "Special Needs Notes",
-#     disabled  => "─────────────────────────",
-#     financial_rep		=> "Financial Report",
-#     joeywatson_rep  	=> "Joey Watson Report",
-#     donation_rep  		=> "Donations",
-# );
-
-# sub print_report_menu {
-#   my $selected = shift;
-
-#   print qq~<select name="reports" id="reports" style="display: none;">~;
-#   print select_options_tmpl($selected, @select_reports);
-#   print qq~</select>~;
-# }
 
 our @select_meeting_reports = (
     select_rep    		=> "Select Report...",
@@ -220,6 +190,7 @@ our @select_meal_reports = (
     picnic_rep    		=> "Picnic Attendance",
     breakfast_rep 		=> "Sunday Breakfast",
     chapterchair_rep	=> "Chapter Chair Lunch",
+    general_meals_rep   => "General Meals Report",
 );
 
 
@@ -238,9 +209,9 @@ sub print_meal_menu {
 #------------------------------------------------
 
 our @select_financial_reports = (
+	select_rep    		=> "Select Report...",
     financial_rep		=> "Financial Report",
-    joeywatson_rep  	=> "Joey Watson Report",
-    donation_rep  		=> "Donations",
+    donations_rep  		=> "Donations",
 );
 
 

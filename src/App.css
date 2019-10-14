@@ -90,7 +90,9 @@ p {
   margin-bottom: 1.25em;
 }
 
-
+.center {
+	text-align: center;
+}
 
 .select-height {
   line-height: 40px;
@@ -675,6 +677,19 @@ code {
   display: inline-block;
   width: 100px;
   text-align: right;
+}
+
+.admin-cost {
+  display: inline-block;
+  width: 100px;
+  text-align: right;
+}
+
+
+.admin-cost-center {
+  display: inline-block;
+  width: 100px;
+  text-align: center;
 }
 
 .admin-narrow-box {

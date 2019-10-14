@@ -28,11 +28,13 @@ use EventInfo;
 use Common qw(
     is_fully_paid
     is_complete
+    is_late_registrant
     age_from_birthdate
     age_of_softangel
     friendly_date
     eats_meals
     diagnosis
+    contactNameHTML
 );
 
 use Exporter 'import';
@@ -44,6 +46,9 @@ our @EXPORT = qw(
 
     welcome_dinner_html
     welcome_dinner_csv
+
+    general_meals_html
+    general_meals_csv
 
     first_timers_html
     first_timers_csv
@@ -89,7 +94,14 @@ our @EXPORT = qw(
 
     notes_html
     notes_csv
+
+	financials_html
+	financials_csv
+
+    donations_html
+    donations_csv
 );
+
 
 
 sub qualifiesChildCare {
@@ -162,7 +174,7 @@ sub contact_summary {
     $output .= add_line(0, "\nContact Information:");
     $output .= "\n";
 
-    $output .= add_line(1, $contact{firstName} . ' ' . $contact{lastName});
+    $output .= add_line(1, contactNameHTML(%contact));
     $output .= add_line(1, $contact{address1});
     if ($contact{address2} ne "") {
         $output .= add_line(1, $contact{address2});
@@ -525,7 +537,7 @@ sub contact_summary {
 
     $output =~ s/\n\n+/\n\n/g;
 
-    my %post = GetPost($contact{id});
+    my %post = GetPost($contact{post_id});
     my $json = JSON::PP->new->ascii->pretty->allow_nonref;
     my %userData = %{$json->decode($post{json})};
 
@@ -558,11 +570,34 @@ sub sort_by_peopleType {
 }
 
 
+#  Hash with peopleTypes as keys and meals counts as values
+sub summarize_meals {
+	my %meals = @_;
+
+	my $adultEaters = 0;
+	my $childEaters = 0;
+
+	for my $peopleType (keys %meals) {
+
+    	if ($peopleType eq $peopleTypes{ADULT}  ||  $peopleType eq $peopleTypes{PROFESSIONAL}  ||  $peopleType eq $peopleTypes{TEEN}) {
+    		$adultEaters += $meals{$peopleType};
+    	}
+    	else {
+    		die "Bad peopleType in _general_meals" unless ($peopleType eq $peopleTypes{CHILD}  ||  $peopleType eq $peopleTypes{SOFTCHILD});
+    		$childEaters += $meals{$peopleType};
+    	}
+    }
+
+    return ($adultEaters, $childEaters);
+}
+
+
+
 sub _buffet {
 	my $type = shift;
     my @contacts = @_;
 
-    die "Bad buffet type: $type"  if ($type !~ /^(reception|breakfast)$/);
+    die "Bad buffet type: $type"  if ($type !~ /^(reception|breakfast|full conference)$/);
 
     return "" unless (@contacts != 0);
 
@@ -580,12 +615,13 @@ sub _buffet {
 
         next unless (is_complete(%contact));
         
-        next if ($type eq "reception"  &&  !$contact{reception});
-        next if ($type eq "breakfast"  &&  !$contact{sundayBreakfast});
+        next if ($type eq "reception"  		&&  !$contact{reception});
+        next if ($type eq "breakfast"  		&&  !$contact{sundayBreakfast});
+        next if ($type eq "full conference" &&  $contact{attendance} ne "full"); 
 
         my $not_paid = is_fully_paid(%contact) ? "" : " — Not Paid Yet";
 
-        $html .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a>$not_paid</div><br>~;
+        $html .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a>$not_paid</div><br>~;
         my @attendees = get_attendee_list($contact{id});
 
         for my $attendee_ref (@attendees) {
@@ -617,6 +653,8 @@ sub _buffet {
         $i++;
     }
 
+    my ($adultMeals, $childMeals) = summarize_meals(%eaterTypes);
+
     #  List the meal totals
     $html .= "<br><b>Totals:</b><br><br>";
     $html .= qq~<span class="admin-narrow-box"></span>$numAttendees ~ . pluralize_person($numAttendees) . " attending the $type<br><br>";
@@ -625,8 +663,9 @@ sub _buffet {
     for my $eaterType (sort { sort_by_peopleType($a, $b) } keys %eaterTypes) {
     	$html .= qq~<span class="indent"></span><span class="admin-narrow-box"></span><span class="row-num">$eaterTypes{$eaterType}</span> ~ . pluralize($eaterTypes{$eaterType}, $eaterType) . "<br>";
     }
+    $html .= qq~<br><span class="indent"></span><span class="admin-narrow-box"></span>($adultMeals Adult ~ . pluralize($adultMeals, "meal") . ", $childMeals Child " . pluralize($childMeals, "meal") . ")<br>";
     $html .= "<br>";
-    $html .= qq~<span class="admin-narrow-box"></span>$nonEaters ~ . pluralize_person($nonEaters) . " NOT eating at the $type:<br>";
+    $html .= qq~<span class="admin-narrow-box"></span>$nonEaters ~ . pluralize_person($nonEaters) . " NOT eating at the $type<br>";
 
     $csv  .= "\nTotals:\n";
     $csv .= ", $numAttendees " . pluralize_person($numAttendees) . " attending the $type\n\n";
@@ -634,7 +673,8 @@ sub _buffet {
     for my $eaterType (sort { sort_by_peopleType($a, $b) } keys %eaterTypes) {
     	$csv .= ",     -  $eaterTypes{$eaterType} " . pluralize($eaterTypes{$eaterType}, $eaterType) . "\n";
     }
-    $csv .= "\n";
+    $csv .= "\n," . csv_column("     ($adultMeals Adult " . pluralize($adultMeals, "meal") . ", $childMeals Child " . pluralize($childMeals, "meal") . ")") . "\n";
+    $csv .= "\n\n";
     $csv .= ", $nonEaters " . pluralize_person($nonEaters) . " NOT eating at the $type\n";
 
     return ($html, $csv);
@@ -669,6 +709,19 @@ sub breakfast_csv {
 }
 
 
+sub general_meals_html {
+    my @contacts = @_;
+
+    return (_buffet("full conference", @contacts))[0];
+}
+
+sub general_meals_csv {
+    my @contacts = @_;
+
+    return (_buffet("full conference", @contacts))[1];
+}
+
+
 #--------------------------------------------------------------------------------
 
 
@@ -690,7 +743,7 @@ sub _welcome_dinner {
 
         my $not_paid = is_fully_paid(%contact) ? "" : " — Not Paid Yet";
 
-        $html .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a>$not_paid</div><br>~;
+        $html .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a>$not_paid</div><br>~;
         my @attendees = get_attendee_list($contact{id});
 
         for my $attendee_ref (@attendees) {
@@ -749,7 +802,6 @@ sub welcome_dinner_csv {
 }
 
 
-
 #--------------------------------------------------------------------------------
 
 
@@ -771,7 +823,7 @@ sub _first_timers {
 
         my $not_paid = is_fully_paid(%contact) ? "" : " — Not Paid Yet";
 
-        $html .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a>$not_paid</div><br>~;
+        $html .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a>$not_paid</div><br>~;
         my @attendees = get_attendee_list($contact{id});
 
         for my $attendee_ref (@attendees) {
@@ -954,7 +1006,7 @@ sub _shirts_ordered {
 
         my $not_paid = is_fully_paid(%contact) ? "" : " &mdash; Not Paid Yet";
 
-        $html .= qq~<br><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a>$not_paid<br>~;
+        $html .= qq~<br><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a>$not_paid<br>~;
 
         my $shirt_id_cur = "";
 
@@ -1127,7 +1179,7 @@ sub _outing {
 
 		$shirt_quantities{$attendee{sibShirtSize}}++;
 
-		$html .= qq~<div class="admin-linespace-after"><span class="admin-twice-indent"></span><span class="row-num">$i.</span><span class="admin-name">$attendee{firstName} $attendee{lastName}</span><span class="admin-medium-box">Age $attendee{age}</span><span class="admin-medium-box">$attendee{sibShirtSize}</span><span class="admin-indent"><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a></span></div><br>~;
+		$html .= qq~<div class="admin-linespace-after"><span class="admin-twice-indent"></span><span class="row-num">$i.</span><span class="admin-name">$attendee{firstName} $attendee{lastName}</span><span class="admin-medium-box">Age $attendee{age}</span><span class="admin-medium-box">$attendee{sibShirtSize}</span><span class="admin-indent"><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a></span></div><br>~;
  		
  		$csv .= ",";
  		$csv .= csv_column($contact{id}) . ",";
@@ -1230,7 +1282,7 @@ sub _childcare {
                 $softchild = "SOFT Child";
             }
 
-            $html .= qq~<div class="admin-linespace-after"><span class="admin-twice-indent"></span><span class="row-num">$i.</span><span class="admin-name">$attendee{firstName} $attendee{lastName}</span><span class="admin-medium-box">Age $attendee{age}</span><span class="admin-medium-box">$softchild</span><span class="admin-indent"><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a></span></div><br>~;
+            $html .= qq~<div class="admin-linespace-after"><span class="admin-twice-indent"></span><span class="row-num">$i.</span><span class="admin-name">$attendee{firstName} $attendee{lastName}</span><span class="admin-medium-box">Age $attendee{age}</span><span class="admin-medium-box">$softchild</span><span class="admin-indent"><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a></span></div><br>~;
 
             $csv .= csv_column($session{title}) . ",";
             $csv .= csv_column($contact{id}) . ",";
@@ -1316,7 +1368,7 @@ sub _clinics {
 	                	$html .= qq~<br><div class="admin-linespace-before"><span class="admin-twice-indent"></span>$clinicInfo[$clinicID]</div><br><br>~;
 	                }
 
-	                $html .= qq~<div class="admin-linespace-after"><span class="admin-twice-indent"></span><span class="admin-indent"></span><span class="row-num">$i.</span><span class="admin-name"><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a></span>~;
+	                $html .= qq~<div class="admin-linespace-after"><span class="admin-twice-indent"></span><span class="admin-indent"></span><span class="row-num">$i.</span><span class="admin-name"><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a></span>~;
 	            }
 
 	            $csv .= csv_column($choice+1) . ",";
@@ -1426,7 +1478,7 @@ sub _picnic {
 
         my $not_paid = is_fully_paid(%contact) ? "" : " — Not Paid Yet";
 
-        $html .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a>$not_paid</div><br>~;
+        $html .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a>$not_paid</div><br>~;
         my @attendees = get_attendee_list($contact{id});
 
         for my $attendee_ref (@attendees) {
@@ -1481,6 +1533,9 @@ sub _picnic {
     	$html .= qq~<div class="admin-linespace-after"><span class="admin-slim-box"></span><span class="row-num">$eaterTypes{$meal}</span>$meal ~ . pluralize($eaterTypes{$meal}, "Meal") . "</div><br>";
     }
 
+    my ($adultMeals, $childMeals) = summarize_meals(%eaterTypes);
+    $html .= qq~<br><span class="indent"></span><span class="admin-narrow-box"></span>($adultMeals Adult ~ . pluralize($adultMeals, "meal") . ", $childMeals Child " . pluralize($childMeals, "meal") . ")<br>";
+
 
     $csv  .= "\n,Transportaion Needs:,";
     $csv  .= csv_column("$totalBusSeats " . pluralize($totalBusSeats, "bus seat")) . ",";
@@ -1494,6 +1549,7 @@ sub _picnic {
     	$csv .= ",,     - " . csv_column("$eaterTypes{$meal} $meal " . pluralize($eaterTypes{$meal}, "Meal"));
     	$csv .= "\n";
     }
+	$csv .= "\n,," . csv_column("     ($adultMeals Adult " . pluralize($adultMeals, "meal") . ", $childMeals Child " . pluralize($childMeals, "meal") . ")") . "\n";
 
     return ($html, $csv);
 }
@@ -1538,7 +1594,7 @@ sub _remembrance {
 
         my $busSeat = $contact{numRembTrans} ? 1 : 0;
 
-        my $contactHtml .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a>$not_paid</div><br>~;
+        my $contactHtml .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a>$not_paid</div><br>~;
         my @attendees = get_attendee_list($contact{id});
 
         my $numAttendees = 1;
@@ -1714,7 +1770,7 @@ sub _chapterchair {
 
         my $not_paid = is_fully_paid(%contact) ? "" : " — Not Paid Yet";
 
-        my $contactHtml .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a>$not_paid</div><br>~;
+        my $contactHtml .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a>$not_paid</div><br>~;
         my @attendees = get_attendee_list($contact{id});
 
         my $numAttendees = 1;
@@ -1771,8 +1827,11 @@ sub _chapterchair {
     for my $meal (sort { sort_by_peopleType($a, $b) } keys %eaterTypesOtherLunch) {
     	$html .= qq~<div class="admin-linespace-after"><span class="admin-slim-box"></span><span class="row-num">$eaterTypesOtherLunch{$meal}</span> ~ . pluralize($eaterTypesOtherLunch{$meal}, $meal) . "</div><br>";
     }
+
+    my ($adultMeals, $childMeals) = summarize_meals(%eaterTypesOtherLunch);
+    $html .= qq~<br><span class="indent"></span><span class="admin-narrow-box"></span>($adultMeals Adult ~ . pluralize($adultMeals, "meal") . ", $childMeals Child " . pluralize($childMeals, "meal") . ")<br>";
     
-    $html .= qq~<br><div class="admin-linespace-after"><span class="admin-narrow-box"></span>$sibTotals ~ . pluralize_person($sibTotals) . qq~ away at Sibling Outings during Chapter Chair luncheon</div><br>~;
+    $html .= qq~<br><br><div class="admin-linespace-after"><span class="admin-narrow-box"></span>$sibTotals ~ . pluralize_person($sibTotals) . qq~ away at Sibling Outings during Chapter Chair luncheon</div><br>~;
 
     $csv .= "\nTotals:\n";
     $csv .= ",";
@@ -1860,7 +1919,7 @@ sub _directory {
         my $dir_email = $contact{dir_email} ? "Yes" : "<b><font color=red>No</font></b>";
         my $dir_city  = $contact{dir_city} ? "Yes" : "<b><font color=red>No</font></b>";
 
-        $html .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><span class="admin-name"><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a></span>~;
+        $html .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><span class="admin-name"><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a></span>~;
         $html .= qq~<span class="admin-narrow-box"></span><span class="admin-medium-box">$dir_phone</span><span class="admin-medium-box">$dir_email</span><span class="admin-medium-box">$dir_city</span></div><br>~;
 
         my $csv_contact = "";
@@ -2006,7 +2065,7 @@ sub _attendance {
         	$csv  .= "\n\n$reg_type{$attendance_title}:\n\n";
         }
 
-        $html .= qq~<br><div class="admin-linespace-after"><span class="row-num">$i: </span><span class="admin-name"><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a></span></div><br>~;
+        $html .= qq~<br><div class="admin-linespace-after"><span class="row-num">$i: </span><span class="admin-name"><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a></span></div><br>~;
 
         my $csv_contact = "";
         $csv_contact .= csv_column($contact{id}) . ",";
@@ -2270,7 +2329,7 @@ sub _notes {
         my $specialNeedsCSV  = $specialNeeds;
         $specialNeedsCSV =~ s/\n/ \/ /g;
 
-        $html .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">$contact{firstName} $contact{lastName}</a></div><br>~;
+        $html .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a></div><br>~;
         $html .= qq~<span class="row-num"></span><span class="admin-superwide-box">$specialNeedsHTML</span><br><br>~;
 
         $csv .= csv_column($contact{id}) . ",";
@@ -2297,6 +2356,274 @@ sub notes_csv {
     my @contacts = @_;
 
     return (_notes(@contacts))[1];
+}
+
+
+
+#--------------------------------------------------------------------------------
+
+
+sub shirt_costs {
+	my $contact_id = shift;
+
+	my $shirtDollars = 0;
+
+    my @shirtTypesInfo = get_shirttypes_info($CONFERENCE_ID);
+
+    for my $shirtType_ref (@shirtTypesInfo) {
+        my %shirtType = %$shirtType_ref;
+
+        my @shirtsOrdered_refs = get_shirtsordered_list($contact_id);
+
+        for my $shirt_ref (@shirtsOrdered_refs) {
+            my %shirt = %$shirt_ref;
+
+            if ($shirt{shirt_id} && $shirt{shirt_id} eq $shirtType{id}) {
+            	$shirtDollars += $shirt{quantity} * $shirtType{cost};
+            }
+        }
+    }
+
+	return $shirtDollars;
+}
+
+
+sub sib_costs {
+	my $contact_id = shift;
+
+	my $sibDollars = 0;
+
+	my @attendees = get_attendee_list($contact_id);
+
+	for my $attendee_ref (@attendees) {
+		my %attendee = %$attendee_ref;
+
+		next unless ($attendee{sibOuting});		#  Not going...
+
+		$sibDollars += 42;
+	}
+
+	return $sibDollars;
+}
+
+
+sub joey_watson_code {
+	my $jwcode = shift;
+
+	my $jwDollars = 0;
+	if ($jwcode =~ /A(\d)/i) { $jwDollars += $1 * 145; }
+	if ($jwcode =~ /T(\d)/i) { $jwDollars += $1 * 145; }
+	if ($jwcode =~ /C(\d)/i) { $jwDollars += $1 * 95; }
+
+	return $jwDollars;
+}
+
+
+sub _financials {
+    my @contacts = @_;
+
+    return "" unless (@contacts != 0);
+
+    my $numBoardMembers = 0;
+    my $totalAmtBoardMembers = 0;
+
+    my $totalReg = 0;
+    my $totalPaidAtRegistration = 0;
+    my $totalPaidLater = 0;
+    my $totalSib = 0;
+    my $totalShirts = 0;
+    my $totalDonations = 0;
+    my $totalBoard = 0;
+    my $totalJWatson = 0;
+    my $totalSOFTDonations = 0;
+    my $totalFundDonations = 0;
+
+    my $html  = qq~<div class="admin-linespace-after"><span class="row-num"></span>~;
+       $html .= qq~<span class="admin-wide-box"></span>~;
+       $html .= qq~<span class="admin-cost"><center>Reg</center></span><span class="admin-cost"><center>Sib<br>Outings</center></span><span class="admin-cost"><center>Shirts</center></span><span class="admin-cost"><center>Donations</center></span><span class="admin-cost"><center>Board Comp'd</center></span><span class="admin-cost"><center>JWatson Comp'd</center></span></div><br><br>~;
+
+    my $csv  = ",,,,, Registration, Registration,,, Donation, Donation,, Comp'd , Comp'd\n";
+       $csv .= "Contact ID, Contact, Email, Phone,, by PayPal, by Check, Sib Outings, Shirts, SOFT, General Fund,, Board Member, Joey Watson\n";
+
+    my $i = 1;
+    for my $contact_ref (@contacts) {
+        my %contact = %$contact_ref;
+
+        next unless ($contact{paymentPage} != 0);
+
+        my $donationDollars = $contact{softDonation} + $contact{fundDonation};
+        my $shirtDollars = shirt_costs($contact{id});
+
+        next unless ($contact{attendance} ne "balloon"  ||  $donationDollars != 0 ||  $shirtDollars != 0);
+
+        # next unless ($contact{grandTotal} != 0  ||  $contact{joeyWatson} != 0);
+
+        my $isBoardMember  = $contact{boardMember};
+        my $isJoeyWatson   = $contact{joeyWatson};
+        my $isPaidByPayPal = $contact{paymentID} ne "";
+        my $isMarkPaid     = !$isPaidByPayPal  &&  $contact{paid} != 0;
+
+        my $boardMemberDollars = $isBoardMember ? 145 : 0;
+        my $joeyWatsonDollars  = $isJoeyWatson ? joey_watson_code($contact{joeyWatsonCode}) : 0;
+        my $sibDollars = sib_costs($contact{id});
+        my $regDollars = $contact{conferenceTotal} - $sibDollars - $shirtDollars;
+
+	    $totalReg += $regDollars;
+	    $totalSib += $sibDollars;
+	    $totalShirts += $shirtDollars;
+	   	$totalSOFTDonations += $contact{softDonation};
+	    $totalFundDonations += $contact{fundDonation};
+	    $totalDonations += $donationDollars;
+	    $totalBoard += $boardMemberDollars;
+	    $totalJWatson += $joeyWatsonDollars;
+
+
+	    #  Handle very unusual case where a SOFT child is registered alone, resulting in 0s across the board
+	    next unless ($totalReg || $totalSib || $totalShirts || $totalDonations || $totalBoard || $totalJWatson);
+
+        $html .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span>~;
+        $html .= qq~<span class="admin-wide-box"><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a></span>~;
+        $html .= qq~<span class="admin-cost-center">$regDollars</span><span class="admin-cost-center">$sibDollars</span><span class="admin-cost-center">$shirtDollars</span><span class="admin-cost-center">$donationDollars</span><span class="admin-cost-center">$boardMemberDollars</span><span class="admin-cost-center">$joeyWatsonDollars</span></div><br><br>~;
+
+        my $paidAtRegistration = ($contact{paymentID} || $contact{paymentNotes} =~ /paypal/i) ? $regDollars : "";
+        my $paidLater = ($paidAtRegistration eq "") ? $regDollars : "";
+
+        $totalPaidAtRegistration += $paidAtRegistration;
+        $totalPaidLater += $paidLater;
+
+        $csv .= csv_column($contact{id}) . ",";
+        $csv .= csv_column("$contact{firstName} $contact{lastName}") . ",";
+        $csv .= csv_column($contact{email}) . ",";
+        $csv .= csv_column($contact{phoneMobile} || $contact{phoneHome} ||  $contact{phoneWork}) . ",";
+        $csv .= ",";
+        
+        $csv .= csv_column($paidAtRegistration) . ",";
+        $csv .= csv_column($paidLater) . ",";
+
+        $csv .= csv_column($sibDollars ? $sibDollars : "") . ",";
+        $csv .= csv_column($shirtDollars ? $shirtDollars : "") . ",";
+        $csv .= csv_column($contact{softDonation} ? $contact{softDonation} : "") . ",";
+        $csv .= csv_column($contact{fundDonation} ? $contact{fundDonation} : "") . ",";
+        $csv .= ",";
+        $csv .= csv_column($boardMemberDollars ? $boardMemberDollars : "") . ",";
+        $csv .= csv_column($joeyWatsonDollars ? $joeyWatsonDollars : "") . "\n";
+
+        $i++;
+    }
+
+    $html .= qq~<br><div class="admin-linespace-after"><span class="row-num"></span>~;
+    $html .= qq~<span class="admin-wide-box"></span>~;
+    $html .= qq~<span class="admin-cost"><center>Reg</center></span><span class="admin-cost"><center>Sib<br>Outings</center></span><span class="admin-cost"><center>Shirts</center></span><span class="admin-cost"><center>Donations</center></span><span class="admin-cost"><center>Board Comp'd</center></span><span class="admin-cost"><center>JWatson Comp'd</center></span></div><br>~;
+
+    $html .= qq~<div class="admin-linespace-after"><span class="row-num"></span>~;
+    $html .= qq~<span class="admin-wide-box"><b>Conference Totals:</b></span>~;
+    $html .= qq~<span class="admin-cost-center">$totalReg</span><span class="admin-cost-center">$totalSib</span><span class="admin-cost-center">$totalShirts</span><span class="admin-cost-center">$totalDonations</span><span class="admin-cost-center">$totalBoard</span><span class="admin-cost-center">$totalJWatson</span></div><br><br>~;
+
+    $csv .= "\n\n,,,,, Registration, Registration,,, Donation, Donation,, Comp'd , Comp'd\n";
+    $csv .= "Contact ID, Contact, Email, Phone,, by PayPal, by Check, Sib Outings, Shirts, SOFT, General Fund,, Board Member, Joey Watson\n";
+    $csv .= "\n,,,Totals:,,";
+    $csv .= csv_column($totalPaidAtRegistration) . ",";
+    $csv .= csv_column($totalPaidLater) . ",";
+
+    $csv .= csv_column($totalSib) . ",";
+    $csv .= csv_column($totalShirts) . ",";
+    $csv .= csv_column($totalSOFTDonations) . ",";
+    $csv .= csv_column($totalFundDonations) . ",";
+    $csv .= ",";
+    $csv .= csv_column($totalBoard) . ",";
+    $csv .= csv_column($totalJWatson) . "\n";
+
+    return ($html, $csv);
+}
+
+
+sub financials_html {
+    my @contacts = @_;
+
+    return (_financials(@contacts))[0];
+}
+
+
+sub financials_csv {
+    my @contacts = @_;
+
+    return (_financials(@contacts))[1];
+}
+
+
+#--------------------------------------------------------------------------------
+
+
+sub _donations {
+    my @contacts = @_;
+
+    return "" unless (@contacts != 0);
+
+    my $softDonationsTotal = 0;
+    my $fundDonationsTotal = 0;
+
+    my $html  = qq~<div class="admin-linespace-after"><span class="row-num"></span>~;
+       $html .= qq~<span class="admin-name">Donations to:</span>~;
+       $html .= qq~<span class="admin-cost"><center>SOFT Conference</center></span><span class="admin-medium-box"></span><span class="admin-cost"><center>General Fund</center></span></div><br><br>~;
+
+    my $csv = "Contact ID, Contact, Email, Phone, Attendee,,SOFT Donation, Fund Donation\n";
+
+    my $i = 1;
+    for my $contact_ref (@contacts) {
+        my %contact = %$contact_ref;
+
+        next unless (is_complete(%contact));
+
+        next unless ($contact{softDonation}  ||  $contact{fundDonation});
+
+        my $not_paid = is_fully_paid(%contact) ? "" : " — Not Paid Yet";
+
+        my $softDonation = $contact{softDonation} ? "\$ $contact{softDonation}" : "";
+        my $fundDonation = $contact{fundDonation} ? "\$ $contact{fundDonation}" : "";
+
+        $html .= qq~<div class="admin-linespace-after"><span class="row-num">$i: </span>~;
+        $html .= qq~<span class="admin-name"><a href="/cgi-bin/admin.cgi?action=summary&id=$contact{id}">~ . contactNameHTML(%contact) . qq~</a></span>~;
+        $html .= qq~<span class="admin-cost">$softDonation</span><span class="admin-slim-box"></span><span class="admin-cost">$fundDonation</span></div><br><br>~;
+
+        $csv .= csv_column($contact{id}) . ",";
+        $csv .= csv_column("$contact{firstName} $contact{lastName}") . ",";
+        $csv .= csv_column($contact{email}) . ",";
+        $csv .= csv_column($contact{phoneMobile} || $contact{phoneHome} ||  $contact{phoneWork}) . ",";
+        $csv .= ",";
+        $csv .= csv_column($softDonation) . ",";
+        $csv .= csv_column($softDonation) . "\n\n";
+
+        $softDonationsTotal += $contact{softDonation};
+        $fundDonationsTotal += $contact{fundDonation};
+
+        $i++;
+    }
+
+    $html .= qq~<br><div class="admin-linespace-after"><span class="row-num"></span>~;
+    $html .= qq~<span class="admin-name">Total Donations:</span>~;
+    $html .= qq~<span class="admin-cost">\$ $softDonationsTotal</span><span class="admin-slim-box"></span><span class="admin-cost">\$ $fundDonationsTotal</span></div><br>~;
+
+    $csv .= "\n\n";
+    $csv .= ",,,,";
+    $csv .= csv_column("Total Donations:") . ",,";
+    $csv .= csv_column($softDonationsTotal) . ",";
+    $csv .= csv_column($fundDonationsTotal) . "\n";
+
+    return ($html, $csv);
+}
+
+
+sub donations_html {
+    my @contacts = @_;
+
+    return (_donations(@contacts))[0];
+}
+
+
+sub donations_csv {
+    my @contacts = @_;
+
+    return (_donations(@contacts))[1];
 }
 
 
