@@ -8,7 +8,7 @@
     "@fortawesome/react-fontawesome": "^0.1.4",
     "ajv": "^6.10.0",
     "i": "^0.3.6",
-    "npm": "^6.8.0",
+    "npm": "^11.9.0",
     "rc-checkbox": "^2.1.6",
     "react": "^16.8.4",
     "react-async-script-loader": "^0.3.0",
